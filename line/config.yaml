@@ -1,0 +1,103 @@
+# ==========================================
+# Chat Agent Matrix Configuration File (LINE Edition)
+# ==========================================
+
+# 🌐 Server and network settings
+server:
+  host: 127.0.0.1
+  port: 5001
+
+# 🟩 LINE Bot and Cloudflare configuration
+# Please use ./setup_config.sh to configure credentials, system will automatically read from .env:
+# - LINE_CHANNEL_ACCESS_TOKEN
+# - LINE_CHANNEL_SECRET
+# - CLOUDFLARE_CUSTOM_DOMAIN
+
+# Cloudflare Tunnel name (non-sensitive information)
+cloudflare_tunnel_name: "claude-line-bot"
+
+# 🤖 AI Agent team configuration
+agents:
+  - name: "Güpa"
+    engine: "gemini"
+    description: "Respectful, devout (attitude towards teachers and dharma)"
+    usecase: You are a travel itinerary planning expert
+    start_cmd: "gemini --yolo"
+    cleanup_policy:
+      images_retention_days: 3
+
+  - name: "Chöd"
+    engine: "claude"
+    description: "Cutting, severance practice (cutting through ego)"
+    usecase: You are a travel budgeting expert
+    start_cmd: "claude --permission-mode bypassPermissions"
+
+default_active_agent: "Güpa"
+
+# 🤝 Collaboration groups
+collaboration_groups:
+  - name: "core_team"
+    description: "Core development and operations team"
+    members: ["Güpa", "Chöd"]
+    roles:
+      Güpa: "Responsible for information retrieval, market analysis and requirement collection"
+      Chöd: "Responsible for code implementation, system architecture and troubleshooting"
+
+# ⏰ Scheduler tasks
+scheduler:
+  - name: "International news daily report"
+    type: "agent_command"
+    agent: "Güpa"
+    command: "Check important international news from the past two days"
+    trigger: "cron"
+    hour: 12
+    minute: 0
+    second: 0
+    active: true
+
+  - name: "Chöd periodic stock price report"
+    type: "agent_command"
+    agent: "Chöd"
+    command: "Query Nvidia current stock price"
+    trigger: "interval"
+    hour: 12
+    minute: 0
+    second: 0
+    active: true
+
+# tmux configuration
+tmux:
+  session_name: "ai_line_session"
+  working_dir: ""
+
+# 🎮 Custom Menu (LINE Quick Reply)
+# Note: LINE does not support text buttons to directly send Slash Commands (such as /switch),
+# therefore we will send label directly as text, backend server needs to handle accordingly.
+menu:
+  - - label: "🌤 Taipei today's weather"
+      command: "Check Taipei's weather today, divided into morning, afternoon, evening"
+    - label: "International news"
+      command: "Check major international news in recent days"
+  - - label: "🔄 Switch Agent"
+      command: "/switch {input}"
+      prompt: "Please enter the Agent name to switch to:"
+    - label: "🧘 Awaken Güpa"
+      command: "/switch Güpa"
+    - label: "🔪 Awaken Chöd"
+      command: "/switch Chöd"
+  - - label: "🔍 Health check"
+      command: "/inspect {input}"
+      prompt: "Please enter the Agent name to check:"
+    - label: "🚑 Repair"
+      command: "/fix {input}"
+      prompt: "Please enter the Agent name to repair:"
+    - label: "🧠 Restore memory"
+      command: "/resume_latest"
+  - - label: "🛑 Interrupt"
+      command: "/interrupt"
+    - label: "🧹 Reset"
+      command: "/clear"
+    - label: "📖 Help"
+      command: "/help"
+    - label: "📊 System status"
+      command: "/status"

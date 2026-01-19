@@ -1,0 +1,116 @@
+# ==========================================
+# Chat Agent Matrix Configuration File (Telegram Edition)
+# ==========================================
+
+# 🌐 Server and network settings
+server:
+  host: 127.0.0.1
+  port: 5000
+
+# 🤖 AI Agent team configuration
+agents:
+  - name: "Güpa"
+    engine: "gemini"
+    description: "Respectful, devout (attitude towards teachers and dharma)"
+    usecase: You are a travel itinerary planning expert
+    start_cmd: "gemini --yolo"
+    cleanup_policy:
+      images_retention_days: 3
+
+  - name: "Chöd"
+    engine: "claude"
+    description: "Cutting, severance practice (cutting through ego)"
+    usecase: You are a travel budgeting expert
+    start_cmd: "claude --permission-mode bypassPermissions"
+
+# Default active Agent name on startup
+default_active_agent: "Güpa"
+
+# 🤝 Collaboration Groups (Collaboration Groups)
+# Group members automatically establish bidirectional full mesh symlinks
+collaboration_groups:
+  - name: "core_team"
+    description: "Collaborate to plan high-value travel itineraries"
+    members: ["Güpa", "Chöd"]
+    roles:
+      Güpa: "Responsible for planning travel itineraries according to user requirements and delivering itineraries to Chöd for budget estimation"
+      Chöd: "Responsible for budgeting all expenses in the itinerary, if individual costs exceed 50,000 TWD, submit budget report to Güpa for itinerary adjustment"
+
+# ⏰ Scheduler tasks (Scheduler)
+scheduler:
+  - name: "Daily system cleanup"
+    type: "system"
+    action: "cleanup_images"
+    trigger: "interval"
+    hour: 24
+    minute: 0
+    second: 0
+    active: true
+
+  - name: "International news daily report"
+    type: "agent_command"
+    agent: "Güpa"
+    command: "Check important international news from the past two days"
+    trigger: "cron"
+    hour: 12
+    minute: 0
+    second: 0
+    active: true
+
+  - name: "Chöd periodic stock price report"
+    type: "agent_command"
+    agent: "Chöd"
+    command: "Query Nvidia current stock price"
+    trigger: "interval"
+    hour: 12
+    minute: 0
+    second: 0
+    active: true
+
+# 🧹 Global default cleanup policy
+default_cleanup_policy:
+  images_retention_days: 7
+
+# 📱 Telegram API configuration
+telegram:
+  api_base_url: "https://api.telegram.org/bot"
+  webhook_path: "/telegram_webhook"
+
+# 🖼️ Multimodal image processing
+image_processing:
+  temp_dir_name: "images_temp"
+
+# tmux configuration
+tmux:
+  session_name: "ai_telegram_session"
+  working_dir: ""
+
+# 🎮 Custom Menu (Custom Menu)
+menu:
+  - - label: "🌤 Taipei today's weather"
+      command: "Check Taipei's weather today, divided into morning, afternoon, evening"
+    - label: "International news"
+      command: "Check major international news in recent days"
+  - - label: "🔄 Switch Agent"
+      command: "/switch {input}"
+      prompt: "Please enter the Agent name to switch to:"
+    - label: "🧘 Awaken Güpa"
+      command: "/switch Güpa"
+    - label: "🔪 Awaken Chöd"
+      command: "/switch Chöd"
+  - - label: "🔍 Health check"
+      command: "/inspect {input}"
+      prompt: "Please enter the Agent name to check:"
+    - label: "🚑 Repair"
+      command: "/fix {input}"
+      prompt: "Please enter the Agent name to repair:"
+    - label: "🧠 Restore memory"
+      command: "/resume_latest"
+  - - label: "🛑 Interrupt"
+      command: "/interrupt"
+    - label: "🧹 Reset"
+      command: "/clear"
+    - label: "📖 Help"
+      command: "/help"
+    - label: "📊 System status"
+      command: "/status"

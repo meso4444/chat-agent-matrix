@@ -1,0 +1,173 @@
+# LINE message templates
+# Claude Code reads templates from this file and fills in variables
+
+# ============================================
+# Basic templates
+# ============================================
+templates:
+
+  # Start deployment template
+  start:
+    icon: "🚀"
+    title: "Claude Code automated deployment started"
+    content: |
+      📦 Software: {software} {version}
+      ⏰ Start time: {timestamp}
+      🤖 Executor: Claude Code
+
+      Starting automated installation...
+
+  # Progress update template
+  progress:
+    icon: "⚙️"
+    title: "{software} Installation progress"
+    content: |
+      📋 Current step: {step}
+      📊 Progress: {progress}
+      ⏰ Time: {timestamp}
+
+      Installation in progress...
+
+  # Success completion template
+  success:
+    icon: "✅"
+    title: "{software} Installation complete!"
+    content: |
+      🎉 Status: Installation successful
+      ⏰ Completion time: {timestamp}
+      🤖 Executor: Claude Code
+
+      {details}
+
+      ✨ Deployment complete, service is ready!
+
+  # Error template
+  error:
+    icon: "❌"
+    title: "{software} Installation failed"
+    content: |
+      ⚠️ Error message: {error}
+      ⏰ Time: {timestamp}
+      🤖 Executor: Claude Code
+
+      Please check logs and retry installation.
+
+  # Custom template
+  custom:
+    icon: ""
+    title: "{title}"
+    content: |
+      {content}
+
+      ⏰ Time: {timestamp}
+      🤖 Claude Code
+
+# ============================================
+# Software-specific templates (optional)
+# ============================================
+software_templates:
+
+  docker:
+    success:
+      icon: "🐳"
+      title: "Docker container engine installation complete!"
+      content: |
+        🎉 Docker has been successfully installed and started
+
+        ✅ Completed items:
+        • Docker Engine - Installed and started
+        • Docker Daemon - Running normally
+        • System service - Set to autostart on boot
+
+        📊 Installation details:
+        {details}
+
+        🐳 Docker containerization environment is ready!
+
+        Next steps:
+        • Test docker run hello-world
+        • Install Docker Compose
+        • Deploy application containers
+
+  mysql:
+    success:
+      icon: "🗄️"
+      title: "MySQL database installation complete!"
+      content: |
+        🎉 MySQL has been successfully installed and started
+
+        ✅ Completed items:
+        • MySQL Server - Installed and started
+        • Database initialization - Complete
+        • System service - Set to autostart on boot
+        • Firewall - Port 3306 opened
+
+        📊 Installation details:
+        {details}
+
+        🗄️ MySQL database service is ready!
+
+        Next steps:
+        • Create application database
+        • Set user permissions
+        • Import initial data
+
+  hadoop:
+    success:
+      icon: "🐘"
+      title: "Hadoop big data platform installation complete!"
+      content: |
+        🎉 Apache Hadoop has been successfully deployed!
+
+        ✅ Completed items:
+        • Hadoop HDFS - Formatted and started
+        • YARN ResourceManager - Running normally
+        • DataNode & NodeManager - Started
+        • WebUI interface - Can be accessed normally
+
+        📊 Deployment details:
+        {details}
+
+        🐘 Hadoop distributed file system is ready!
+
+        Next steps:
+        • Test HDFS file operations
+        • Install Hive data warehouse
+        • Configure Ranger security management
+
+  nginx:
+    success:
+      icon: "🌐"
+      title: "NGINX web server installation complete!"
+      content: |
+        🎉 NGINX has been successfully installed and started
+
+        ✅ Completed items:
+        • NGINX Server - Installed and started
+        • Default site - Configuration complete
+        • System service - Set to autostart on boot
+        • Firewall - HTTP/HTTPS ports opened
+
+        📊 Installation details:
+        {details}
+
+        🌐 NGINX web server is ready!
+
+        Next steps:
+        • Configure virtual hosts
+        • Set up SSL certificates
+        • Deploy website content
+
+# ============================================
+# Variable explanations
+# ============================================
+# Available variables:
+# - {software}: Software name
+# - {version}: Software version
+# - {timestamp}: Timestamp
+# - {step}: Current step
+# - {progress}: Progress information
+# - {details}: Detailed content
+# - {error}: Error message
+# - {title}: Custom title
+# - {content}: Custom content

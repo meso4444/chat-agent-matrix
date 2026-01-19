@@ -1,0 +1,15 @@
+# Sensitive configuration files
+.env
+.webhook_secret
+webhook_secret.token
+.runtime_state
+
+# Runtime directories and files
+agent_home/
+images_temp/
+ngrok.log
+*.log
+
+# Python
+__pycache__/
+*.pyc
