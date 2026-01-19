@@ -1,0 +1,15 @@
+# 敏感設定檔
+.env
+.webhook_secret
+webhook_secret.token
+.runtime_state
+
+# 運行時目錄與檔案
+agent_home/
+images_temp/
+ngrok.log
+*.log
+
+# Python
+__pycache__/
+*.pyc
