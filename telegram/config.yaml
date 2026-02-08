@@ -2,43 +2,42 @@
 # Chat Agent Matrix Configuration File (Telegram Edition)
 # ==========================================
 
-# 🌐 Server and network settings
+# 🌐 Server and Network Configuration
 server:
   host: 127.0.0.1
   port: 5000
+  ngrok_api_port: 4040
 
-# 🤖 AI Agent team configuration
+# 🤖 AI Agent Configuration
 agents:
   - name: "Güpa"
     engine: "gemini"
-    description: "Respectful, devout (attitude towards teachers and dharma)"
+    description: "Reverent and devoted (attitude toward teachers and dharma)"
     usecase: You are a travel itinerary planning expert
-    start_cmd: "gemini --yolo"
     cleanup_policy:
       images_retention_days: 3
 
   - name: "Chöd"
     engine: "claude"
-    description: "Cutting, severance practice (cutting through ego)"
-    usecase: You are a travel budgeting expert
-    start_cmd: "claude --permission-mode bypassPermissions"
+    description: "Cutting and dedication practice (cutting through ego)"
+    usecase: You are a travel cost estimation expert
 
-# Default active Agent name on startup
+# Default active agent name on startup
 default_active_agent: "Güpa"
 
-# 🤝 Collaboration Groups (Collaboration Groups)
-# Group members automatically establish bidirectional full mesh symlinks
+# 🤝 Collaboration Groups
+# Members will automatically establish bidirectional interconnection (Full Mesh) via soft links
 collaboration_groups:
   - name: "core_team"
-    description: "Collaborate to plan high-value travel itineraries"
+    description: "Collaborate to plan cost-effective travel itineraries"
     members: ["Güpa", "Chöd"]
     roles:
-      Güpa: "Responsible for planning travel itineraries according to user requirements and delivering itineraries to Chöd for budget estimation"
-      Chöd: "Responsible for budgeting all expenses in the itinerary, if individual costs exceed 50,000 TWD, submit budget report to Güpa for itinerary adjustment"
+      Güpa: "Responsible for planning travel itineraries per user requests and delivering to Chöd for budget estimation"
+      Chöd: "Responsible for budgeting all expenses. If per-person cost exceeds 50,000 TWD, submit budget report to Güpa for adjustment"
 
-# ⏰ Scheduler tasks (Scheduler)
+# ⏰ Scheduled Tasks (Scheduler)
 scheduler:
-  - name: "Daily system cleanup"
+  - name: "Daily System Cleanup"
     type: "system"
     action: "cleanup_images"
     trigger: "interval"
@@ -47,64 +46,64 @@ scheduler:
     second: 0
     active: true
 
-  - name: "International news daily report"
+  - name: "International News Daily Report"
     type: "agent_command"
     agent: "Güpa"
-    command: "Check important international news from the past two days"
+    command: "Find important international news from the past two days"
     trigger: "cron"
     hour: 12
     minute: 0
     second: 0
     active: true
 
-  - name: "Chöd periodic stock price report"
+  - name: "Chöd Regular Stock Price Report"
     type: "agent_command"
     agent: "Chöd"
-    command: "Query Nvidia current stock price"
+    command: "Check current NVIDIA stock price"
     trigger: "interval"
     hour: 12
     minute: 0
     second: 0
     active: true
 
-# 🧹 Global default cleanup policy
+# 🧹 Global Default Cleanup Policy
 default_cleanup_policy:
   images_retention_days: 7
 
-# 📱 Telegram API configuration
+# 📱 Telegram API Configuration
 telegram:
   api_base_url: "https://api.telegram.org/bot"
   webhook_path: "/telegram_webhook"
 
-# 🖼️ Multimodal image processing
+# 🖼️ Multimodal Image Processing
 image_processing:
   temp_dir_name: "images_temp"
 
-# tmux configuration
+# tmux Configuration
 tmux:
   session_name: "ai_telegram_session"
   working_dir: ""
 
-# 🎮 Custom Menu (Custom Menu)
+# 🎮 Custom Menu
 menu:
-  - - label: "🌤 Taipei today's weather"
-      command: "Check Taipei's weather today, divided into morning, afternoon, evening"
-    - label: "International news"
-      command: "Check major international news in recent days"
+  - - label: "🌤 Taipei Today Weather"
+      command: "Check Taipei weather today, divided into morning, afternoon, and evening"
+    - label: "International News"
+      command: "Find major international news from recent days"
   - - label: "🔄 Switch Agent"
       command: "/switch {input}"
-      prompt: "Please enter the Agent name to switch to:"
-    - label: "🧘 Awaken Güpa"
+      prompt: "Enter agent name to switch to:"
+    - label: "🧘 Wake Güpa"
       command: "/switch Güpa"
-    - label: "🔪 Awaken Chöd"
+    - label: "🔪 Wake Chöd"
       command: "/switch Chöd"
-  - - label: "🔍 Health check"
+  - - label: "🔍 Health Check"
       command: "/inspect {input}"
-      prompt: "Please enter the Agent name to check:"
+      prompt: "Enter agent name to inspect:"
     - label: "🚑 Repair"
       command: "/fix {input}"
-      prompt: "Please enter the Agent name to repair:"
-    - label: "🧠 Restore memory"
+      prompt: "Enter agent name to repair:"
+    - label: "🧠 Restore Memory"
       command: "/resume_latest"
   - - label: "🛑 Interrupt"
       command: "/interrupt"
@@ -112,5 +111,5 @@ menu:
       command: "/clear"
     - label: "📖 Help"
       command: "/help"
-    - label: "📊 System status"
+    - label: "📊 System Status"
       command: "/status"

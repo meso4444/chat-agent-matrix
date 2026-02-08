@@ -1,0 +1,34 @@
+# Chat Agent Matrix - Docker 實例配置模板
+# 此文件由 setup_docker.sh 根據實例參數自動生成
+# 不應手動編輯 - 如需修改，請重新執行 setup_docker.sh
+
+services:
+  bot:
+    build:
+      context: ../
+      dockerfile: docker-deploy/Dockerfile
+      args:
+        BUILD_USER: {USER}
+    container_name: chat-agent-{INSTANCE_NAME}
+    restart: unless-stopped
+    user: "1000:1000"
+    environment:
+      - INSTANCE_NAME={INSTANCE_NAME}
+    volumes:
+      # Agent 主目錄（所有實例共享代碼）
+      - ../agent_home:/app/telegram/agent_home
+      # 用戶主目錄（認證隔離）
+      - ./container_home/{INSTANCE_NAME}:/home/{USER}
+      # 實例配置檔案
+      - ./.env.{INSTANCE_NAME}:/app/telegram/.env
+      - ./config.{INSTANCE_NAME}.yaml:/app/telegram/config.yaml
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    networks:
+      - telegram_net_{INSTANCE_NAME}
+
+networks:
+  telegram_net_{INSTANCE_NAME}:
+    driver: bridge
+    name: telegram_net_{INSTANCE_NAME}

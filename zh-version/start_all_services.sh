@@ -1,56 +1,56 @@
 #!/bin/bash
-# Start Telegram → AI Agent Network Remote Control System
+# 啟動 Telegram → AI Agent 軍團 遠端控制系統
 
 set -e
 
-# Resolve to absolute path
+# 解析為絕對路徑
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/config.py"
 ENV_FILE="$SCRIPT_DIR/.env"
 
 if [ ! -f "$CONFIG_FILE" ]; then
-    echo "❌ Configuration file not found: $CONFIG_FILE"
+    echo "❌ 配置文件不存在: $CONFIG_FILE"
     exit 1
 fi
 
-# Load environment variables
+# 載入環境變數
 if [ -f "$ENV_FILE" ]; then
     set -a
     source "$ENV_FILE"
     set +a
-    echo "🔐 Loaded .env"
+    echo "🔐 已載入 .env"
 else
-    echo "⚠️  Warning: .env file not found"
+    echo "⚠️  警告: .env 檔案不存在"
 fi
 
-# Read configuration
+# 讀取配置
 TMUX_SESSION_NAME=$(python3 -c "import sys; sys.path.append('$SCRIPT_DIR'); from config import TMUX_SESSION_NAME; print(TMUX_SESSION_NAME)")
 
-echo "🚀 Starting Chat Agent Matrix (Telegram Edition)"
+echo "🚀 啟動 Chat Agent Matrix (Telegram Edition)"
 echo "==========================================="
 
-# Generate dynamic Webhook Secret
+# 生成動態 Webhook Secret
 SECRET_FILE="$SCRIPT_DIR/webhook_secret.token"
 openssl rand -hex 32 > "$SECRET_FILE"
 export WEBHOOK_SECRET_TOKEN=$(cat "$SECRET_FILE")
 
-# Kill existing session
+# 終止現有 session
 if tmux has-session -t "$TMUX_SESSION_NAME" 2>/dev/null; then
-    echo "🔄 Killing existing session…"
+    echo "🔄 終止現有 session…"
     tmux kill-session -t "$TMUX_SESSION_NAME"
     sleep 1
 fi
 
-# Create main session
-echo "🧬 Creating tmux session '$TMUX_SESSION_NAME'…"
+# 建立主 session
+echo "🧬  建立 tmux session '$TMUX_SESSION_NAME'…"
 tmux new-session -d -s "$TMUX_SESSION_NAME" -n "init" -c "$SCRIPT_DIR"
 
-# 1. Initialize Agent environment
-echo "🧬 Initializing Agent ecosystem…"
+# 1. 初始化 Agent 環境
+echo "🧬  正在初始化 Agent 生態環境…"
 python3 "$SCRIPT_DIR/telegram_scripts/setup_agent_env.py"
 
-# 2. Dynamically start AI Agent network
-echo "🤖 Deploying AI Agent network…"
+# 2. 動態啟動 AI Agent 軍團
+echo "🤖 正在部署 AI Agent 軍團…"
 export SCRIPT_DIR
 export TMUX_SESSION_NAME
 
@@ -76,31 +76,31 @@ try:
     for i, agent in enumerate(AGENTS):
         name = agent['name']
         engine = agent['engine']
-        usecase = agent.get('usecase', 'No description')
+        usecase = agent.get('usecase', '無描述')
         home_path = os.path.join(script_dir, 'agent_home', name)
-
-        # Generate collaboration context
+        
+        # 產生協作脈絡
         collab_context_lines = []
         for grp in COLLABORATION_GROUPS:
             if name in grp.get('members', []):
-                collab_context_lines.append(f"- Belongs to team: {grp.get('name')} ({grp.get('description', '')})")
-                collab_context_lines.append("  Team member responsibilities:")
+                collab_context_lines.append(f"- 所屬團隊: {grp.get('name')} ({grp.get('description', '')})")
+                collab_context_lines.append("  團隊成員權責:")
                 roles = grp.get('roles', {})
                 for member, role in roles.items():
-                    marker = " (you)" if member == name else ""
+                    marker = " (你)" if member == name else ""
                     collab_context_lines.append(f"  * {member}{marker}: {role}")
                 collab_context_lines.append("")
+        
+        collab_context = "\n".join(collab_context_lines) if collab_context_lines else "無特定協作團隊配置。"
 
-        collab_context = "\n".join(collab_context_lines) if collab_context_lines else "No specific collaboration team configuration."
-
-        print(f"   ▸ Starting Agent: {name} ({engine})")
+        print(f"   ▸ 啟動 Agent: {name} ({engine})")
         
         if i == 0:
             subprocess.run(['tmux', 'rename-window', '-t', f'{session_name}:0', name], check=True)
         else:
             subprocess.run(['tmux', 'new-window', '-t', session_name, '-n', name], check=True)
 
-        # 🎯 Enter Agent working directory
+        # 🎯 進入 Agent 工作目錄
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', f'cd {home_path}'], check=True)
         time.sleep(1)
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
@@ -115,11 +115,11 @@ try:
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', cmd], check=True)
         time.sleep(1)
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
-
-        # Check if protocol file exists
+        
+        # 檢查規範是否存在
         target_rule_file = os.path.join(home_path, protocol_file)
         if not os.path.exists(target_rule_file):
-            print(f"     ✨ Triggering {name} self-construction of protocol file (waiting 10 seconds for startup)…")
+            print(f"     ✨ 觸發 {name} 自我建構規範文件中 (等待 10 秒啟動)…")
             
             protocol_path = os.path.join(script_dir, protocol_file)
             
@@ -148,41 +148,41 @@ try:
             os.remove(prompt_file)
 
 except Exception as e:
-    print(f"❌ Error occurred during deployment: {e}")
+    print(f"❌ 部署過程中發生錯誤: {e}")
     sys.exit(1)
 EOF
 
-echo "   ✅ All Agents ready"
+echo "   ✅ 所有 Agent 已就緒"
 
 # Window: Flask Telegram API
-echo "📱 Starting Telegram Webhook API…"
+echo "📱 啟動 Telegram Webhook API…"
 tmux new-window -t "$TMUX_SESSION_NAME" -n "telegram" -c "$SCRIPT_DIR"
 tmux send-keys -t "$TMUX_SESSION_NAME:telegram" "python3 $SCRIPT_DIR/telegram_webhook_server.py"
 sleep 1
 tmux send-keys -t "$TMUX_SESSION_NAME:telegram" Enter
 
-# Wait for Flask to start
+# 等待 Flask 啟動
 sleep 3
 
 # Window: ngrok Tunnel
-echo "☁️ Setting up secure tunnel (ngrok)…"
+echo "☁️  建立安全連線隧道 (ngrok)…"
 tmux new-window -t "$TMUX_SESSION_NAME" -n "ngrok" -c "$SCRIPT_DIR"
 tmux send-keys -t "$TMUX_SESSION_NAME:ngrok" "$SCRIPT_DIR/start_ngrok.sh"
 sleep 1
 tmux send-keys -t "$TMUX_SESSION_NAME:ngrok" Enter
 
-echo "⏳ Synchronizing network address and webhook…"
+echo "⏳ 正在同步網路位址與 Webhook…"
 sleep 5
 
-# Switch to first Agent window
+# 回到第一個 Agent window
 tmux select-window -t "$TMUX_SESSION_NAME:0"
 
 echo "==========================================="
-echo "🎉 Chat Agent Matrix v1.0.0 fully deployed!"
+echo "🎉 Chat Agent Matrix v1.0.0 已全員部署！"
 echo ""
-echo "📋 Deployment Summary:"
+echo "📋 運行摘要:"
 echo "   Session: $TMUX_SESSION_NAME"
-echo "   Started Agent windows:"
+echo "   已啟動 Agent 視窗:"
 tmux list-windows -t "$TMUX_SESSION_NAME" -F "      • Window #{window_index}: #{window_name}"
 echo ""
-echo "🚀 Attach to session: tmux attach -t $TMUX_SESSION_NAME"
+echo "🚀 連接 Session: tmux attach -t $TMUX_SESSION_NAME"
