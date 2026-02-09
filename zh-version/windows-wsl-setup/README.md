@@ -49,7 +49,21 @@
 1. 打開「開始」菜單
 2. 搜尋並打開 **Ubuntu** 應用
 3. 首次執行時會要求建立用戶名和密碼，請按照指示設定
-4. 設定完成後，在 Ubuntu 視窗中執行以下命令：
+
+#### 第五步：安裝 Git 工具
+
+設定完成後，在 Ubuntu 視窗中先安裝 Git：
+
+```bash
+sudo apt update
+sudo apt install git -y
+```
+
+系統會提示輸入您剛才設定的密碼，請輸入密碼並按 Enter（輸入時不會顯示密碼）。
+
+#### 第六步：克隆並安裝 Chat Agent Matrix
+
+Git 安裝完成後，執行以下命令：
 
 ```bash
 git clone https://github.com/meso4444/chat-agent-matrix.git
@@ -57,7 +71,7 @@ cd chat-agent-matrix/telegram
 ./install_dependencies.sh
 ```
 
-5. 按照安裝精靈的指示完成設定
+7. 按照安裝精靈的指示完成設定
 
 ## 故障排除
 
