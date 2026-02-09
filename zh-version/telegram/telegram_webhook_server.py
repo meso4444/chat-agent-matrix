@@ -23,6 +23,10 @@ from telegram_scripts.scheduler_manager import SchedulerManager
 
 app = Flask(__name__)
 
+# 🔧 支援長訊息: 增加 JSON 請求大小限制 (預設 16MB)
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB (支援超長訊息)
+app.config['JSON_MAX_SIZE'] = 50 * 1024 * 1024       # JSON 最大大小
+
 # 讀取動態 Webhook Secret
 try:
     SECRET_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'webhook_secret.token')
@@ -139,32 +143,48 @@ def check_agent_session(name):
         return False
 
 def send_to_ai_session(message, agent_name=None):
-    """發送訊息到指定的 Agent tmux window"""
+    """發送訊息到指定的 Agent tmux window (含特殊字符轉義支持)"""
     global CURRENT_AGENT
     target = agent_name or CURRENT_AGENT
-    
+
     try:
         if not check_agent_session(target):
             send_message(f"❌ Agent '{target}' 視窗不存在\n請檢查配置或執行: ./start_all_services.sh")
             return False
 
-        # 發送訊息到 tmux session 的指定 window
+        # 🔧 使用 -l (literal mode) 發送訊息，防止特殊字符被 shell 解釋
+        # 這解決了:
+        # - "!" 觸發 bash 歷史展開
+        # - "git" 觸發 Claude Code hook
+        # - "\n" 誤觸粘貼模式
         subprocess.run([
             'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target}',
+            '-l',       # ← 關鍵: 字面量模式，不執行 shell 解釋
             message
         ], check=True)
 
-        time.sleep(0.1)
+        # 延遲讓訊息完全進入輸入緩衝區
+        time.sleep(0.5)
 
-        # 發送 Enter 鍵
+        # 發送第一次 Enter 鍵
         subprocess.run([
             'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target}',
             'Enter'
         ], check=True)
 
-        print(f"📤 已發送到 Agent[{target}]: {message}")
+        # 🔒 雙重保險: 對 Claude 等需要粘貼模式確認的 Agent 再按一次 Enter
+        # 這確保長文本被正確發送
+        if target in ['Claude', 'Accelerator', 'Chöd']:  # Claude-based agents
+            time.sleep(0.2)
+            subprocess.run([
+                'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target}',
+                'Enter'
+            ], check=True)
+
+        msg_preview = message[:80] + ('...' if len(message) > 80 else '')
+        print(f"📤 已發送到 Agent[{target}] (模式: literal): {msg_preview}")
         return True
-        
+
     except Exception as e:
         print(f"❌ 發送到 Agent 失敗: {e}")
         send_message(f"❌ 系統錯誤: {str(e)}")
@@ -217,7 +237,10 @@ def telegram_webhook():
             # 1. 處理文字訊息
             if 'text' in message_data:
                 user_message = message_data['text']
-                print(f"📨 收到文字訊息: {user_message} (from: @{username})")
+                # 改進: 長訊息的日誌處理 (前 100 字符顯示，避免日誌爆炸)
+                msg_preview = user_message[:100] + ('...' if len(user_message) > 100 else '')
+                msg_length = len(user_message)
+                print(f"📨 收到文字訊息 (長度: {msg_length} chars): {msg_preview} (from: @{username})")
                 
             # 2. 處理圖片訊息
             elif 'photo' in message_data:
@@ -551,6 +574,11 @@ def api_status():
 if __name__ == '__main__':
     print(f"🚀 啟動 Chat Agent Matrix API (Multi-Agent Mode)...")
     print(f"📍 本地端點: http://{FLASK_HOST}:{FLASK_PORT}")
+    # === AACS: 物理寫入當前 Port 供啟動腳本讀取 === 
+    port_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".flask_port") 
+    with open(port_file, "w") as f: 
+        f.write(str(FLASK_PORT)) 
+
     print(f"🤖 預設 Agent: {DEFAULT_ACTIVE_AGENT}")
     print(f"👥 已配置 Agents: {', '.join([a['name'] for a in AGENTS])}")
     print("")
