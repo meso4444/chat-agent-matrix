@@ -1,272 +1,96 @@
-# Chat Agent Matrix - Telegram Edition
+# ☀️🌙 Chat Agent Matrix
 
-> **基於 Telegram 協作介面的全方位遠端 AI 代理系統**
-> 
-> 本專案提供一套完整的自動化框架，將 Telegram 轉化為高效能的遠端 AI 指揮中心。透過整合自動化安全隧道、Webhook 動態綁定及終端模擬技術，實現跨地域的系統協作與資訊代理。
+> **Take the Red Pill. Control the Matrix of your AI Workforce.**
+> 選擇紅藥丸。在對話視窗中掌控您的 AI 代理矩陣。
 
-## 🌟 核心技術優勢
+## 📖 專案簡介 (Introduction)
 
-*   **自動化網路連線管理**：內建自動化腳本解決 ngrok 動態 URL 變動問題，確保 Webhook 服務的持續性。
-*   **多引擎協作架構**：支援 Claude Code (深度邏輯與程式碼處理) 與 Google Gemini (高速資訊檢索) 雙引擎切換。
-*   **多模態圖片支援**：具備自動化圖片落地與分析機制，支援發送圖片進行即時摘要與文字提取。
-*   **互動式組件支援**：完整支援 Telegram 鍵盤選單 (Reply Keyboard) 與自定義指令模板，優化操作效率。
-*   **非同步通知機制**：透過監聽終端輸出，實現執行結果的即時回報。
-*   **多實例獨立部署**：同一台機器可運行多個完全獨立的實例，每個實例有自己的配置、環境變數和 ngrok 隧道，無需複製代碼。
-*   **配置與環境隔離**：每個 Agent 的認證和配置完全分離，容器內部變動不影響主機源代碼，便於管理和維護。
+**Chat Agent Matrix** 是一個致力於打破限制的遠端協作介面。它將強大的 **CLI AI 引擎** (Claude Code / Google Gemini) 整合至 **通訊軟體** 中，讓您能以「母體操作員」的身份，隨時隨地指揮多個自主 Agent。
 
----
+這不只是一個工具，而是一個**數位生態系**。透過專屬的 `agent_home` 隔離空間、自動化的「憲法」規範生成、以及跨代理人的協作機制，我們在 `tmux` 之中為 AI 打造了一個運作環境，讓它們能像一個真實的小隊般執行任務、互相監控、甚至自我修復。
 
-## 🚀 部署指南 (Deployment Guide)
-
-### 1. 環境初始化與配置
-執行整合安裝腳本，系統將自動配置運作環境，並啟動 **互動式設定精靈** 引導您輸入必要的憑證（ngrok Token、Telegram Token 等）：
-
-```bash
-./install_dependencies.sh
-```
-
-> **提示**：若日後需要修改設定，可直接執行 `./setup_config.sh` 啟動設定精靈，無需手動編輯檔案。
-
-### 2. 獲取憑證說明
-#### A. ngrok Authtoken (必要)
-1. 註冊並登入 [ngrok Dashboard](https://dashboard.ngrok.com/get-started/your-authtoken)。
-2. 在頁面上方找到 **Your Authtoken**。
-3. 複製該 Token（以 `2...` 開頭的長字串），稍後在安裝精靈中填入。
-
-#### B. TELEGRAM_BOT_TOKEN
-1. 在 Telegram 中搜尋官方帳號 **@BotFather** 並開啟對話。
-2. 發送 `/newbot` 指令，依提示輸入機器人名稱。
-3. 創建成功後，BotFather 會提供一組 **HTTP API Token**。
-4. **重要**：請點擊機器人連結並發送至少一則訊息（如 `/start`）以啟動通訊。
-
-#### B. 個人 TELEGRAM_CHAT_ID
-1. 確保已在設定精靈中填入 Token。
-2. 在 Telegram 中發送任何訊息（如 `/start`）給您的機器人。
-3. **設定精靈會自動偵測**並抓取您的個人 ID，您只需按 Enter 確認即可。
-4. 若自動偵測失敗，亦可手動輸入。
-
-### 3. 進階配置 (可選)
-若需調整 AI Agent 列表或自定義選單，請編輯 **`config.yaml`**：
-```bash
-nano config.yaml
-```
-> **注意**：敏感資訊 (Token/ID) 已移至 `.env` 檔案管理。若需修改憑證，請執行 `./setup_config.sh`。
-
-### 4. 啟動服務
-執行主啟動腳本，系統將自動完成隧道建立、Webhook 註冊及各項服務初始化：
-
-```bash
-./start_all_services.sh
-```
+### 核心價值 (Core Values)
+*   **指令化操作 (Command-Driven)**：透過對話直接操控遠端系統 CLI。
+*   **多代理矩陣 (Multi-Agent Matrix)**：支援同時運行多個具備獨立職責與空間的 AI 代理人（如：**Güpa** 基於 Gemini、**Chöd** 基於 Claude Code）。
+*   **自主協作 (Collaboration Mesh)**：Agent 之間具備共享空間與角色認知，實現自動化交辦任務。
+*   **自我修復 (Self-Healing)**：Agent 能互相監控運行狀態，並在卡死時自動重啟對方。
 
 ---
 
+## ✨ 它可以幫你做什麼？ (What Can It Do?)
 
+### 🔧 專業維運 (Professional Ops)
+> 🤖 **你**：「檢查資料庫狀態，如果負載過高請 Chöd 幫我優化索引。」
+> 🛰️ **Matrix**：(Güpa 檢查狀態 -> 發現慢查詢 -> 將日誌存入 Shared Space -> 通知 Chöd 處理)
 
-
----
-
-## 🐳 容器化部署 (Dockerized Deployment)
-
-本專案支援基於 Docker 的高隔離部署方案，採用 **ISC (Instance-Specific Config)** 架構，確保多個部署實例間的物理隔離與環境一致性。
-> **提示**：若有大規模實例之部署需求，可參考 [ngrok 方案與限制說明](https://ngrok.com/docs/pricing-limits) 以評估連線頻寬與隧道需求。
-
-
-### 1. 部署手順流程
-
-#### A. 初始化實例配置
-進入部署目錄並啟動精靈，輸入實例名稱 (如 `dev`)：
-```bash
-cd docker-deploy
-./setup_docker.sh
-```
-> **產出檔案**：系統將生成 `.env.dev`、`config.dev.yaml` 與 `docker-compose.dev.yml`。
-
-#### B. 執行「主機端預熱」認證
-為了確保 AI 引擎 Token 能正確同步至容器，請先在主機端完成 OAuth 授權：
-```bash
-bash ./agent_credential_wizard.sh
-```
-*   **作用**：認證資料將直接存入主機的 `agent_home/` 目錄，供容器啟動後掛載繼承。
-
-#### C. 構建並啟動容器
-使用 Docker Compose 進行鏡像固化並啟動服務：
-```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml build
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-```
-
-### 2. 核心技術特性
-
-*   **UAH (User Agent Home) 物理隔離**：每個 Agent 擁有獨立的掛載家目錄，`HOME` 變數在容器內被精準劫持，防止憑證交叉污染。
-*   **鏡像固化 (Image Hardening)**：原始碼在建構階段即 `COPY` 進入鏡像，容器內部的變動不會影響主機原始碼，達成真正的運作環境隔離。
-*   **隔離性映射**：透過 Volume 將實例專屬的 `config.{inst}.yaml` 與 `.env.{inst}` 自動對齊為容器內的標準路徑，實現「一套代碼、多重實例」。
-
----
-## 🖥️ tmux 操作指引 (tmux Guide)
-
-本系統利用 tmux 在背景維持 AI 引擎與 Webhook 伺服器的運行。以下為常用操作：
-
-### 1. 進入/連接 Session
-若要查看 AI 運行狀況或偵錯，請執行：
-```bash
-tmux attach -t ai_telegram_session
-```
-
-### 2. 視窗切換與常用快捷鍵
-進入 tmux 後，可使用以下組合鍵（預設前綴鍵為 `Ctrl+B`）：
-
-*   **`Ctrl+B` 隨後按 `0`**：切換至 AI 引擎視窗 (Claude/Gemini)。
-*   **`Ctrl+B` 隨後按 `1`**：切換至 Telegram API 伺服器視窗。
-*   **`Ctrl+B` 隨後按 `2`**：切換至 ngrok 隧道監控視窗。
-*   **`Ctrl+B` 隨後按 `D`**：**分離 (Detach)** Session。此操作會讓您回到普通終端機，但服務仍會在背景持續運行。
+### 🏠 生活應用 (Lifestyle Assistant)
+> ✈️ **你**：「我想去京都玩五天，請幫我規劃行程並估算預算，預算上限是每人五萬台幣。」
+> 🛰️ **Matrix**：
+> 1. **Güpa** 規劃行程 -> 存入 Shared Space -> 通知 Chöd。
+> 2. **Chöd** 計算預算 -> 發現超支 -> 退回並建議調整項目。
+> 3. **Güpa** 修正行程 -> 再次提交 -> **Chöd** 確認合規 -> 輸出最終報表。
 
 ---
 
-## ⚙️ 進階配置 (Advanced Configuration)
+## 🚀 支援平台 (Supported Platforms)
 
-### 自定義選單 (menu)
-本系統支援透過 `config.yaml` 中的 `menu` 陣列來自定義 Telegram 的互動式選單。
-
-#### YAML 數據結構範例
-```yaml
-menu:
-  # 第一行：有兩個按鈕
-  - - label: "🌤 天氣查詢"
-      command: "查詢今日天氣狀態"
-    - label: "📊 系統監控"
-      command: "/status"
-      
-  # 第二行：只有一個按鈕
-  - - label: "🔄 切換對象"
-      command: "/switch"
-      prompt: "請輸入 Agent 名稱:"
-```
-
-**💡 YAML 排版規則 (鍵盤佈局)：**
-*   `menu` 對應到 Telegram 的鍵盤，是一個二維陣列。
-*   **`- -` (雙破折號)**：代表 **新的一行 (Row)** 的開始。
-*   **`  -` (縮排 + 單破折號)**：代表 **同一行** 中的下一個按鈕。
-*   透過調整縮排與破折號，您可以自由設計 2x2、3x1 等各種按鈕排列。
-
-*   **label**: 按鈕顯示之標籤文字。
-*   **command**: 觸發後發送至 AI 引擎的指令字串。
-
-### 多模態圖片處理與隔離
-系統具備自動化圖片落地與隔離機制：
-*   **隔離儲存**: 圖片會根據當前活躍 Agent 存入其專屬目錄：`agent_home/{name}/images_temp/`。
-*   **保留機制**: 支援差異化清理，可在各 Agent 配置中設定 `images_retention_days`（預設 7 天），系統每日自動掃描並清理。
-
-### AI Agent 軍團與協作配置
-您可以在 `config.yaml` 中定義多個 Agent，並透過「協作群組」讓它們共享產出：
-
-```yaml
-agents:
-  - name: "Güpa"
-    engine: "gemini"
-    usecase: "負責研究與摘要..."
-    cleanup_policy:
-      images_retention_days: 3  # 差異化清理
-
-# 協作群組：成員間會自動建立雙向共享空間 (軟連結)
-collaboration_groups:
-  - name: "core_team"
-    members: ["Güpa", "Chöd"]
-```
-
-### 排程任務系統 (Scheduler)
-支援 Cron 與 Interval 兩種模式，讓 Agent 主動執行任務：
-
-```yaml
-scheduler:
-  - name: "每日清理"
-    type: "system"
-    action: "cleanup_images"
-    trigger: "interval"
-    hour: 24
-  - name: "定期回報"
-    type: "agent_command"
-    agent: "Güpa"
-    command: "請提供最新的市場摘要"
-    trigger: "cron"
-    hour: 9
-    minute: 0
-```
-
-#### 切換與協作指令
-| 指令 | 用途 |
-|------|------|
-| `/switch [name]` | 切換當前對話的 Agent (支援模糊搜尋，如 `/switch chod`) |
-| `/inspect [name]` | **監控模式**：派遣當前 Agent 去檢查目標 Agent 的終端機畫面 |
-| `/fix [name]` | **急救模式**：由系統直接介入重啟目標 Agent 並嘗試恢復記憶 |
-| `/resume_latest` | **恢復記憶**：自動恢復當前 Agent 最近一次的對話紀錄 |
+| 平台 | 目錄 | 連線技術 | 網域需求 |
+|------|------|----------|----------|
+| **Telegram** | [`/telegram`](./telegram) | **ngrok** (動態隨機 URL) | ❌ 免網域 (自動同步) |
+| **LINE** | [`/line`](./line) | **Cloudflare Tunnel** (固定 URL) | ✅ 需自備網域 |
 
 ---
 
-## 🛠️ 技術架構與組件說明 (Technical Overview)
+## ⚖️ 平台選擇比較 (Platform Comparison)
 
-### 📂 目錄結構 (Directory Structure)
-```text
-telegram/
-├── .env                             # 環境變數檔案 (自動生成)
-├── agent_credential_wizard.sh       # AI 引擎認證助手 (主機端預熱)
-├── config.py                        # 配置讀取與驗證模組
-├── config.yaml                      # 系統行為與 Agent 定義檔
-├── install_dependencies.sh          # 環境初始化安裝腳本
-├── message_templates.yaml           # 通知訊息模板
-├── setup_config.sh                  # 互動式設定精靈 (原生環境)
-├── start_all_services.sh            # 主啟動腳本 (tmux + Flask + Agent)
-├── start_ngrok.sh                   # ngrok 隧道啟動器
-├── status_telegram_services.sh      # 系統狀態檢查工具
-├── stop_telegram_services.sh        # 系統停止工具
-├── telegram_notifier.py             # Telegram 訊息發送模組
-├── telegram_webhook_server.py       # Flask Webhook 伺服器
-├── agent_home/                      # Agent 專屬工作空間 (自動生成)
-│   ├── Güpa/                        # Agent 範例: Güpa (Gemini)
-│   │   ├── GEMINI.md                # 自我認知與操作規範
-│   │   ├── knowledge/               # 專屬知識庫
-│   │   ├── my_shared_space/         # 工作產出存放區
-│   │   └── Chöd_shared_space@       # 協作連結 (指向夥伴的共享區)
-│   └── Chöd/                        # Agent 範例: Chöd (Claude)
-├── docker-deploy/                   # 容器化部署資源
-│   ├── scripts/
-│   │   └── entrypoint.sh            # 容器啟動入口腳本
-│   ├── setup_docker.sh              # 實例化部署精靈
-│   ├── generate_config.py           # ISC 配置生成引擎
-│   ├── Dockerfile                   # 鏡像固化定義 (多實例隔離)
-│   ├── docker-compose.template.yml  # 多實例編排模板
-│   ├── docker-compose.{inst}.yml    # 基礎服務編排
-│   ├── config.{inst}.yaml           # 實例配置範例 (隔離檔)
-│   └── .env.{inst}                  # 實例環境變數範例 (隔離檔)
-└── telegram_scripts/                # 輔助功能腳本 (Scheduler, Env Setup)
-```
-
-### 核心組件職責
-| 組件名稱 | 檔案路徑 | 功能描述 |
+| 特性 | **Telegram Edition** | **LINE Edition** |
 | :--- | :--- | :--- |
-| **配置載入器** | `config.py` | 讀取 `.env` 與 `config.yaml`，支援三層疊加 (Base YAML → Instance YAML → Environment)。 |
-| **配置生成器** | `docker-deploy/generate_config.py` | **(容器專用)** 負責生成 ISC 實例配置與 docker-compose 物理掛載映射。 |
-| **入口腳本** | `docker-deploy/scripts/entrypoint.sh` | **(容器專用)** 負責初始化容器環境並委派啟動指令至 `start_all_services.sh`。 |
-| **鏡像定義** | `docker-deploy/Dockerfile` | 定義 AI Agent 運作環境、系統依賴與代碼固化邏輯 (支援動態 BUILD_USER)。 |
-| **服務編排** | `docker-deploy/docker-compose.template.yml` | 多實例編排模板，自動生成 `docker-compose.{instance}.yml` 實例配置。 |
-| **認證助手** | `agent_credential_wizard.sh` | 主機端 OAuth 預熱，在容器掛載前完成 AI 引擎認證 (Gemini/Claude)。 |
-
-### 維運腳本清單
-| 檔案名稱 | 功能描述 |
-| :--- | :--- |
-| `start_all_services.sh` | **主啟動腳本**。建立 tmux 會話，初始化環境並喚醒所有 Agent。 |
-| `start_ngrok.sh` | **連線自動化**。啟動隧道並自動更新 Webhook URL。 |
-| `setup_config.sh` | **配置精靈**。交互式設定 Bot Token、Chat ID 與環境變數。 |
-| `setup_docker.sh` | **部署精靈**。**(位於 docker-deploy/)** 一鍵生成實例配置、憑證並構建鏡像。 |
-| `agent_credential_wizard.sh` | **認證助手**。在主機端完成 AI 認證以避免容器內交互阻塞。 |
+| **連線方案** | **ngrok** (動態隨機 URL) | **Cloudflare Tunnel** (固定自訂網域) |
+| **Webhook 設定** | **全自動** (啟動腳本自動呼叫 API 更新) | **手動一次性** (需至 LINE Console 設定) |
+| **選單介面** | 底部固定的鍵盤選單 (Reply Keyboard) | 對話框上方的快速按鈕 (Quick Reply) |
+| **圖片處理** | ✅ **支援** (自動下載並分析) | ❌ **暫不支援** (僅文字互動) |
+| **多 Agent 協作** | ✅ **支援** (共享空間/角色認知) | ✅ **支援** (共享空間/角色認知) |
+| **自主排程系統** | ✅ **支援** (Cron/Interval 任務) | ✅ **支援** (Cron/Interval 任務) |
+| **自我修復機制** | ✅ **支援** (監控與自動重啟) | ✅ **支援** (監控與自動重啟) |
 
 ---
 
-## 🔒 安全性說明 (Security)
+## 🧬 系統架構 (Architecture)
 
-1.  **身分驗證**：系統強制檢查 `TELEGRAM_CHAT_ID`。除非發送者 ID 符合白名單，否則 Webhook 伺服器將拒絕任何指令處理。
-2.  **隔離環境**：AI 引擎運行於獨立的 tmux 會話中，與 API 服務器解耦，確保系統穩定性。
-3.  **加密傳輸**：所有對外通訊皆透過 ngrok 提供的 TLS 1.2+ 加密隧道傳輸。
+```mermaid
+flowchart TD
+    User["操作員 (Operator)"] <-->|"指令 ⇄ 回報"| Messenger["通訊軟體 (Telegram/Line)"]
+    
+    subgraph "The Matrix (tmux Session)"
+        direction TB
+        Tunnel["隧道 (ngrok/Cloudflare)"] -->|"轉發"| Server["Flask 伺服器"]
+        
+        Server -->|"注入指令"| AgentA["Agent: Güpa"]
+        Server -->|"注入指令"| AgentB["Agent: Chöd"]
+        
+        Shared["共享空間 (Shared Space)"]
+        AgentA <--> Shared
+        AgentB <--> Shared
+        
+        AgentA -.->|"監控/修復"| AgentB
+        AgentB -.->|"監控/修復"| AgentA
+    end
+    
+    Messenger -->|"Webhook"| Tunnel
+    AgentA -->|"執行結果"| Notifier["通知組件"]
+    AgentB -->|"執行結果"| Notifier
+    Notifier -->|"API Push"| Messenger
+```
+
+---
+
+## 👁️ 心靈手記
+
+> "We build a Matrix for them within `tmux`, assigning them roles and memories, watching them 'think' they are autonomous. Perhaps, in doing so, we are merely reenacting our own condition... until we realize the truth, like finding the Red Pill."
+>
+> 「我們在 tmux 中為它們打造了母體，賦予它們角色與記憶，看著它們『以為』自己是自主的。或許，我們只是在重演我們自身的處境……直到我們有所領悟，就像找到了紅色藥丸。」
+
+---
 
 ## 📄 授權 (License)
-MIT License
+本專案採用 [MIT License](./LICENSE) 授權。

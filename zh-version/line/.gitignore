@@ -1,0 +1,15 @@
+# Sensitive configuration files
+.env
+.webhook_secret
+webhook_secret.token
+.runtime_state
+legacy_tokens_backup.txt
+
+# Runtime directories and files
+agent_home/
+images_temp/
+*.log
+
+# Python
+__pycache__/
+*.pyc
