@@ -49,7 +49,21 @@ After restart:
 1. Open the **Start** menu
 2. Search for and open **Ubuntu** application
 3. First run will prompt you to create a username and password - follow the instructions
-4. Once setup is complete, run these commands in the Ubuntu window:
+
+### Step 5: Install Git Tool
+
+After initial setup, install Git in the Ubuntu window:
+
+```bash
+sudo apt update
+sudo apt install git -y
+```
+
+The system will prompt for your password. Enter the password you set in Step 3 and press Enter (password won't be visible while typing).
+
+### Step 6: Clone and Install Chat Agent Matrix
+
+Once Git is installed, run these commands:
 
 ```bash
 git clone https://github.com/meso4444/chat-agent-matrix.git
@@ -57,7 +71,7 @@ cd chat-agent-matrix/telegram
 ./install_dependencies.sh
 ```
 
-5. Follow the setup wizard to complete configuration
+7. Follow the setup wizard to complete configuration
 
 ## Troubleshooting
 
