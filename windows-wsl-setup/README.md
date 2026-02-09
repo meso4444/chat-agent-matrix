@@ -63,11 +63,23 @@ The system will prompt for your password. Enter the password you set in Step 3 a
 
 ### Step 6: Clone and Install Chat Agent Matrix
 
-Once Git is installed, run these commands:
+Once Git is installed, clone the repository:
 
 ```bash
 git clone https://github.com/meso4444/chat-agent-matrix.git
+```
+
+Then choose which chat platform you want to install:
+
+**For Telegram Bot:**
+```bash
 cd chat-agent-matrix/telegram
+./install_dependencies.sh
+```
+
+**For Line Bot:**
+```bash
+cd chat-agent-matrix/line
 ./install_dependencies.sh
 ```
 
