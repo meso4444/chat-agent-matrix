@@ -63,11 +63,23 @@ sudo apt install git -y
 
 #### 第六步：克隆並安裝 Chat Agent Matrix
 
-Git 安裝完成後，執行以下命令：
+Git 安裝完成後，執行以下命令克隆倉庫：
 
 ```bash
 git clone https://github.com/meso4444/chat-agent-matrix.git
+```
+
+然後選擇要安裝的聊天機器人平台：
+
+**如果要使用 Telegram Bot：**
+```bash
 cd chat-agent-matrix/telegram
+./install_dependencies.sh
+```
+
+**如果要使用 Line Bot：**
+```bash
+cd chat-agent-matrix/line
 ./install_dependencies.sh
 ```
 
