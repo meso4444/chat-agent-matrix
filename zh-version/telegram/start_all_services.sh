@@ -25,7 +25,6 @@ fi
 
 # 讀取配置
 TMUX_SESSION_NAME=$(python3 -c "import sys; sys.path.append('$SCRIPT_DIR'); from config import TMUX_SESSION_NAME; print(TMUX_SESSION_NAME)")
-FLASK_PORT=$(python3 -c "import sys; sys.path.append('$SCRIPT_DIR'); from config import FLASK_PORT; print(FLASK_PORT)")
 
 echo "🚀 啟動 Chat Agent Matrix (Telegram Edition)"
 echo "==========================================="
@@ -99,18 +98,23 @@ try:
         if i == 0:
             subprocess.run(['tmux', 'rename-window', '-t', f'{session_name}:0', name], check=True)
         else:
-            subprocess.run(['tmux', 'new-window', '-t', session_name, '-n', name, '-c', home_path], check=True)
-        
-        subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', f'cd {home_path}', 'Enter'], check=True)
-        
+            subprocess.run(['tmux', 'new-window', '-t', session_name, '-n', name], check=True)
+
+        # 🎯 進入 Agent 工作目錄
+        subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', f'cd {home_path}'], check=True)
+        time.sleep(1)
+        subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
+
         if engine == 'gemini':
             cmd = 'gemini --yolo'
             protocol_file = 'GEMINI.md'
         else:
             cmd = 'claude --permission-mode bypassPermissions'
             protocol_file = 'CLAUDE.md'
-            
-        subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', cmd, 'Enter'], check=True)
+
+        subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', cmd], check=True)
+        time.sleep(1)
+        subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
         
         # 檢查規範是否存在
         target_rule_file = os.path.join(home_path, protocol_file)
@@ -153,7 +157,9 @@ echo "   ✅ 所有 Agent 已就緒"
 # Window: Flask Telegram API
 echo "📱 啟動 Telegram Webhook API…"
 tmux new-window -t "$TMUX_SESSION_NAME" -n "telegram" -c "$SCRIPT_DIR"
-tmux send-keys -t "$TMUX_SESSION_NAME:telegram" "python3 $SCRIPT_DIR/telegram_webhook_server.py" Enter
+tmux send-keys -t "$TMUX_SESSION_NAME:telegram" "python3 $SCRIPT_DIR/telegram_webhook_server.py"
+sleep 1
+tmux send-keys -t "$TMUX_SESSION_NAME:telegram" Enter
 
 # 等待 Flask 啟動
 sleep 3
@@ -161,7 +167,9 @@ sleep 3
 # Window: ngrok Tunnel
 echo "☁️  建立安全連線隧道 (ngrok)…"
 tmux new-window -t "$TMUX_SESSION_NAME" -n "ngrok" -c "$SCRIPT_DIR"
-tmux send-keys -t "$TMUX_SESSION_NAME:ngrok" "$SCRIPT_DIR/start_ngrok.sh" Enter
+tmux send-keys -t "$TMUX_SESSION_NAME:ngrok" "$SCRIPT_DIR/start_ngrok.sh"
+sleep 1
+tmux send-keys -t "$TMUX_SESSION_NAME:ngrok" Enter
 
 echo "⏳ 正在同步網路位址與 Webhook…"
 sleep 5

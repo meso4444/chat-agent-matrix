@@ -6,6 +6,7 @@
 server:
   host: 127.0.0.1
   port: 5000
+  ngrok_api_port: 4040
 
 # 🤖 AI Agent 軍團配置
 agents:
@@ -13,7 +14,6 @@ agents:
     engine: "gemini"
     description: "恭敬、虔誠（對上師、佛法的態度）"
     usecase: 你是一個旅遊行程規劃專家
-    start_cmd: "gemini --yolo"
     cleanup_policy:
       images_retention_days: 3
 
@@ -21,7 +21,6 @@ agents:
     engine: "claude"
     description: "斷、施身法（切斷我執）"
     usecase: 你是一個旅遊估價專家
-    start_cmd: "claude --permission-mode bypassPermissions"
 
 # 預設啟動時活躍的 Agent 名稱
 default_active_agent: "Güpa"

@@ -1,77 +1,95 @@
-# config.py - 配置載入器
-# 負責讀取 config.yaml 與環境變數，並提供給應用程式使用
-
+# config.py - Configuration Loader (ISC - Instance-Specific Config)
+# 支援三層疊加：Base YAML -> Instance YAML -> Environment
 import os
 import sys
 import yaml
+import json
+from copy import deepcopy
 
-# 獲取當前腳本所在目錄
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(BASE_DIR, 'config.yaml')
 
-# 手動載入 .env (確保在 systemd/tmux 環境下能讀取)
-ENV_PATH = os.path.join(BASE_DIR, '.env')
-if os.path.exists(ENV_PATH):
+# ==========================================
+# 第一層: 載入 .env (通用)
+# ==========================================
+def _load_env_file(env_path):
+    """載入 .env 檔案到環境變數 (不覆蓋已存在的)"""
+    if not os.path.exists(env_path):
+        return
     try:
-        with open(ENV_PATH, 'r', encoding='utf-8') as f:
+        with open(env_path, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith('#') and '=' in line:
                     key, value = line.split('=', 1)
-                    # 只有在環境變數不存在時才寫入 (避免覆蓋已存在的)
                     if key not in os.environ:
-                        os.environ[key] = value.strip('"\'') # 去除可能引號
+                        os.environ[key] = value.strip('"\'')
     except Exception as e:
-        sys.stderr.write(f"⚠️  無法讀取 .env: {e}\n")
+        sys.stderr.write(f"⚠️  無法讀取 {env_path}: {e}\n")
 
-# 載入 YAML 配置
-try:
-    with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
-        _config = yaml.safe_load(f)
-except FileNotFoundError:
-    print(f"❌ 錯誤: 找不到設定檔 {CONFIG_PATH}")
-    print("💡 請確保 config.yaml 存在於正確位置")
-    sys.exit(1)
-except yaml.YAMLError as e:
-    print(f"❌ 錯誤: config.yaml 格式有誤: {e}")
-    sys.exit(1)
+# 載入通用 .env
+_load_env_file(os.path.join(BASE_DIR, '.env'))
 
 # ==========================================
-# 變數導出 (保持與舊版相容的介面)
+# 第二層: 載入 Instance 專屬 .env (如果有)
 # ==========================================
+INSTANCE_NAME = os.environ.get('INSTANCE_NAME', '')
+if INSTANCE_NAME:
+    _instance_env_path = os.path.join(BASE_DIR, f'.env.{INSTANCE_NAME}')
+    _load_env_file(_instance_env_path)
+    # 也檢查 docker-deploy 目錄
+    _docker_env_path = os.path.join(BASE_DIR, 'docker-deploy', '.env')
+    _load_env_file(_docker_env_path)
 
-# 敏感資訊 (從環境變數讀取)
+# 3. 載入 YAML 配置 (ISC: Instance-Specific Config)
+CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
+INSTANCE_CONFIG_PATH = os.path.join(BASE_DIR, f"config.{INSTANCE_NAME}.yaml")
+
+def load_yaml(path):
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f)
+    return {}
+
+def _deep_merge(base, override):
+    """遞迴合併字典，支援巢狀配置"""
+    result = deepcopy(base)
+    for key, value in override.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge(result[key], value)
+        else:
+            result[key] = deepcopy(value)
+    return result
+
+_config = load_yaml(CONFIG_PATH)
+_instance_config = load_yaml(INSTANCE_CONFIG_PATH)
+
+# 合併配置 (實例配置優先，支援遞迴深層合併)
+if _instance_config:
+    _config = _deep_merge(_config, _instance_config)
+
+# 4. 變數映射與環境變數覆蓋
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
-# 伺服器設定
-FLASK_HOST = _config['server']['host']
-FLASK_PORT = _config['server']['port']
+_registry_str = os.environ.get("BOT_REGISTRY", "{}")
+try:
+    BOT_REGISTRY = json.loads(_registry_str)
+except Exception:
+    BOT_REGISTRY = {}
 
-# AI Agent 設定
-AGENTS = _config['agents']
-DEFAULT_ACTIVE_AGENT = _config['default_active_agent']
+FLASK_HOST = os.environ.get("FLASK_HOST", _config.get("server", {}).get("host", "127.0.0.1"))
+# 【Port 配置統一化】Port 從 config.yaml 讀取，環境變量保留作緊急覆蓋用
+FLASK_PORT = int(os.environ.get("FLASK_PORT", _config.get("server", {}).get("port", 5000)))
+NGROK_API_PORT = int(os.environ.get("NGROK_API_PORT", _config.get("server", {}).get("ngrok_api_port", 4040)))
 
-# tmux 設定
-TMUX_SESSION_NAME = _config['tmux']['session_name']
-TMUX_WORKING_DIR = _config['tmux']['working_dir']
-
-# Telegram API 設定
-TELEGRAM_API_BASE_URL = _config['telegram']['api_base_url']
-TELEGRAM_WEBHOOK_PATH = _config['telegram']['webhook_path']
-
-# 圖片處理設定
-DEFAULT_CLEANUP_POLICY = _config.get('default_cleanup_policy', {'images_retention_days': 7})
-TEMP_IMAGE_DIR_NAME = _config['image_processing'].get('temp_dir_name', 'images_temp')
-
-# 自定義選單
-CUSTOM_MENU = _config['menu']
-
-# 排程任務
-SCHEDULER_CONF = _config.get('scheduler', [])
-
-# 協作群組
-COLLABORATION_GROUPS = _config.get('collaboration_groups', [])
-
-# 除錯訊息
-# print(f"✅ 已載入配置 (Agents: {len(AGENTS)}, Menu Rows: {len(CUSTOM_MENU)})")
+AGENTS = _config.get("agents", [])
+DEFAULT_ACTIVE_AGENT = _config.get("default_active_agent", "")
+TMUX_SESSION_NAME = os.environ.get("TMUX_SESSION_NAME", _config.get("tmux", {}).get("session_name", "chat_agent"))
+TMUX_WORKING_DIR = _config.get("tmux", {}).get("working_dir", "")
+TELEGRAM_API_BASE_URL = _config.get("telegram", {}).get("api_base_url", "https://api.telegram.org/bot")
+TELEGRAM_WEBHOOK_PATH = os.environ.get("TELEGRAM_WEBHOOK_PATH", _config.get("telegram", {}).get("webhook_path", "/webhook"))
+DEFAULT_CLEANUP_POLICY = _config.get("default_cleanup_policy", {"images_retention_days": 7})
+TEMP_IMAGE_DIR_NAME = _config.get("image_processing", {}).get("temp_dir_name", "images_temp")
+CUSTOM_MENU = _config.get("menu", [])
+SCHEDULER_CONF = _config.get("scheduler", [])
+COLLABORATION_GROUPS = _config.get("collaboration_groups", [])
