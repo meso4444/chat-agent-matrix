@@ -4,9 +4,9 @@
 
 # ☀️🌙 Chat Agent Matrix 🐙
 
-> **Take the Red Pill. Control the Matrix of your AI Workforce.**
+> **Take the Red Pill.**
 >
-> *Just watch out for the Octopus Sentinels along the way...*
+> *Just watch out for the Octopus Sentinels...*
 
 ## 📖 Project Introduction
 
