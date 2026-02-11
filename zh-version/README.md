@@ -4,10 +4,9 @@
 
 # ☀️🌙 Chat Agent Matrix 🐙
 
-> **Take the Red Pill. Control the Matrix of your AI Workforce.**
-> 選擇紅藥丸。在對話視窗中掌控您的 AI 代理矩陣。
+> **Take the Red Pill.** / 選擇紅藥丸。
 >
-> *但要小心那些章魚哨兵...*
+> *Just watch out for the Octopus Sentinels...* / *但要小心那些章魚哨兵...*
 
 ## 📖 專案簡介 (Introduction)
 
