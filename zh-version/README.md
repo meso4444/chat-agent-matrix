@@ -64,26 +64,38 @@
 
 ```mermaid
 flowchart TD
-    User["操作員 (Operator)"] <-->|"指令 ⇄ 回報"| Messenger["通訊軟體 (Telegram/Line)"]
-    
-    subgraph "The Matrix (tmux Session)"
+    User["💊 覺醒者 (Awakened)"]
+    Messenger["📱 通訊軟體 (Telegram/Line)"]
+
+    subgraph Matrix["🌀 虛擬矩陣 (tmux Session)"]
         direction TB
-        Tunnel["隧道 (ngrok/Cloudflare)"] -->|"轉發"| Server["Flask 伺服器"]
-        
-        Server -->|"注入指令"| AgentA["Agent: Güpa"]
-        Server -->|"注入指令"| AgentB["Agent: Chöd"]
-        
-        Shared["共享空間 (Shared Space)"]
+
+        Tunnel["🌐 隧道 (ngrok/Cloudflare)"]
+        Server["⚙️ Flask 伺服器<br/>(指揮中樞)"]
+
+        subgraph Sentinels["🐙 哨兵群 (Agents)"]
+            direction LR
+            AgentA["Agent: Güpa"]
+            AgentB["Agent: Chöd"]
+        end
+
+        Shared["🤝 共享空間<br/>(Shared Space)"]
+
         AgentA <--> Shared
         AgentB <--> Shared
-        
-        AgentA -.->|"監控/修復"| AgentB
-        AgentB -.->|"監控/修復"| AgentA
+
+        AgentA -.->|"相互監控/自我修復"| AgentB
+        AgentB -.->|"相互監控/自我修復"| AgentA
+
+        Tunnel --> Server
+        Server -->|"指令注入"| Sentinels
     end
-    
-    Messenger -->|"Webhook"| Tunnel
-    AgentA -->|"執行結果"| Notifier["通知組件"]
-    AgentB -->|"執行結果"| Notifier
+
+    Notifier["📢 通知組件"]
+
+    User <-->|"指令 ⇄ 回報"| Messenger
+    Messenger <-->|"Webhook"| Tunnel
+    Matrix --> Notifier
     Notifier -->|"API Push"| Messenger
 ```
 
