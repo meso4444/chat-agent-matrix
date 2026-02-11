@@ -1,147 +1,273 @@
 #!/bin/bash
-# Install system dependencies required for tmux Claude session remote control functionality
+# Install dependencies for LINE → AI Remote Control System (Cloudflare Tunnel version)
+# Automatically detects environment (WSL/Linux/macOS) and applies appropriate installation method
 
-echo "🔧 Installing tmux Claude session remote control dependencies..."
+set -e
 
-# Check and install tmux
-if ! command -v tmux &> /dev/null; then
-    echo "📦 Installing tmux..."
-    if command -v apt-get &> /dev/null; then
-        sudo apt-get update
-        sudo apt-get install -y tmux
-    elif command -v yum &> /dev/null; then
-        sudo yum install -y tmux
-    elif command -v brew &> /dev/null; then
-        brew install tmux
-    else
-        echo "❌ Unable to auto-install tmux, please install manually"
-        exit 1
-    fi
-    echo "✅ tmux installation complete"
-else
-    echo "✅ tmux already installed"
-fi
+echo "🔧 Checking system environment..."
 
-# Check and install Python dependencies
-echo "📦 Installing Python dependencies..."
+# ============================================================================
+# Step 1: Detect Environment
+# ============================================================================
 
-# Check Python3
-if ! command -v python3 &> /dev/null; then
-    echo "❌ Python3 not installed, attempting to install..."
-    if command -v apt-get &> /dev/null; then
-        sudo apt-get update
-        sudo apt-get install -y python3 python3-pip
-    elif command -v yum &> /dev/null; then
-        sudo yum install -y python3 python3-pip
-    elif command -v brew &> /dev/null; then
-        brew install python3
-    else
-        echo "❌ Unable to auto-install Python3, please install manually"
-        echo "Ubuntu/Debian: sudo apt-get install python3 python3-pip"
-        echo "CentOS/RHEL: sudo yum install python3 python3-pip"
-        echo "macOS: brew install python3"
-        exit 1
-    fi
-    echo "✅ Python3 installation complete"
-else
-    echo "✅ Python3 already installed"
-fi
+detect_environment() {
+    local os_type=$(uname -s)
+    local uname_release=$(uname -r)
 
-# Check pip3
-if ! command -v pip3 &> /dev/null; then
-    echo "🔧 Attempting to install pip3..."
-    if command -v apt-get &> /dev/null; then
-        sudo apt-get install -y python3-pip
-    elif command -v yum &> /dev/null; then
-        sudo yum install -y python3-pip
-    else
-        echo "❌ pip3 not installed, attempting to use ensurepip..."
-        if python3 -m ensurepip --default-pip 2>/dev/null; then
-            echo "✅ pip3 installation complete via ensurepip"
+    # Check for WSL
+    if grep -qi "microsoft" /proc/version 2>/dev/null; then
+        # Detect WSL version
+        if grep -qi "WSL2" /proc/version 2>/dev/null; then
+            echo "WSL2"
         else
-            echo "❌ Unable to install pip3, please install manually"
-            echo "Ubuntu/Debian: sudo apt-get install python3-pip"
-            echo "CentOS/RHEL: sudo yum install python3-pip"
-            echo "Or use: python3 -m ensurepip --default-pip"
-            exit 1
+            echo "WSL1"
+        fi
+    # Check for macOS
+    elif [[ "$os_type" == "Darwin" ]]; then
+        echo "macOS"
+    # Check for Linux
+    elif [[ "$os_type" == "Linux" ]]; then
+        echo "Linux"
+    else
+        echo "Unknown"
+    fi
+}
+
+ENVIRONMENT=$(detect_environment)
+echo "✅ Detected Environment: $ENVIRONMENT"
+echo ""
+
+# ============================================================================
+# Step 2: Environment-Specific Dependency Installation
+# ============================================================================
+
+# ===== Homebrew Check (macOS only) =====
+install_homebrew_if_needed() {
+    if [[ "$ENVIRONMENT" != "macOS" ]]; then
+        return
+    fi
+
+    if ! command -v brew &> /dev/null; then
+        echo "📦 Installing Homebrew..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+        # Additional configuration for Apple Silicon Mac
+        if [[ $(uname -m) == 'arm64' ]]; then
+            echo "🍎 Detected Apple Silicon (M1/M2/M3), configuring Homebrew..."
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        fi
+    else
+        echo "✅ Homebrew is already installed"
+    fi
+}
+
+# ===== Basic Tools Installation (tmux only for LINE) =====
+install_basic_tools() {
+    echo "📦 Checking and installing basic tools (tmux)..."
+
+    if [[ "$ENVIRONMENT" == "macOS" ]]; then
+        # macOS: Use brew
+        if ! command -v tmux &> /dev/null; then
+            echo "   Installing tmux..."
+            brew install tmux
+        else
+            echo "   ✅ tmux is already installed"
+        fi
+    else
+        # Linux/WSL: Use apt-get or yum
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y tmux
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y tmux
+        else
+            echo "⚠️  Unable to automatically install tmux. Please manually confirm: tmux"
         fi
     fi
-fi
+}
 
-echo "✅ pip3 check complete"
-
-# Install Flask and related dependencies
-echo "📦 Installing Python packages..."
-if pip3 install flask PyYAML requests; then
-    echo "✅ Python packages installation successful"
-else
-    echo "❌ Python packages installation failed, attempting with --user parameter..."
-    if pip3 install --user flask PyYAML requests; then
-        echo "✅ Python packages installation successful (using --user)"
-    else
-        echo "❌ Python packages installation failed, please check network connection or install manually"
-        echo "Manual installation command: pip3 install flask PyYAML requests"
-        exit 1
+# ===== Python 3 Installation (may be needed on macOS) =====
+install_python3_if_needed() {
+    if command -v python3 &> /dev/null; then
+        echo "✅ Python 3 is already installed: $(python3 --version)"
+        return
     fi
-fi
 
-echo "✅ Python dependencies installation complete"
+    if [[ "$ENVIRONMENT" == "macOS" ]]; then
+        echo "📦 Installing Python 3..."
+        brew install python3
+    elif [[ "$ENVIRONMENT" == "Linux" || "$ENVIRONMENT" == "WSL2" || "$ENVIRONMENT" == "WSL1" ]]; then
+        echo "📦 Installing Python 3..."
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get install -y python3 python3-pip
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y python3 python3-pip
+        fi
+    fi
+}
 
-# Check installation results
-echo ""
-echo "📋 System information confirmation:"
-echo "• tmux version: $(tmux -V 2>/dev/null || echo "not installed")"
-echo "• Python version: $(python3 --version 2>/dev/null || echo "not installed")"
-echo "• pip3 version: $(pip3 --version 2>/dev/null | cut -d' ' -f1-2 || echo "not installed")"
-echo "• Flask version: $(python3 -c 'import flask; print(f"Flask {flask.__version__}")' 2>/dev/null || echo "not installed")"
-echo "• requests version: $(python3 -c 'import requests; print(f"requests {requests.__version__}")' 2>/dev/null || echo "not installed")"
-echo "• PyYAML version: $(python3 -c 'import yaml; print("PyYAML installed")' 2>/dev/null || echo "not installed")"
+# ===== Python Packages Installation =====
+install_python_packages() {
+    echo ""
+    echo "🐍 Installing Python dependencies..."
 
-# Ask whether to install Cloudflare Tunnel
-echo ""
-read -p "Install Cloudflare Tunnel (cloudflared)? (y/N): " install_cloudflared
-case $install_cloudflared in
-    [Yy]*)
-        echo "📦 Installing Cloudflare Tunnel..."
+    # Check pip3
+    if ! command -v pip3 &> /dev/null; then
+        echo "📦 Installing pip3..."
+        if [[ "$ENVIRONMENT" == "macOS" ]]; then
+            python3 -m ensurepip --upgrade
+        else
+            if command -v apt-get &> /dev/null; then
+                sudo apt-get install -y python3-pip
+            elif command -v yum &> /dev/null; then
+                sudo yum install -y python3-pip
+            fi
+        fi
+    fi
+
+    # Install packages (LINE-specific: no apscheduler needed)
+    PACKAGES="flask requests pyyaml"
+    echo "📦 Installing Python packages: $PACKAGES"
+    if pip3 install $PACKAGES; then
+        echo "✅ Python packages installed successfully"
+    else
+        echo "⚠️  Attempting installation with --user..."
+        pip3 install --user $PACKAGES
+    fi
+}
+
+# ===== Cloudflare Tunnel Installation =====
+install_cloudflared() {
+    echo ""
+    echo "📦 Installing Cloudflare Tunnel (cloudflared)..."
+
+    if command -v cloudflared &> /dev/null; then
+        echo "✅ cloudflared is already installed: $(cloudflared --version 2>&1 | head -1)"
+        return
+    fi
+
+    local cloudflared_url=""
+    local install_method=""
+
+    if [[ "$ENVIRONMENT" == "macOS" ]]; then
+        # macOS: Use Homebrew (handles both Intel and Apple Silicon)
+        if command -v brew &> /dev/null; then
+            echo "   (Using brew installation)"
+            brew install cloudflare/cloudflare/cloudflared
+            install_method="brew"
+        else
+            echo "⚠️  Homebrew not found. Please install manually: https://github.com/cloudflare/cloudflared/releases"
+            return
+        fi
+    elif [[ "$ENVIRONMENT" == "WSL2" || "$ENVIRONMENT" == "WSL1" || "$ENVIRONMENT" == "Linux" ]]; then
+        # Linux/WSL: Download binary directly
+        local arch=$(uname -m)
+        case "$arch" in
+            x86_64)
+                cloudflared_url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64"
+                ;;
+            aarch64|arm64)
+                cloudflared_url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64"
+                ;;
+            *)
+                echo "⚠️  Unsupported architecture: $arch. Please install cloudflared manually."
+                return
+                ;;
+        esac
+
+        if [[ -z "$cloudflared_url" ]]; then
+            echo "⚠️  Unable to determine download URL for architecture: $arch"
+            return
+        fi
+
         if command -v curl &> /dev/null; then
-            echo "Downloading cloudflared..."
-            curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+            echo "   (Using direct download method for $arch)"
+            curl -L "$cloudflared_url" -o cloudflared
             chmod +x cloudflared
             sudo mv cloudflared /usr/local/bin/
-            echo "✅ cloudflared installation complete"
+            install_method="download"
+        elif command -v wget &> /dev/null; then
+            echo "   (Using wget download method for $arch)"
+            wget "$cloudflared_url" -O cloudflared
+            chmod +x cloudflared
+            sudo mv cloudflared /usr/local/bin/
+            install_method="wget"
         else
-            echo "⚠️ Please manually install cloudflared: https://github.com/cloudflare/cloudflared/releases"
+            echo "⚠️  Neither curl nor wget found. Please install cloudflared manually: $cloudflared_url"
+            return
         fi
-        ;;
-    *)
-        echo "⏭️ Skipping Cloudflare Tunnel installation"
-        ;;
-esac
+    fi
 
+    if command -v cloudflared &> /dev/null; then
+        echo "✅ cloudflared installed successfully via $install_method"
+    else
+        echo "⚠️  cloudflared installation may have failed. Please verify: cloudflared --version"
+    fi
+}
+
+# ===== Summary =====
+print_summary() {
+    echo ""
+    echo "📋 System Dependencies Check ($ENVIRONMENT):"
+    echo "   • Environment: $ENVIRONMENT"
+    if [[ "$ENVIRONMENT" == "macOS" ]]; then
+        echo "   • Homebrew:  $(brew --version 2>/dev/null | head -1 || echo 'Not installed')"
+    fi
+    echo "   • tmux:      $(tmux -V 2>/dev/null || echo 'Not installed')"
+    echo "   • Python:    $(python3 --version 2>/dev/null || echo 'Not installed')"
+    echo "   • Flask:     $(python3 -c 'import flask; print(f"Flask {flask.__version__}")' 2>/dev/null || echo 'Not installed')"
+    echo "   • cloudflared: $(cloudflared --version 2>&1 | head -1 || echo 'Not installed')"
+    echo ""
+    echo "✅ Core dependencies installation completed!"
+    echo ""
+}
+
+# ===== Next Steps =====
+print_next_steps() {
+    echo "📋 Next steps to perform:"
+    echo "1. Fill in CHANNEL_SECRET in config.py (if not already filled)"
+    echo "2. Update CLOUDFLARE_CUSTOM_DOMAIN in config.py to your domain name"
+    echo "3. Configure Cloudflare fixed URL: ./setup_cloudflare_fixed_url.sh"
+    echo "4. Configure LINE Webhook URL (don't verify yet)"
+    echo "5. Start all services: ./start_all_services.sh"
+    echo "6. Verify Webhook connection in LINE Console"
+    echo ""
+    echo "💡 Important reminders:"
+    echo "• Need to own a domain name and host it on Cloudflare"
+    echo "• Webhook verification must be performed after service startup"
+    echo "• See SETUP_GUIDE.md for detailed configuration"
+    echo "• See TMUX_GUIDE.md for tmux operation instructions"
+    echo ""
+}
+
+# ============================================================================
+# Main Execution Flow
+# ============================================================================
+
+# Check for unknown environment
+if [[ "$ENVIRONMENT" == "Unknown" ]]; then
+    echo "❌ Unrecognized operating system"
+    exit 1
+fi
+
+# WSL1 Warning
+if [[ "$ENVIRONMENT" == "WSL1" ]]; then
+    echo "⚠️  WSL1 detected. Some features may be limited."
+    echo "   Recommended to upgrade to WSL2: wsl --set-version <distro-name> 2"
+    read -p "Continue anyway? (y/N): " continue_install
+    if [[ ! $continue_install =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+# Execute installation steps
+install_homebrew_if_needed
+install_basic_tools
+install_python3_if_needed
+install_python_packages
+install_cloudflared
+print_summary
+print_next_steps
+
+echo "🚀 Setup preparation complete! Ready to configure LINE integration."
 echo ""
-echo "🎉 All dependencies installation complete!"
-echo ""
-echo "📋 Next steps to perform:"
-echo "1. Fill in CHANNEL_SECRET in config.py (if not already filled)"
-echo "2. Update CLOUDFLARE_CUSTOM_DOMAIN in config.py to your domain name"
-echo "3. Configure Cloudflare fixed URL: ./setup_cloudflare_fixed_url.sh"
-echo "4. Configure LINE Webhook URL (don't verify yet)"
-echo "5. Start all services: ./start_all_services.sh"
-echo "6. Verify Webhook connection in LINE Console"
-echo ""
-echo "💡 Important reminders:"
-echo "• Need to own a domain name and host it on Cloudflare"
-echo "• Webhook verification must be performed after service startup"
-echo "• See SETUP_GUIDE.md for detailed configuration"
-echo "• See TMUX_GUIDE.md for tmux operation instructions"
-echo ""
-echo "🔧 Service management commands:"
-echo "• Start all services: ./start_all_services.sh"
-echo "• Check service status: ./status_all_services.sh"
-echo "• Stop all services: ./stop_all_services.sh"
-echo ""
-echo "💡 Advantages:"
-echo "• Unified service management using tmux"
-echo "• Single command to start/stop entire system"
-echo "• Services continue running in background"
-echo "• See README.md for detailed configuration"
