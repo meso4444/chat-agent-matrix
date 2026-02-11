@@ -4,9 +4,8 @@
 
 # ☀️🌙 Chat Agent Matrix 🐙
 
-> **Take the Red Pill.** / 選擇紅藥丸。
->
-> *Just watch out for the Octopus Sentinels...* / *但要小心那些章魚哨兵...*
+> Take the Red Pill. Just watch out for the Octopus Sentinels...
+> 選擇紅藥丸。但要小心那些章魚哨兵...
 
 ## 📖 專案簡介 (Introduction)
 
