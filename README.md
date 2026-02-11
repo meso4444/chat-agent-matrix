@@ -63,26 +63,38 @@ This is not just a tool, but a **digital ecosystem**. Through dedicated `agent_h
 
 ```mermaid
 flowchart TD
-    User["Operator"] <-->|"Command ⇄ Report"| Messenger["Messenger (Telegram/LINE)"]
-    
-    subgraph "The Matrix (tmux Session)"
+    User["💊 Awakened"]
+    Messenger["📱 Messenger (Telegram/Line)"]
+
+    subgraph Matrix["🌀 The Matrix (tmux Session)"]
         direction TB
-        Tunnel["Tunnel (ngrok/Cloudflare)"] -->|"Forward"| Server["Flask Server"]
-        
-        Server -->|"Inject Command"| AgentA["Agent: Güpa"]
-        Server -->|"Inject Command"| AgentB["Agent: Chöd"]
-        
-        Shared["Shared Space"]
+
+        Tunnel["🌐 Tunnel (ngrok/Cloudflare)"]
+        Server["⚙️ Flask Server<br/>(Command Hub)"]
+
+        subgraph Sentinels["🐙 Agent Cluster"]
+            direction LR
+            AgentA["Agent: Güpa"]
+            AgentB["Agent: Chöd"]
+        end
+
+        Shared["🤝 Shared Space"]
+
         AgentA <--> Shared
         AgentB <--> Shared
-        
-        AgentA -.->|"Monitor/Fix"| AgentB
-        AgentB -.->|"Monitor/Fix"| AgentA
+
+        AgentA -.->|"Mutual Monitoring/Self-Healing"| AgentB
+        AgentB -.->|"Mutual Monitoring/Self-Healing"| AgentA
+
+        Tunnel --> Server
+        Server -->|"Command Injection"| Sentinels
     end
-    
-    Messenger -->|"Webhook"| Tunnel
-    AgentA -->|"Execution Result"| Notifier["Notifier"]
-    AgentB -->|"Execution Result"| Notifier
+
+    Notifier["📢 Notifier"]
+
+    User <-->|"Command ⇄ Report"| Messenger
+    Messenger <-->|"Webhook"| Tunnel
+    Matrix --> Notifier
     Notifier -->|"API Push"| Messenger
 ```
 
