@@ -2,10 +2,12 @@
   <img src="assets/logo-banner.png" alt="Chat Agent Matrix" width="100%" style="max-width: 900px; height: auto; margin-bottom: 20px;" />
 </div>
 
-# ☀️🌙 Chat Agent Matrix
+# ☀️🌙 Chat Agent Matrix 🐙
 
 > **Take the Red Pill. Control the Matrix of your AI Workforce.**
 > 選擇紅藥丸。在對話視窗中掌控您的 AI 代理矩陣。
+>
+> *但要小心那些章魚哨兵...*
 
 ## 📖 專案簡介 (Introduction)
 
