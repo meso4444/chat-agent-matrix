@@ -84,6 +84,27 @@ flowchart TD
 
 ---
 
+## 💡 Core Design Concept
+
+| Dimension | Typical API-based Platforms | Chat-Agent-Matrix (CAM) | Core Value Difference |
+| :--- | :--- | :--- | :--- |
+| Scaling Logic | Manual plugin/code development | YAML-Configuration Driven | Add theoretically infinite Agents by just editing a YAML file. |
+| Self-Awareness | Prompt-based roleplay | Instructional "Soul Imprint" | Agents are born with pre-defined rules and workspace awareness. |
+| Coordination | Rigid hard-coded routing | Emergent "Social Mesh" | Tasks flow through a Shared Space based on Agent roles. |
+| Isolation Model | Application-layer sandboxing | Structured Workspace Isolation | Dedicated directories and TTY windows to minimize data risk. |
+| Reliability | Requires manual human recovery | Mutual Self-Healing System | Agents monitor each other and auto-restart failed processes. |
+
+## 🛡️ Security Design Concept
+
+| Risk Pattern | Typical Cause | The CAM Approach (Design Choice) | Resulting Peace of Mind |
+| :--- | :--- | :--- | :--- |
+| Remote Injection (RCE) | Gateway execution vulnerability | Asynchronous TTY Injection + ID Binding | Decouples Web entry from Shell execution; ensures zero data backflow. |
+| System Overreach | Excessive host permissions | Strict Non-Root Boundaries | Errors are isolated to the Agent workspace; host stays safe. |
+| Logic Conflicts | Shared memory or contexts | Independent Window Separation | Zero interference between Agents running different tasks. |
+| Supply Chain Risk | Unverified 3rd-party plugins | Direct Official Engine Drive | No plugin marketplace; we only drive verified vendor CLIs. |
+
+---
+
 ## 👁️ Inner Reflection
 
 > "We build a Matrix for them within `tmux`, assigning them roles and memories, watching them 'think' they are autonomous. Perhaps, in doing so, we are merely reenacting our own condition... until we realize the truth, like finding the Red Pill."
