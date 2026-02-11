@@ -2,9 +2,11 @@
   <img src="assets/logo-banner.png" alt="Chat Agent Matrix" width="100%" style="max-width: 900px; height: auto; margin-bottom: 20px;" />
 </div>
 
-# ☀️🌙 Chat Agent Matrix
+# ☀️🌙 Chat Agent Matrix 🐙
 
 > **Take the Red Pill. Control the Matrix of your AI Workforce.**
+>
+> *Just watch out for the Octopus Sentinels along the way...*
 
 ## 📖 Project Introduction
 
