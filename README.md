@@ -4,9 +4,7 @@
 
 # ☀️🌙 Chat Agent Matrix 🐙
 
-> **Take the Red Pill.**
->
-> *Just watch out for the Octopus Sentinels...*
+> Take the Red Pill. Just watch out for the Octopus Sentinels...
 
 ## 📖 Project Introduction
 
