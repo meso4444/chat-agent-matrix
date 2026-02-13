@@ -45,6 +45,41 @@
 
 ---
 
+## 🚄 快速開始 (Quick Start)
+
+### 第 1 步：安裝 Git 並拉取專案
+
+```bash
+# 如果尚未安裝 Git，請先安裝
+# macOS: brew install git
+# Ubuntu/Debian/WSL: sudo apt-get install git
+# CentOS: sudo yum install git
+
+# ⚠️ Windows 用戶注意：如果尚未安裝 WSL，請先執行 windows-wsl-setup 腳本
+
+# 拉取 Chat Agent Matrix 專案
+git clone https://github.com/meso4444/chat-agent-matrix.git
+cd chat-agent-matrix
+```
+
+### 第 2 步：選擇版本並進入對應目錄
+
+根據您需要使用的通訊軟體，進入對應的子目錄：
+
+```bash
+# 使用 Telegram 版本
+cd telegram
+
+# 或使用 LINE 版本
+cd line
+```
+
+### 第 3 步：安裝和啟動
+
+詳細的安裝、配置和啟動說明請參考子目錄中的 `README.md`。每個版本都有獨立的環境變數配置、依賴安裝和運行腳本。
+
+---
+
 ## ⚖️ 平台選擇比較 (Platform Comparison)
 
 | 特性 | **Telegram Edition** | **LINE Edition** |
