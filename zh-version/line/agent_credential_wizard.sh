@@ -1,60 +1,60 @@
 #!/bin/bash
-# agent_credential_wizard.sh - AI Agent Credential Wizard (LINE Local Edition)
-# Local environment authentication only (LINE does not support container deployment)
+# agent_credential_wizard.sh - AI Agent 認證精靈 (LINE 本地版)
+# 僅支援本地環境認證 (LINE 不支援容器部署)
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "=========================================="
-echo "🔐 AI Agent Credential Wizard"
+echo "🔐 AI Agent 認證精靈"
 echo "=========================================="
 echo ""
 
-# Local environment authentication function
+# 本地環境認證函數
 echo ""
-echo "📍 Environment: Local (~)"
-echo "🎯 Goal: Authenticate and store credentials in local home directory"
+echo "📍 環境：本地 (~)"
+echo "🎯 目標：在本地家目錄中認證並儲存認證資訊"
 echo ""
 
-# Choose CLI tool
-echo "Select AI CLI tool:"
+# 選擇 CLI 工具
+echo "選擇 AI CLI 工具："
 echo "1) Gemini"
 echo "2) Claude"
 echo ""
-read -p "Enter choice (1 or 2): " CLI_CHOICE
+read -p "請輸入選擇 (1 或 2): " CLI_CHOICE
 
 case "$CLI_CHOICE" in
   1)
     echo ""
-    echo "🚀 Starting Gemini CLI authentication..."
+    echo "🚀 正在啟動 Gemini CLI 認證..."
     echo "📂 HOME: $HOME"
-    echo "💡 Tip: After authentication, credentials will be stored in ~/.gemini"
+    echo "💡 提示：認證後，認證資訊將儲存在 ~/.gemini"
     echo ""
     gemini --yolo
     echo ""
-    echo "✅ Gemini authentication completed!"
-    echo "📦 Credential location: $(eval echo ~)/.gemini"
+    echo "✅ Gemini 認證已完成！"
+    echo "📦 認證資訊位置：$(eval echo ~)/.gemini"
     ;;
   2)
     echo ""
-    echo "🚀 Starting Claude CLI authentication..."
+    echo "🚀 正在啟動 Claude CLI 認證..."
     echo "📂 HOME: $HOME"
-    echo "💡 Tip: After authentication, credentials will be stored in ~/.claude"
+    echo "💡 提示：認證後，認證資訊將儲存在 ~/.claude"
     echo ""
     claude --permission-mode bypassPermissions
     echo ""
-    echo "✅ Claude authentication completed!"
-    echo "📦 Credential location: $(eval echo ~)/.claude"
+    echo "✅ Claude 認證已完成！"
+    echo "📦 認證資訊位置：$(eval echo ~)/.claude"
     ;;
   *)
-    echo "❌ Invalid choice"
+    echo "❌ 無效的選擇"
     exit 1
     ;;
 esac
 
 echo ""
 echo "=========================================="
-echo "🎉 Credential wizard completed!"
+echo "🎉 認證精靈已完成！"
 echo "=========================================="
 echo ""
