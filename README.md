@@ -44,6 +44,41 @@ This is not just a tool, but a **digital ecosystem**. Through dedicated `agent_h
 
 ---
 
+## 🚄 Quick Start
+
+### Step 1: Install Git and Clone the Project
+
+```bash
+# If Git is not installed yet, please install it first
+# macOS: brew install git
+# Ubuntu/Debian/WSL: sudo apt-get install git
+# CentOS: sudo yum install git
+
+# ⚠️ Windows Users: If WSL is not installed, please run the windows-wsl-setup script first
+
+# Clone the Chat Agent Matrix project
+git clone https://github.com/meso4444/chat-agent-matrix.git
+cd chat-agent-matrix
+```
+
+### Step 2: Choose Your Edition and Navigate to the Corresponding Directory
+
+Select the messaging platform you want to use and enter the corresponding subdirectory:
+
+```bash
+# For Telegram edition
+cd telegram
+
+# Or for LINE edition
+cd line
+```
+
+### Step 3: Install and Run
+
+For detailed installation, configuration, and startup instructions, please refer to the `README.md` in the subdirectory. Each edition has its own environment variable setup, dependency installation, and startup scripts.
+
+---
+
 ## ⚖️ Platform Comparison
 
 | Feature | **Telegram Edition** | **LINE Edition** |
