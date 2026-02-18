@@ -1,0 +1,223 @@
+# ==========================================
+# Schedule Task Configuration File (Scheduler Configuration)
+# ==========================================
+# Supports 5 trigger types: daily / weekly / monthly / interval / cron
+
+scheduler:
+
+  # ═══════════════════════════════════════════════════════════════
+  # 🧠 Agent Memory Management
+  # ═══════════════════════════════════════════════════════════════
+
+  # 【Built-in Default Schedule】Rotate Agent memory files at 00:00 every day
+  - name: "Daily Memory File Rotation"
+    type: "system"
+    action: "rotate_memory_files"
+    trigger: "daily"
+    hour: 0
+    minute: 0
+    second: 0
+    active: true    # ✅ Enabled by default
+
+  # 【Built-in Default Schedule】Update all Agent memories every hour
+  - name: "All Agents Hourly Memory Update"
+    type: "system"
+    action: "update_agent_memories"
+    prompt: "Summary and key points of tasks completed in the past period. Record details for key tasks or important turning points. Update the current day's memory file in the memory directory"
+    trigger: "interval"
+    hours: 1
+    minutes: 0
+    seconds: 0
+    active: true    # ✅ Enabled by default
+
+  # ═══════════════════════════════════════════════════════════════
+  # 📅 Daily (Execute at specified time every day)
+  # Parameters: hour (0-23), minute (0-59), second (0-59)
+  # ═══════════════════════════════════════════════════════════════
+
+  # 【Built-in Default Schedule】Clean up expired images daily
+  - name: "Daily System Cleanup"
+    type: "system"
+    action: "cleanup_images"
+    trigger: "daily"
+    hour: 2
+    minute: 0
+    second: 0
+    active: true    # ✅ Enabled by default
+
+  # Example: Execute at 08:00 every day
+  - name: "Morning News"
+    type: "agent_command"
+    agent: "Güpa"
+    command: "Please summarize today's top news for me"
+    trigger: "daily"
+    hour: 8
+    minute: 0
+    second: 0
+    active: true
+
+  # ═══════════════════════════════════════════════════════════════
+  # 📊 Weekly (Execute at specified day and time every week)
+  # day_of_week: 0=Monday, 1=Tuesday, 2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday
+  # Parameters: day_of_week, hour (0-23), minute (0-59), second (0-59)
+  # ═══════════════════════════════════════════════════════════════
+
+  - name: "Friday Report"
+    type: "agent_command"
+    agent: "Güpa"
+    command: "What important itinerary planning was completed this week, and what are the plans for next week"
+    trigger: "weekly"
+    day_of_week: 4      # Friday
+    hour: 17
+    minute: 0
+    second: 0
+    active: true
+
+  # ═══════════════════════════════════════════════════════════════
+  # 📈 Monthly (Execute at specified date and time every month)
+  # day: 1-31 (which day of the month, use 28 for end of month to avoid month length issues)
+  # Parameters: day, hour (0-23), minute (0-59), second (0-59)
+  # ═══════════════════════════════════════════════════════════════
+
+  - name: "Monthly Review"
+    type: "agent_command"
+    agent: "Güpa"
+    command: "Generate a summary report of last month's travel itineraries, including completion rate and satisfaction"
+    trigger: "monthly"
+    day: 1
+    hour: 9
+    minute: 0
+    second: 0
+    active: true
+
+  # ═══════════════════════════════════════════════════════════════
+  # ⏱️ Interval (Execute at fixed intervals)
+  # Description: Execute once every N hours/minutes/seconds (not at fixed time points)
+  # Parameters: hours, minutes, seconds
+  #
+  # ⚠️ Note:
+  # - interval hours:24 ≠ every day at 08:00
+  # - interval hours:24 = execute every 24 hours (timer resets when service restarts)
+  # - If you need "fixed time every day", it's recommended to use daily instead
+  # ═══════════════════════════════════════════════════════════════
+
+  # Example 1: Poll every 30 minutes (status check)
+  - name: "Status Poll"
+    type: "agent_command"
+    agent: "Chöd"
+    command: "Check if the current system is running normally"
+    trigger: "interval"
+    hours: 0
+    minutes: 30
+    seconds: 0
+    active: false  # Example, disabled by default
+
+  # Example 4: Execute every 12 hours (mid-term report)
+  - name: "Mid-term Status Report"
+    type: "agent_command"
+    agent: "Güpa"
+    command: "What important travel market changes have occurred in the past 12 hours"
+    trigger: "interval"
+    hours: 12
+    minutes: 0
+    seconds: 0
+    active: false  # Example, disabled by default
+
+  # ═══════════════════════════════════════════════════════════════
+  # 🔄 Cron (Cron expression, supports complex time logic)
+  # Description: Use APScheduler's CronTrigger syntax
+  #
+  # Parameters:
+  # - year: Year (optional, usually use *)
+  # - month: Month (1-12 or *)
+  # - day: Date (1-31 or * or L for end of month)
+  # - week: Week number (1-53 or *)
+  # - day_of_week: Day of week (0-6 or 0-4 for Monday to Friday or *)
+  # - hour: Hour (0-23 or *)
+  # - minute: Minute (0-59 or *)
+  # - second: Second (0-59 or *)
+  #
+  # Special values:
+  # - * = any value
+  # - 0-4 = range (Monday to Friday)
+  # - 1,15 = multiple values (1st and 15th)
+  # - L = Last (end of month)
+  # ═══════════════════════════════════════════════════════════════
+
+  # Example 1: Weekdays (Monday to Friday) at 09:00 every day
+  # Purpose: Weekday morning meeting
+  - name: "Weekday Morning Meeting"
+    type: "agent_command"
+    agent: "Chöd"
+    command: "Prepare today's work plan and priorities"
+    trigger: "cron"
+    day_of_week: "0-4"      # 0=Monday, 4=Friday, so 0-4 = Monday to Friday
+    hour: 9
+    minute: 0
+    second: 0
+    active: false  # Example, disabled by default
+
+  # Example 2: End of month (last day) at 23:59
+  # Purpose: End-of-month backup (in addition to daily cleanup, this is deep cleanup at month end)
+  - name: "End-of-Month Deep Cleanup"
+    type: "system"
+    action: "cleanup_images"
+    trigger: "cron"
+    day: "L"                # L = last day of month
+    hour: 23
+    minute: 59
+    second: 0
+    active: false  # Example, disabled by default
+
+  # Example 3: 1st and 15th of every month at 10:00
+  # Purpose: Mid-month check
+  - name: "Mid-Month Check"
+    type: "agent_command"
+    agent: "Güpa"
+    command: "Conduct progress checks for the first/second half of this month"
+    trigger: "cron"
+    day: "1,15"             # 1st and 15th
+    hour: 10
+    minute: 0
+    second: 0
+    active: false  # Example, disabled by default
+
+  # Example 4: Weekends (Saturday and Sunday) at 10:00 every day
+  # Purpose: Weekend travel planning
+  - name: "Weekend Planning"
+    type: "agent_command"
+    agent: "Güpa"
+    command: "Plan the travel itinerary for this weekend"
+    trigger: "cron"
+    day_of_week: "5,6"      # 5=Saturday, 6=Sunday
+    hour: 10
+    minute: 0
+    second: 0
+    active: false  # Example, disabled by default
+
+  # Example 5: Weekdays (Monday to Friday) every 4 hours (09:00, 13:00, 17:00, 21:00)
+  # Purpose: Regular synchronization on weekdays
+  - name: "Weekday Regular Sync"
+    type: "agent_command"
+    agent: "Chöd"
+    command: "Sync the latest itinerary progress"
+    trigger: "cron"
+    day_of_week: "0-4"      # Monday to Friday
+    hour: "9,13,17,21"      # 9 AM, 1 PM, 5 PM, 9 PM
+    minute: 0
+    second: 0
+    active: false  # Example, disabled by default
+
+  # Example 6: Specific date (10th of every month) at 14:00 on weekdays
+  # Purpose: Mid-month financial review
+  - name: "Mid-Month Financial Review"
+    type: "agent_command"
+    agent: "Chöd"
+    command: "Conduct mid-month financial review and budget adjustment"
+    trigger: "cron"
+    day: "10"               # 10th of every month
+    day_of_week: "0-4"      # Execute only if it happens to be a weekday
+    hour: 14
+    minute: 0
+    second: 0
+    active: false  # Example, disabled by default

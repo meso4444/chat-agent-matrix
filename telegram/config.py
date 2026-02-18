@@ -1,5 +1,5 @@
 # config.py - Configuration Loader (ISC - Instance-Specific Config)
-# Support three-layer stacking: Base YAML -> Instance YAML -> Environment
+# Supports three-layer stacking: Base YAML -> Instance YAML -> Environment
 import os
 import sys
 import yaml
@@ -9,10 +9,10 @@ from copy import deepcopy
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ==========================================
-# Layer 1: Load .env (Common)
+# Layer 1: Load .env (general)
 # ==========================================
 def _load_env_file(env_path):
-    """Load .env file to environment variables (don't override existing ones)"""
+    """Load .env file to environment variables (don't overwrite existing ones)"""
     if not os.path.exists(env_path):
         return
     try:
@@ -24,9 +24,9 @@ def _load_env_file(env_path):
                     if key not in os.environ:
                         os.environ[key] = value.strip('"\'')
     except Exception as e:
-        sys.stderr.write(f"⚠️ Unable to read {env_path}: {e}\n")
+        sys.stderr.write(f"⚠️  Unable to read {env_path}: {e}\n")
 
-# Load common .env
+# Load general .env
 _load_env_file(os.path.join(BASE_DIR, '.env'))
 
 # ==========================================
@@ -43,6 +43,7 @@ if INSTANCE_NAME:
 # 3. Load YAML configuration (ISC: Instance-Specific Config)
 CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
 INSTANCE_CONFIG_PATH = os.path.join(BASE_DIR, f"config.{INSTANCE_NAME}.yaml")
+SCHEDULER_YAML_PATH = os.path.join(BASE_DIR, "scheduler.yaml")
 
 def load_yaml(path):
     if os.path.exists(path):
@@ -63,7 +64,7 @@ def _deep_merge(base, override):
 _config = load_yaml(CONFIG_PATH)
 _instance_config = load_yaml(INSTANCE_CONFIG_PATH)
 
-# Merge configuration (instance config takes priority, support recursive deep merge)
+# Merge configurations (instance config takes priority, support recursive deep merge)
 if _instance_config:
     _config = _deep_merge(_config, _instance_config)
 
@@ -78,7 +79,7 @@ except Exception:
     BOT_REGISTRY = {}
 
 FLASK_HOST = os.environ.get("FLASK_HOST", _config.get("server", {}).get("host", "127.0.0.1"))
-# [Port Configuration Standardization] Port read from config.yaml, environment variables reserved for emergency override
+# 【Port configuration unification】Port read from config.yaml, environment variable reserved for emergency override
 FLASK_PORT = int(os.environ.get("FLASK_PORT", _config.get("server", {}).get("port", 5000)))
 NGROK_API_PORT = int(os.environ.get("NGROK_API_PORT", _config.get("server", {}).get("ngrok_api_port", 4040)))
 
@@ -91,5 +92,9 @@ TELEGRAM_WEBHOOK_PATH = os.environ.get("TELEGRAM_WEBHOOK_PATH", _config.get("tel
 DEFAULT_CLEANUP_POLICY = _config.get("default_cleanup_policy", {"images_retention_days": 7})
 TEMP_IMAGE_DIR_NAME = _config.get("image_processing", {}).get("temp_dir_name", "images_temp")
 CUSTOM_MENU = _config.get("menu", [])
-SCHEDULER_CONF = _config.get("scheduler", [])
+
+# Read schedule configuration from separate scheduler.yaml
+_scheduler_config = load_yaml(SCHEDULER_YAML_PATH)
+SCHEDULER_CONF = _scheduler_config.get("scheduler", [])
+
 COLLABORATION_GROUPS = _config.get("collaboration_groups", [])

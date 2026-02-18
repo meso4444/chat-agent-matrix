@@ -2,75 +2,48 @@
 # Chat Agent Matrix Configuration File (Telegram Edition)
 # ==========================================
 
-# 🌐 Server and Network Configuration
+# 🌐 Server and Network Settings
 server:
   host: 127.0.0.1
-  port: 5000
-  ngrok_api_port: 4040
+  port: 5002
+  ngrok_api_port: 4042
 
-# 🤖 AI Agent Configuration
+# 🤖 AI Agent Squad Configuration
 agents:
   - name: "Güpa"
     engine: "gemini"
-    description: "Reverent and devoted (attitude toward teachers and dharma)"
+    description: "Respect and reverence (attitude towards teachers and dharma)"
     usecase: You are a travel itinerary planning expert
     cleanup_policy:
       images_retention_days: 3
 
   - name: "Chöd"
     engine: "claude"
-    description: "Cutting and dedication practice (cutting through ego)"
+    description: "Severance, body offering (cutting through ego)"
     usecase: You are a travel cost estimation expert
 
-# Default active agent name on startup
+# Default active Agent name on startup
 default_active_agent: "Güpa"
 
 # 🤝 Collaboration Groups
-# Members will automatically establish bidirectional interconnection (Full Mesh) via soft links
+# Group members automatically establish bidirectional (Full Mesh) symlinks
 collaboration_groups:
   - name: "core_team"
-    description: "Collaborate to plan cost-effective travel itineraries"
+    description: "Collaboratively plan high-value travel itineraries"
     members: ["Güpa", "Chöd"]
     roles:
-      Güpa: "Responsible for planning travel itineraries per user requests and delivering to Chöd for budget estimation"
-      Chöd: "Responsible for budgeting all expenses. If per-person cost exceeds 50,000 TWD, submit budget report to Güpa for adjustment"
+      Güpa: "Responsible for planning travel itineraries according to user requirements, and deliver the itinerary to Chöd for budget estimation"
+      Chöd: "Responsible for budget estimation of all itinerary expenses. If single person cost exceeds 50,000 TWD, submit budget report to Güpa to adjust the itinerary"
 
-# ⏰ Scheduled Tasks (Scheduler)
-scheduler:
-  - name: "Daily System Cleanup"
-    type: "system"
-    action: "cleanup_images"
-    trigger: "interval"
-    hour: 24
-    minute: 0
-    second: 0
-    active: true
-
-  - name: "International News Daily Report"
-    type: "agent_command"
-    agent: "Güpa"
-    command: "Find important international news from the past two days"
-    trigger: "cron"
-    hour: 12
-    minute: 0
-    second: 0
-    active: true
-
-  - name: "Chöd Regular Stock Price Report"
-    type: "agent_command"
-    agent: "Chöd"
-    command: "Check current NVIDIA stock price"
-    trigger: "interval"
-    hour: 12
-    minute: 0
-    second: 0
-    active: true
-
-# 🧹 Global Default Cleanup Policy
+# ⏰ Schedule Tasks (Scheduler)
+# Schedule configuration has been separated to independent scheduler.yaml file
+# Reference: scheduler.yaml
+#
+# 🧹 Global Default Cleanup Rules
 default_cleanup_policy:
   images_retention_days: 7
 
-# 📱 Telegram API Configuration
+# 📱 Telegram API Settings
 telegram:
   api_base_url: "https://api.telegram.org/bot"
   webhook_path: "/telegram_webhook"
@@ -79,30 +52,30 @@ telegram:
 image_processing:
   temp_dir_name: "images_temp"
 
-# tmux Configuration
+# tmux Settings
 tmux:
   session_name: "ai_telegram_session"
   working_dir: ""
 
 # 🎮 Custom Menu
 menu:
-  - - label: "🌤 Taipei Today Weather"
-      command: "Check Taipei weather today, divided into morning, afternoon, and evening"
+  - - label: "🌤 Taipei Today's Weather"
+      command: "Query Taipei's weather today, broken down by morning, afternoon, evening"
     - label: "International News"
-      command: "Find major international news from recent days"
+      command: "Query recent major international news"
   - - label: "🔄 Switch Agent"
       command: "/switch {input}"
-      prompt: "Enter agent name to switch to:"
-    - label: "🧘 Wake Güpa"
+      prompt: "Please enter the Agent name to switch to:"
+    - label: "🧘 Awaken Güpa"
       command: "/switch Güpa"
-    - label: "🔪 Wake Chöd"
+    - label: "🔪 Awaken Chöd"
       command: "/switch Chöd"
   - - label: "🔍 Health Check"
       command: "/inspect {input}"
-      prompt: "Enter agent name to inspect:"
+      prompt: "Please enter the Agent name to check:"
     - label: "🚑 Repair"
       command: "/fix {input}"
-      prompt: "Enter agent name to repair:"
+      prompt: "Please enter the Agent name to repair:"
     - label: "🧠 Restore Memory"
       command: "/resume_latest"
   - - label: "🛑 Interrupt"
