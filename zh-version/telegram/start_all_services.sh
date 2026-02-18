@@ -59,10 +59,49 @@ import sys
 import os
 import subprocess
 import time
+import re
 
 script_dir = os.environ['SCRIPT_DIR']
 session_name = os.environ['TMUX_SESSION_NAME']
 sys.path.append(script_dir)
+
+def wait_for_prompt(session_name, window_name, engine, max_wait=30):
+    """等待 tmux pane 出現對應的 CLI 提示符
+
+    Args:
+        engine: 'claude' 或 'gemini'
+        - claude → ❯
+        - gemini → * 或 >
+    """
+    start_time = time.time()
+    # 根據引擎選擇對應的提示符
+    if engine == 'claude':
+        prompt_markers = ['❯']
+    else:  # gemini - 可能是 * 或 >
+        prompt_markers = ['*', '>']
+
+    while time.time() - start_time < max_wait:
+        try:
+            result = subprocess.run(
+                ['tmux', 'capture-pane', '-t', f'{session_name}:{window_name}', '-p'],
+                capture_output=True, text=True
+            )
+            output = result.stdout
+            if not output:
+                time.sleep(0.5)
+                continue
+
+            # 檢查整個 pane 內容是否包含任何預期的提示符
+            for marker in prompt_markers:
+                if marker in output:
+                    print(f"       ✅ 檢測到 {engine} 提示符 '{marker}'")
+                    return True
+        except Exception as e:
+            pass
+
+        time.sleep(0.5)
+
+    return False
 
 try:
     from config import AGENTS, COLLABORATION_GROUPS
@@ -100,6 +139,60 @@ try:
         else:
             subprocess.run(['tmux', 'new-window', '-t', session_name, '-n', name], check=True)
 
+        # 設置 pipe-pane 監聽授權提示和卡住指令
+        responder_script = os.path.join(script_dir, 'auto_permission_responder.py')
+        subprocess.run(['tmux', 'pipe-pane', '-t', f'{session_name}:{name}',
+                       f'python3 {responder_script} {session_name}:{name}'], check=True)
+
+        # 📋 複製必要的工具腳本到 Agent home
+        # 複製 telegram_notifier.py 到 agent_home（不放入 toolbox）
+        telegram_notifier_src = os.path.join(script_dir, 'telegram_notifier.py')
+        telegram_notifier_dst = os.path.join(home_path, 'telegram_notifier.py')
+        if os.path.exists(telegram_notifier_src):
+            subprocess.run(['cp', telegram_notifier_src, telegram_notifier_dst], check=True)
+
+        # 建立共享空間、知識庫與記憶目錄
+        shared_space_path = os.path.join(home_path, 'my_shared_space')
+        os.makedirs(shared_space_path, exist_ok=True)
+
+        knowledge_path = os.path.join(home_path, 'knowledge')
+        os.makedirs(knowledge_path, exist_ok=True)
+
+        memory_path = os.path.join(home_path, 'memory')
+        os.makedirs(memory_path, exist_ok=True)
+
+        # 初始化當日記憶檔
+        from datetime import datetime
+        today_memory_file = os.path.join(memory_path, 'memory.md')
+        if not os.path.exists(today_memory_file):
+            with open(today_memory_file, 'w', encoding='utf-8') as f:
+                f.write(f"# {name} 的每日記憶\n\n")
+                f.write(f"**日期**: {datetime.now().strftime('%Y-%m-%d')}\n\n")
+                f.write("## 今日任務記錄\n\n")
+
+        # 📚 統一複製知識文檔邏輯
+        # 複製規則和協議文件（直接到 agent_home）
+        rule_files_to_copy = ['agent_home_rules.md', 'AGENT_PROTOCOL.md']
+        for rule_file in rule_files_to_copy:
+            src_file = os.path.join(script_dir, rule_file)
+            dst_file = os.path.join(home_path, rule_file)
+            if os.path.exists(src_file):
+                subprocess.run(['cp', src_file, dst_file], check=True)
+
+        # 複製知識庫文件（到 knowledge 目錄）
+        knowledge_files_to_copy = ['SCHEDULER_FUNCTIONALITY.md']
+        for knowledge_file in knowledge_files_to_copy:
+            src_file = os.path.join(script_dir, knowledge_file)
+            dst_file = os.path.join(knowledge_path, knowledge_file)
+            if os.path.exists(src_file):
+                subprocess.run(['cp', src_file, dst_file], check=True)
+
+        # 複製 Template 文件（直接複製到 agent_home，不建立子目錄）
+        template_src = os.path.join(script_dir, 'agent_home_rules_templates', 'agent_rule_gen_template.txt')
+        template_dst = os.path.join(home_path, 'agent_rule_gen_template.txt')
+        if os.path.exists(template_src):
+            subprocess.run(['cp', template_src, template_dst], check=True)
+
         # 🎯 進入 Agent 工作目錄
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', f'cd {home_path}'], check=True)
         time.sleep(1)
@@ -107,42 +200,69 @@ try:
 
         if engine == 'gemini':
             cmd = 'gemini --yolo'
-            protocol_file = 'GEMINI.md'
+            engine_doc_name = 'GEMINI.md'
         else:
             cmd = 'claude --permission-mode bypassPermissions'
-            protocol_file = 'CLAUDE.md'
+            engine_doc_name = 'CLAUDE.md'
 
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', cmd], check=True)
         time.sleep(1)
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
-        
-        # 檢查規範是否存在
-        target_rule_file = os.path.join(home_path, protocol_file)
-        if not os.path.exists(target_rule_file):
-            print(f"     ✨ 觸發 {name} 自我建構規範文件中 (等待 10 秒啟動)…")
-            
-            protocol_path = os.path.join(script_dir, protocol_file)
-            
+
+        # 等待 CLI 提示符出現（根據引擎類型檢查對應提示符，最多等待 60 秒）
+        print(f"     ⏳ 等待 {name} CLI 啟動…")
+        if not wait_for_prompt(session_name, name, engine, max_wait=60):
+            print(f"     ⚠️ {name} 啟動超時（未檢測到 {engine} 提示符），仍然嘗試注入 prompt…")
+
+        # ✅ 檢查規範文件是否已存在（避免重複注入與覆蓋）
+        doc_path = os.path.join(home_path, engine_doc_name)
+        if os.path.exists(doc_path):
+            print(f"     ✅ {engine_doc_name} 已存在，跳過初始化注入（保護現有規範）")
+
+            # 📋 注入 prompt：檢查規範是否完備
+            print(f"     📋 注入規範檢查 prompt…")
+            engine_upper = engine.upper()
+            check_prompt = f"檢視AGENT_PROTOCOL.md內容,確認{engine_upper}.md的規範是否完備,並更新"
+
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', '-l', check_prompt], check=True)
+            time.sleep(0.5)
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
+
+            # 🔒 雙重保險: 確保 prompt 被正確接收
+            time.sleep(0.2)
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
+        else:
+            # 觸發 Agent 規範文件構建
+            print(f"     ✨ 觸發 {name} 自我建構規範文件中…")
+
+            # 指向 agent_home 中的本地副本
+            rules_path = os.path.join(home_path, 'agent_home_rules.md')
+            protocol_path = os.path.join(home_path, 'AGENT_PROTOCOL.md')  # 參考通知規則
+
+            # 生成初始化 Prompt
             prompt = (gen_template.replace('{agent_name}', name)
                                  .replace('{agent_usecase}', usecase)
-                                 .replace('{engine_doc_name}', protocol_file)
+                                 .replace('{engine_doc_name}', engine_doc_name)
                                  .replace('{rules_path}', rules_path)
                                  .replace('{protocol_path}', protocol_path)
                                  .replace('{collaboration_context}', collab_context)
                                  .replace('{home_path}', home_path))
-            
-            time.sleep(10) 
-            
+
             prompt_file = os.path.join(script_dir, f".prompt_temp_{name}")
             with open(prompt_file, 'w') as f:
                 f.write(prompt)
-            
+
             with open(prompt_file, 'r') as pf:
                 prompt_content = pf.read()
 
             # Use send-keys -l (literal) to simulate typing, bypassing paste mode
             subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', '-l', prompt_content], check=True)
             time.sleep(0.5)
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
+
+            # 🔒 雙重保險: 所有 Agent 都需要粘貼模式確認
+            # 這確保長 prompt 被正確發送
+            time.sleep(0.2)
             subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
 
             os.remove(prompt_file)

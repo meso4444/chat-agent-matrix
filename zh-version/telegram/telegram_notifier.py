@@ -8,21 +8,45 @@ import requests
 import json
 import yaml
 import os
+import sys
 from datetime import datetime
+
+# 支援從 agent_home 目錄執行：查找上層目錄的 config.py
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# 如果當前目錄找不到 config，則逐級往上查找
+if not os.path.exists(os.path.join(script_dir, 'config.py')):
+    # 從 agent_home/AgentName/ 往上兩級到 telegram/
+    telegram_dir = os.path.dirname(os.path.dirname(script_dir))
+    if os.path.exists(os.path.join(telegram_dir, 'config.py')):
+        sys.path.insert(0, telegram_dir)
+    else:
+        # 如果還是找不到，試試再往上一級
+        telegram_dir = os.path.dirname(telegram_dir)
+        if os.path.exists(os.path.join(telegram_dir, 'config.py')):
+            sys.path.insert(0, telegram_dir)
+
 from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_API_BASE_URL
 
 def load_message_template(template_name: str, software: str = None) -> dict:
     """
     從模板文件載入訊息模板
-    
+
     Args:
         template_name (str): 模板名稱 (start, progress, success, error, custom)
         software (str): 軟體名稱，用於查找特定軟體模板
-        
+
     Returns:
         dict: 包含 icon, title, content 的模板字典
     """
-    template_file = os.path.join(os.path.dirname(__file__), 'message_templates.yaml')
+    # 支援從 agent_home 目錄執行：優先查找上層目錄的 message_templates.yaml
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    template_file = os.path.join(script_dir, 'message_templates.yaml')
+
+    if not os.path.exists(template_file):
+        # 往上兩級到 telegram/ 目錄
+        telegram_dir = os.path.dirname(os.path.dirname(script_dir))
+        template_file = os.path.join(telegram_dir, 'message_templates.yaml')
     
     try:
         with open(template_file, 'r', encoding='utf-8') as f:
@@ -132,6 +156,76 @@ def send_message_with_keyboard(message: str, keyboard_buttons: list = None) -> b
         print(f'❌ 發送過程發生錯誤: {e}')
         return False
 
+def send_file(file_path: str, file_type: str = 'document', caption: str = '') -> bool:
+    """
+    發送文件到 Telegram
+
+    Args:
+        file_path (str): 文件完整路徑
+        file_type (str): 文件類型 ('document', 'photo', 'video', 'audio')
+        caption (str): 文件描述（選填）
+
+    Returns:
+        bool: 發送是否成功
+    """
+    if not TELEGRAM_BOT_TOKEN:
+        print("❌ 錯誤: 請在 config.py 中設定 TELEGRAM_BOT_TOKEN")
+        return False
+
+    if not TELEGRAM_CHAT_ID:
+        print("❌ 錯誤: 請在 config.py 中設定 TELEGRAM_CHAT_ID")
+        return False
+
+    if not os.path.exists(file_path):
+        print(f"❌ 錯誤: 文件不存在 - {file_path}")
+        return False
+
+    # 決定 API 端點
+    api_method_map = {
+        'document': 'sendDocument',
+        'photo': 'sendPhoto',
+        'video': 'sendVideo',
+        'audio': 'sendAudio'
+    }
+
+    api_method = api_method_map.get(file_type, 'sendDocument')
+    url = f"{TELEGRAM_API_BASE_URL}{TELEGRAM_BOT_TOKEN}/{api_method}"
+
+    # 檔案參數對應
+    file_param_map = {
+        'document': 'document',
+        'photo': 'photo',
+        'video': 'video',
+        'audio': 'audio'
+    }
+
+    file_param = file_param_map.get(file_type, 'document')
+
+    try:
+        with open(file_path, 'rb') as f:
+            files = {file_param: f}
+            data = {
+                'chat_id': TELEGRAM_CHAT_ID,
+                'parse_mode': 'HTML'
+            }
+
+            if caption:
+                data['caption'] = caption
+
+            response = requests.post(url, files=files, data=data, timeout=30)
+
+        if response.status_code == 200:
+            file_name = os.path.basename(file_path)
+            print(f'✅ 文件發送成功 ({file_type}): {file_name} - {datetime.now().strftime("%H:%M:%S")}')
+            return True
+        else:
+            print(f'❌ 文件發送失敗 ({file_type}): {response.status_code} - {response.text}')
+            return False
+
+    except Exception as e:
+        print(f'❌ 文件發送過程發生錯誤: {e}')
+        return False
+
 def format_message_from_template(template_name: str, software: str = "", **kwargs) -> str:
     """
     從模板格式化訊息
@@ -211,7 +305,24 @@ def send_template_message(template_name: str, **variables) -> bool:
 
 if __name__ == '__main__':
     import sys
-    
+
+    # 支援文件發送: python3 telegram_notifier.py --file <file_type> <file_path> [caption]
+    if len(sys.argv) > 1 and sys.argv[1] == '--file':
+        if len(sys.argv) < 4:
+            print("❌ 用法: python3 telegram_notifier.py --file <type> <path> [caption]")
+            print("   類型: document, photo, video, audio")
+            sys.exit(1)
+
+        file_type = sys.argv[2]
+        file_path = sys.argv[3]
+        caption = " ".join(sys.argv[4:]) if len(sys.argv) > 4 else ''
+        caption = caption.replace('\\n', '\n')
+
+        if send_file(file_path, file_type, caption):
+            sys.exit(0)
+        else:
+            sys.exit(1)
+
     # 支援命令行直接發送訊息 (更安全的特殊字符處理方式)
     if len(sys.argv) > 1:
         message_content = " ".join(sys.argv[1:])

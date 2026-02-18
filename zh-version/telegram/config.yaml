@@ -5,8 +5,8 @@
 # 🌐 伺服器與網路設定
 server:
   host: 127.0.0.1
-  port: 5000
-  ngrok_api_port: 4040
+  port: 5002
+  ngrok_api_port: 4042
 
 # 🤖 AI Agent 軍團配置
 agents:
@@ -36,36 +36,9 @@ collaboration_groups:
       Chöd: "負責行程所有花費的預算估算，若單人花費超出台幣五萬時，就提交預算報告給Güpa，讓他調整行程"
 
 # ⏰ 排程任務 (Scheduler)
-scheduler:
-  - name: "每日系統清理"
-    type: "system"
-    action: "cleanup_images"
-    trigger: "interval"
-    hour: 24
-    minute: 0
-    second: 0
-    active: true
-    
-  - name: "國際新聞日報"
-    type: "agent_command"
-    agent: "Güpa"
-    command: "查詢一下這兩天重要的國際新聞"
-    trigger: "cron"
-    hour: 12
-    minute: 0
-    second: 0
-    active: true
-    
-  - name: "Chöd 定期股價回報"
-    type: "agent_command"
-    agent: "Chöd"
-    command: "查詢英偉達當前股價"
-    trigger: "interval"
-    hour: 12
-    minute: 0
-    second: 0
-    active: true
-
+# 排程配置已分離到獨立的 scheduler.yaml 檔案
+# 參考：scheduler.yaml
+#
 # 🧹 全域預設清理規則
 default_cleanup_policy:
   images_retention_days: 7
@@ -77,7 +50,7 @@ telegram:
 
 # 🖼️ 多模態圖片處理
 image_processing:
-  temp_dir_name: "images_temp" 
+  temp_dir_name: "images_temp"
 
 # tmux 設定
 tmux:

@@ -19,7 +19,7 @@ from config import (
     COLLABORATION_GROUPS
 )
 from telegram_notifier import send_message, send_message_with_keyboard
-from telegram_scripts.scheduler_manager import SchedulerManager
+from scheduler_manager import SchedulerManager
 
 app = Flask(__name__)
 
@@ -41,6 +41,9 @@ USER_STATES = {}
 
 # 當前活躍 Agent (預設為配置中的預設值)
 CURRENT_AGENT = DEFAULT_ACTIVE_AGENT
+
+# 全局排程管理器（在主程式中初始化）
+scheduler = None
 
 class ImageManager:
     """圖片管理員：負責下載、儲存與自動清理 (支援多 Agent 隔離)"""
@@ -152,15 +155,20 @@ def send_to_ai_session(message, agent_name=None):
             send_message(f"❌ Agent '{target}' 視窗不存在\n請檢查配置或執行: ./start_all_services.sh")
             return False
 
-        # 🔧 使用 -l (literal mode) 發送訊息，防止特殊字符被 shell 解釋
+        # 🔧 防止 Gemini CLI 誤解感叹號進入 shell 模式
+        # 轉義無效，直接替換: ! → ！(全形感叹號)
+        escaped_message = message.replace('!', '！')
+
+        # 🔧 使用 -l (literal mode) 發送訊息，防止 tmux 解釋特殊字符
         # 這解決了:
-        # - "!" 觸發 bash 歷史展開
-        # - "git" 觸發 Claude Code hook
+        # - tmux 命令解釋 (如 #{pane_id} 等)
+        # - bash 歷史展開
         # - "\n" 誤觸粘貼模式
+        # （! → ！ 替換已在上方處理，防止 Gemini 進入特殊模式）
         subprocess.run([
             'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target}',
-            '-l',       # ← 關鍵: 字面量模式，不執行 shell 解釋
-            message
+            '-l',       # ← 關鍵: 字面量模式，不執行 tmux 解釋
+            escaped_message
         ], check=True)
 
         # 延遲讓訊息完全進入輸入緩衝區
@@ -307,7 +315,7 @@ def handle_user_message(message, user_id, username):
             
             if found_agent:
                 CURRENT_AGENT = found_agent['name'] # 使用原始定義名稱 (如 "Güpa")
-                send_message(f"🎯 <b>對話切換成功</b>\n當前活躍 Agent: <code>{CURRENT_AGENT}</code>")
+                send_message(f"⚡ <b>對話切換成功</b>\n當前活躍 Agent: <code>{CURRENT_AGENT}</code>")
             else:
                 send_message(f"❌ 找不到 Agent: <code>{parts[1]}</code>\n請輸入 <code>/status</code> 查看可用列表。")
         else:
@@ -406,6 +414,57 @@ def handle_user_message(message, user_id, username):
             send_message("❌ 請指定要修復的 Agent 名稱，例如: `/fix claude`")
         return
 
+    # 格式: /capture [target_agent]
+    elif message.startswith('/capture'):
+        parts = message.split()
+        if len(parts) > 1:
+            target = parts[1]
+            if check_agent_session(target):
+                try:
+                    # 擷取 tmux pane 的內容
+                    result = subprocess.run(
+                        ['tmux', 'capture-pane', '-t', f'{TMUX_SESSION_NAME}:{target}', '-p'],
+                        capture_output=True, text=True, timeout=5
+                    )
+
+                    if result.returncode == 0:
+                        output_lines = result.stdout.split('\n')
+                        # 取最後 100 行
+                        captured_lines = output_lines[-100:] if len(output_lines) > 100 else output_lines
+                        captured_content = '\n'.join(captured_lines).strip()
+
+                        # 分割成多條訊息發送（避免超過 Telegram 限制）
+                        msg_chunks = []
+                        current_chunk = ""
+                        for line in captured_lines:
+                            if len(current_chunk) + len(line) + 1 > 4000:  # Telegram 訊息限制
+                                if current_chunk:
+                                    msg_chunks.append(current_chunk)
+                                current_chunk = line
+                            else:
+                                current_chunk += line + '\n'
+                        if current_chunk:
+                            msg_chunks.append(current_chunk)
+
+                        # 發送擷圖
+                        send_message(f"📸 <b>[{target}]</b> 畫面擷圖（最後 100 行）\n<code>{msg_chunks[0]}</code>" if msg_chunks else f"❌ [{target}] 畫面為空")
+
+                        # 如果有多個 chunk，繼續發送
+                        for chunk in msg_chunks[1:]:
+                            time.sleep(0.3)
+                            send_message(f"<code>{chunk}</code>")
+                    else:
+                        send_message(f"❌ 無法擷圖 [{target}]: {result.stderr}")
+                except subprocess.TimeoutExpired:
+                    send_message(f"⏱️ 擷圖超時 [{target}]")
+                except Exception as e:
+                    send_message(f"❌ 擷圖失敗 [{target}]: {str(e)}")
+            else:
+                send_message(f"❌ Agent '{target}' 視窗不存在")
+        else:
+            send_message("❌ 請指定要擷圖的 Agent 名稱，例如: `/capture Güpa20`")
+        return
+
     # 3. 檢查是否為自定義選單標籤
     matched_menu_item = None
     for row in CUSTOM_MENU:
@@ -433,7 +492,7 @@ def handle_user_message(message, user_id, username):
     
     success = send_to_ai_session(final_message)
     if success:
-        send_message(f"📤 <b>[{timestamp}]</b> 已轉發到 <b>[{CURRENT_AGENT}]</b>:\n<i>{message}</i>")
+        send_message(f"🐙 <b>[{timestamp}]</b> > Matrix Connected :: <b>[{CURRENT_AGENT}]</b>")
 
 def handle_callback_query(callback_data, user_id):
     """處理按鈕回調"""
@@ -441,7 +500,7 @@ def handle_callback_query(callback_data, user_id):
     if callback_data.startswith('sw_'):
         target = callback_data.replace('sw_', '')
         CURRENT_AGENT = target
-        send_message(f"🎯 <b>對話切換成功</b>\n當前活躍 Agent: <code>{target}</code>")
+        send_message(f"⚡ <b>對話切換成功</b>\n當前活躍 Agent: <code>{target}</code>")
     elif callback_data == 'system_status':
         check_system_status()
     elif callback_data == 'help':
@@ -467,9 +526,8 @@ def check_system_status():
         for grp in COLLABORATION_GROUPS:
             roles = grp.get('roles', {})
             for member, role in roles.items():
-                # 簡化顯示：只取前 15 個字
-                short_role = role[:15] + "..." if len(role) > 15 else role
-                agent_role_map[member] = f"[{grp.get('name')}] {short_role}"
+                # 完整顯示角色說明（無長度限制）
+                agent_role_map[member] = f"[{grp.get('name')}] {role}"
 
         # 1. Agent 狀態
         agent_status_list = []
@@ -491,18 +549,61 @@ def check_system_status():
         if SCHEDULER_CONF:
             for job in SCHEDULER_CONF:
                 if job.get('active'):
+                    trigger_type = job.get('trigger', '')
                     trigger_info = ""
-                    if job['trigger'] == 'interval':
-                        # 簡化顯示 interval
+
+                    # 根據 trigger 類型生成詳細描述
+                    if trigger_type == 'daily':
+                        h = job.get('hour', 0)
+                        m = job.get('minute', 0)
+                        trigger_info = f"每天 {h:02d}:{m:02d}"
+
+                    elif trigger_type == 'weekly':
+                        days = {0: '週一', 1: '週二', 2: '週三', 3: '週四', 4: '週五', 5: '週六', 6: '週日'}
+                        day = days.get(job.get('day_of_week', 0), '?')
+                        h = job.get('hour', 0)
+                        m = job.get('minute', 0)
+                        trigger_info = f"每{day} {h:02d}:{m:02d}"
+
+                    elif trigger_type == 'monthly':
+                        day = job.get('day', 1)
+                        h = job.get('hour', 0)
+                        m = job.get('minute', 0)
+                        trigger_info = f"每月{day}日 {h:02d}:{m:02d}"
+
+                    elif trigger_type == 'interval':
                         h = job.get('hours', job.get('hour', 0))
                         m = job.get('minutes', job.get('minute', 0))
                         s = job.get('seconds', job.get('second', 0))
-                        trigger_info = f"每 {h}時{m}分{s}秒"
-                    elif job['trigger'] == 'cron':
-                        trigger_info = f"每天 {job.get('hour', '*')}:{job.get('minute', '*')}"
-                    
-                    scheduler_list.append(f"• {job['name']} ({trigger_info})")
-        
+                        if h > 0:
+                            trigger_info = f"每{h}小時"
+                        elif m > 0:
+                            trigger_info = f"每{m}分鐘"
+                        else:
+                            trigger_info = f"每{s}秒"
+
+                    elif trigger_type == 'cron':
+                        dow = job.get('day_of_week', '*')
+                        day = job.get('day', '*')
+                        h = job.get('hour', '*')
+                        m = job.get('minute', '*')
+                        trigger_info = f"Cron: {dow}/{day} {h}:{m}"
+
+                    # 生成任務詳情
+                    job_type = job.get('type', '')
+                    if job_type == 'agent_command':
+                        agent = job.get('agent', '?')
+                        cmd = job.get('command', '?')[:20]  # 限制長度
+                        type_info = f"[Agent: {agent}]"
+                    elif job_type == 'system':
+                        action = job.get('action', '?')
+                        type_info = f"[系統: {action}]"
+                    else:
+                        type_info = ""
+
+                    # 組合呈現
+                    scheduler_list.append(f"• {job['name']} | {trigger_info} {type_info}")
+
         scheduler_info = "\n".join(scheduler_list) if scheduler_list else "• 無啟用中的任務"
         
         # 3. tmux 狀態
@@ -532,19 +633,45 @@ def check_system_status():
 def show_help():
     """顯示幫助訊息"""
     help_message = f"""
-📖 <b>Chat Agent Matrix 指令說明</b>
+📖 <b>Chat Agent Matrix - 完整功能說明</b>
 
-🎯 <b>當前聚焦 Agent:</b> <code>{CURRENT_AGENT}</code>
+<b>🎯 當前聚焦 Agent:</b> <code>{CURRENT_AGENT}</code>
 
-🔧 <b>核心指令:</b>
-• <code>/switch [name]</code> - 切換對話 Agent
-• <code>/status</code> - 檢查所有 Agent 狀態
-• <code>/menu</code> - 顯示功能選單
-• <code>/interrupt</code> - 中斷目前執行 (Ctrl+C)
-• <code>/clear</code> - 清除當前視窗與記憶
+───────────────────────────────
 
-💡 <b>使用技巧:</b>
-直接發送訊息或圖片，系統會自動遞交給標註為 ⭐ 的活躍 Agent 處理。"""
+<b>🔧 基本對話操作</b>
+• 直接發送訊息 - 交給活躍 Agent (⭐)
+• 發送圖片 - 交給活躍 Agent 進行多模態分析
+• <code>/switch [name]</code> - 切換活躍 Agent
+• <code>/menu</code> - 顯示快捷功能選單
+
+───────────────────────────────
+
+<b>🔍 系統檢查與控制</b>
+• <code>/status</code> - 查看所有 Agent 狀態、排程任務、系統資訊
+• <code>/inspect [agent]</code> - 深度檢查指定 Agent 的 tmux 會話
+• <code>/interrupt</code> - 中斷當前 Agent 執行 (Ctrl+C)
+• <code>/clear</code> - 清除當前 Agent 視窗與記憶
+
+───────────────────────────────
+
+<b>🧠 記憶與恢復</b>
+• <code>/resume_latest</code> - 恢復最近一次對話內容
+
+───────────────────────────────
+
+<b>🛠️ 進階操作</b>
+• <code>/fix [agent]</code> - 嘗試修復故障 Agent
+
+───────────────────────────────
+
+<b>💡 快速技巧</b>
+1️⃣ 標註 ⭐ 的 Agent 為當前活躍，直接訊息會交給它
+2️⃣ /status 可快速了解系統整體狀態
+3️⃣ 排程任務在 scheduler.yaml 中配置
+4️⃣ 使用 /menu 選擇常用操作，無需記指令
+
+"""
     send_message(help_message)
 
 def show_control_menu():
@@ -571,18 +698,62 @@ def api_status():
         'timestamp': datetime.now().isoformat()
     })
 
+# ==========================================
+# 排程管理 API (Scheduler Management)
+# ==========================================
+
+@app.route('/scheduler/refresh', methods=['POST'])
+def scheduler_refresh():
+    """重新讀取 scheduler.yaml 並刷新排程"""
+    if scheduler is None:
+        return jsonify({'status': 'error', 'message': '排程管理器未初始化'}), 500
+
+    result = scheduler.refresh_jobs()
+    return jsonify(result), 200 if result['status'] == 'ok' else 400
+
+@app.route('/scheduler/jobs', methods=['GET'])
+def scheduler_list_jobs():
+    """列出所有排程任務"""
+    if scheduler is None:
+        return jsonify({'status': 'error', 'message': '排程管理器未初始化'}), 500
+
+    result = scheduler.list_jobs()
+    return jsonify(result), 200
+
+@app.route('/scheduler/jobs/register', methods=['POST'])
+def scheduler_register_job():
+    """註冊新排程任務"""
+    if scheduler is None:
+        return jsonify({'status': 'error', 'message': '排程管理器未初始化'}), 500
+
+    job_config = request.get_json()
+    if not job_config:
+        return jsonify({'status': 'error', 'message': '請提供有效的 JSON 配置'}), 400
+
+    result = scheduler.register_job(job_config)
+    return jsonify(result), 200 if result['status'] == 'ok' else 400
+
+@app.route('/scheduler/jobs/<job_id>', methods=['DELETE'])
+def scheduler_delete_job(job_id):
+    """刪除排程任務"""
+    if scheduler is None:
+        return jsonify({'status': 'error', 'message': '排程管理器未初始化'}), 500
+
+    result = scheduler.delete_job(job_id)
+    return jsonify(result), 200 if result['status'] == 'ok' else 400
+
 if __name__ == '__main__':
     print(f"🚀 啟動 Chat Agent Matrix API (Multi-Agent Mode)...")
     print(f"📍 本地端點: http://{FLASK_HOST}:{FLASK_PORT}")
-    # === AACS: 物理寫入當前 Port 供啟動腳本讀取 === 
-    port_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".flask_port") 
-    with open(port_file, "w") as f: 
-        f.write(str(FLASK_PORT)) 
+    # === AACS: 物理寫入當前 Port 供啟動腳本讀取 ===
+    port_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".flask_port")
+    with open(port_file, "w") as f:
+        f.write(str(FLASK_PORT))
 
     print(f"🤖 預設 Agent: {DEFAULT_ACTIVE_AGENT}")
     print(f"👥 已配置 Agents: {', '.join([a['name'] for a in AGENTS])}")
     print("")
-    
+
     # 啟動排程任務
     scheduler = SchedulerManager(image_manager=image_manager)
     scheduler.load_jobs(SCHEDULER_CONF)

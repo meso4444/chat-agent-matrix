@@ -43,6 +43,7 @@ if INSTANCE_NAME:
 # 3. 載入 YAML 配置 (ISC: Instance-Specific Config)
 CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
 INSTANCE_CONFIG_PATH = os.path.join(BASE_DIR, f"config.{INSTANCE_NAME}.yaml")
+SCHEDULER_YAML_PATH = os.path.join(BASE_DIR, "scheduler.yaml")
 
 def load_yaml(path):
     if os.path.exists(path):
@@ -91,5 +92,9 @@ TELEGRAM_WEBHOOK_PATH = os.environ.get("TELEGRAM_WEBHOOK_PATH", _config.get("tel
 DEFAULT_CLEANUP_POLICY = _config.get("default_cleanup_policy", {"images_retention_days": 7})
 TEMP_IMAGE_DIR_NAME = _config.get("image_processing", {}).get("temp_dir_name", "images_temp")
 CUSTOM_MENU = _config.get("menu", [])
-SCHEDULER_CONF = _config.get("scheduler", [])
+
+# 從分離的 scheduler.yaml 讀取排程配置
+_scheduler_config = load_yaml(SCHEDULER_YAML_PATH)
+SCHEDULER_CONF = _scheduler_config.get("scheduler", [])
+
 COLLABORATION_GROUPS = _config.get("collaboration_groups", [])
