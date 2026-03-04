@@ -381,6 +381,25 @@ def handle_user_message(message, user_id, username):
             send_message("❌ Please specify the Agent name to check, for example: `/inspect claude`")
         return
 
+    # Format: /awake [target_agent] - Automatic one-click agent recovery
+    elif message.startswith('/awake'):
+        parts = message.split()
+        if len(parts) > 1:
+            target_name = parts[1]
+            target_agent = get_agent_info(target_name)
+            if target_agent:
+                send_message(f"⚡ Starting automatic recovery for <b>[{target_name}]</b>...")
+                # Launch in background thread to avoid blocking
+                import threading
+                thread = threading.Thread(target=awake_agent, args=(target_name, target_agent))
+                thread.daemon = True
+                thread.start()
+            else:
+                send_message(f"❌ Agent not found in configuration: {target_name}")
+        else:
+            send_message("❌ Please specify the Agent name to awake, for example: `/awake Güpa`")
+        return
+
     # Format: /fix [target_agent]
     elif message.startswith('/fix'):
         parts = message.split()
@@ -517,6 +536,83 @@ def show_agent_selector():
     agent_list = "\n".join([f"• <code>{a['name']}</code> - {a['description']}" for a in AGENTS])
     msg = f"🤖 <b>Please select Agent to switch to</b>\nFormat: <code>/switch [name]</code>\n\nAvailable list:\n{agent_list}"
     send_message(msg)
+
+def awake_agent(target_name, target_agent):
+    """Automatically recover a faulty Agent with precise timing control"""
+    try:
+        start_cmd = target_agent.get('start_cmd', 'python3 main.py')
+
+        send_message(f"📍 [Step 1/6] Entering {target_name} tmux window...")
+
+        # Step 1: Send /quit command
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            '/quit'
+        ], check=True)
+        time.sleep(1)
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            'Enter'
+        ], check=True)
+        time.sleep(3)
+
+        send_message(f"📍 [Step 2/6] Verifying shell return with pwd...")
+
+        # Step 2: Verify with pwd
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            'pwd'
+        ], check=True)
+        time.sleep(1)
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            'Enter'
+        ], check=True)
+        time.sleep(2)
+
+        send_message(f"📍 [Step 3/6] Executing startup command: {start_cmd}...")
+
+        # Step 3: Restart Agent
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            start_cmd
+        ], check=True)
+        time.sleep(1)
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            'Enter'
+        ], check=True)
+        time.sleep(5)
+
+        send_message(f"📍 [Step 4/6] Waiting for startup to complete (5 seconds)...")
+        time.sleep(1)  # Additional stability wait
+
+        send_message(f"📍 [Step 5/6] Restoring conversation with /resume...")
+
+        # Step 4: Resume conversation
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            '/resume'
+        ], check=True)
+        time.sleep(1)
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            'Enter'
+        ], check=True)
+        time.sleep(3)
+
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            'Enter'
+        ], check=True)
+        time.sleep(2)
+
+        send_message(f"✅ [Step 6/6] Agent <b>{target_name}</b> awakened successfully! Ready to use.")
+
+    except subprocess.CalledProcessError as e:
+        send_message(f"❌ Awake failed at step: {str(e)}")
+    except Exception as e:
+        send_message(f"❌ Error during awake process: {str(e)}")
 
 def check_system_status():
     """Check system status (Multi-Agent Edition)"""
