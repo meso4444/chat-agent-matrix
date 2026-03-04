@@ -23,7 +23,7 @@ scheduler:
   - name: "All Agents Hourly Memory Update"
     type: "system"
     action: "update_agent_memories"
-    prompt: "Summary and key points of tasks completed in the past period. Record details for key tasks or important turning points. Update the current day's memory file in the memory directory"
+    prompt: "If there are tasks performed in the past period, provide a summary and key points. Record details for key tasks or important turning points. Update the records to today's memory file (md format) in the memory directory. This is your personal memory task and does not require reporting to users."
     trigger: "interval"
     hours: 1
     minutes: 0
