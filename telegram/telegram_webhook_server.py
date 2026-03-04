@@ -381,6 +381,25 @@ def handle_user_message(message, user_id, username):
             send_message("❌ 請指定要檢查的 Agent 名稱，例如: `/inspect claude`")
         return
 
+    # 格式: /awake [target_agent] - 自動一鍵喚醒 Agent
+    elif message.startswith('/awake'):
+        parts = message.split()
+        if len(parts) > 1:
+            target_name = parts[1]
+            target_agent = get_agent_info(target_name)
+            if target_agent:
+                send_message(f"⚡ 開始自動修復 <b>[{target_name}]</b>...")
+                # 在後台執行以避免阻塞
+                import threading
+                thread = threading.Thread(target=awake_agent, args=(target_name, target_agent))
+                thread.daemon = True
+                thread.start()
+            else:
+                send_message(f"❌ 找不到配置檔中的 Agent: {target_name}")
+        else:
+            send_message("❌ 請指定要喚醒的 Agent 名稱，例如: `/awake Chöd`")
+        return
+
     # 格式: /fix [target_agent]
     elif message.startswith('/fix'):
         parts = message.split()
@@ -517,6 +536,83 @@ def show_agent_selector():
     agent_list = "\n".join([f"• <code>{a['name']}</code> - {a['description']}" for a in AGENTS])
     msg = f"🤖 <b>請選擇要切換的 Agent</b>\n格式: <code>/switch [名稱]</code>\n\n可用列表:\n{agent_list}"
     send_message(msg)
+
+def awake_agent(target_name, target_agent):
+    """自動修復故障 Agent，精確控制時間延迟"""
+    try:
+        start_cmd = target_agent.get('start_cmd', 'python3 main.py')
+
+        send_message(f"📍 [步驟 1/6] 進入 {target_name} tmux 視窗...")
+
+        # 步驟 1: 發送 /quit 指令
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            '/quit'
+        ], check=True)
+        time.sleep(1)
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            'Enter'
+        ], check=True)
+        time.sleep(3)
+
+        send_message(f"📍 [步驟 2/6] 用 pwd 驗證返回 Shell...")
+
+        # 步驟 2: 用 pwd 驗證
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            'pwd'
+        ], check=True)
+        time.sleep(1)
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            'Enter'
+        ], check=True)
+        time.sleep(2)
+
+        send_message(f"📍 [步驟 3/6] 執行啟動指令: {start_cmd}...")
+
+        # 步驟 3: 重新啟動 Agent
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            start_cmd
+        ], check=True)
+        time.sleep(1)
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            'Enter'
+        ], check=True)
+        time.sleep(5)
+
+        send_message(f"📍 [步驟 4/6] 等待啟動完成（5秒）...")
+        time.sleep(1)  # 額外穩定等待
+
+        send_message(f"📍 [步驟 5/6] 使用 /resume 恢復對話...")
+
+        # 步驟 4: 恢復對話
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            '/resume'
+        ], check=True)
+        time.sleep(1)
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            'Enter'
+        ], check=True)
+        time.sleep(3)
+
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
+            'Enter'
+        ], check=True)
+        time.sleep(2)
+
+        send_message(f"✅ [步驟 6/6] Agent <b>{target_name}</b> 成功喚醒！已準備好使用。")
+
+    except subprocess.CalledProcessError as e:
+        send_message(f"❌ 喚醒在某一步驟失敗: {str(e)}")
+    except Exception as e:
+        send_message(f"❌ 喚醒過程中出現錯誤: {str(e)}")
 
 def check_system_status():
     """檢查系統狀態 (Multi-Agent 版)"""
