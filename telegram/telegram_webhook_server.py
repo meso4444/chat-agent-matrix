@@ -542,15 +542,10 @@ def wait_for_agent_prompt(target_name, engine, max_wait=30):
 
     Args:
         engine: 'claude' or 'gemini'
-        - claude → ❯
-        - gemini → * or >
+        - claude → ❯ (at end of last non-empty line)
+        - gemini → * or > (at start of last line)
     """
     start_time = time.time()
-    # Select corresponding prompt marker based on engine
-    if engine == 'claude':
-        prompt_markers = ['❯']
-    else:  # gemini - could be * or >
-        prompt_markers = ['*', '>']
 
     while time.time() - start_time < max_wait:
         try:
@@ -563,10 +558,28 @@ def wait_for_agent_prompt(target_name, engine, max_wait=30):
                 time.sleep(0.5)
                 continue
 
-            # Check if entire pane content contains any expected prompt marker
-            for marker in prompt_markers:
-                if marker in output:
+            lines = output.strip().split('\n')
+            if not lines:
+                time.sleep(0.5)
+                continue
+
+            # Get last non-empty line for prompt detection
+            last_line = ''
+            for line in reversed(lines):
+                if line.strip():
+                    last_line = line
+                    break
+
+            if engine == 'claude':
+                # Claude prompt: ❯ (usually at the end or alone on a line)
+                if '❯' in last_line or (last_line.strip() == '❯'):
                     return True
+            else:  # gemini
+                # Gemini prompt: * or > at the start of the line (check multiple last lines)
+                for line in reversed(lines[-5:]):  # Check last 5 lines
+                    stripped = line.strip()
+                    if stripped.startswith('*') or stripped.startswith('>'):
+                        return True
         except Exception as e:
             pass
 
