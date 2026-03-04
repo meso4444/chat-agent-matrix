@@ -538,9 +538,15 @@ def show_agent_selector():
     send_message(msg)
 
 def awake_agent(target_name, target_agent):
-    """自動修復故障 Agent，精確控制時間延迟"""
+    """自動修復故障 Agent，精確控制時間延迿"""
     try:
-        start_cmd = target_agent.get('start_cmd', 'python3 main.py')
+        # Determine startup command based on agent engine type
+        engine = target_agent.get('engine', 'claude')
+        engine_cmd_map = {
+            'gemini': 'gemini --yolo',
+            'claude': 'claude --permission-mode bypassPermissions'
+        }
+        start_cmd = target_agent.get('start_cmd', engine_cmd_map.get(engine, 'python3 main.py'))
 
         send_message(f"📍 [步驟 1/6] 進入 {target_name} tmux 視窗...")
 
