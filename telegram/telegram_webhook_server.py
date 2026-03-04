@@ -542,7 +542,7 @@ def wait_for_agent_prompt(target_name, engine, max_wait=30):
 
     Args:
         engine: 'claude' or 'gemini'
-        - claude → 'bypass permissions on' text
+        - claude → ❯ prompt marker
         - gemini → * or > at start of line
     """
     start_time = time.time()
@@ -558,13 +558,14 @@ def wait_for_agent_prompt(target_name, engine, max_wait=30):
                 time.sleep(0.5)
                 continue
 
+            lines = output.split('\n')
+
             if engine == 'claude':
-                # Claude prompt: look for 'bypass permissions on' text (indicates CLI ready)
-                if 'bypass permissions on' in output:
+                # Claude prompt: check for ❯ marker in output
+                if '❯' in output:
                     return True
             else:  # gemini
                 # Gemini prompt: * or > at the start of a line (check multiple last lines)
-                lines = output.strip().split('\n')
                 for line in reversed(lines[-5:]):  # Check last 5 lines
                     stripped = line.strip()
                     if stripped.startswith('*') or stripped.startswith('>'):
