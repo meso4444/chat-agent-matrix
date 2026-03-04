@@ -544,65 +544,24 @@ def check_system_status():
         
         agents_info = "\n".join(agent_status_list)
         
-        # 2. 排程狀態
+        # 2. 排程狀態（實時查詢）
         scheduler_list = []
-        if SCHEDULER_CONF:
-            for job in SCHEDULER_CONF:
-                if job.get('active'):
-                    trigger_type = job.get('trigger', '')
-                    trigger_info = ""
+        if scheduler:
+            scheduler_data = scheduler.list_jobs()
+            for job in scheduler_data.get('jobs', []):
+                job_id = job.get('id', '?')
+                trigger_str = job.get('trigger', '?')
+                next_run = job.get('next_run_time', '?')
 
-                    # 根據 trigger 類型生成詳細描述
-                    if trigger_type == 'daily':
-                        h = job.get('hour', 0)
-                        m = job.get('minute', 0)
-                        trigger_info = f"每天 {h:02d}:{m:02d}"
+                # 格式化下次運行時間
+                if next_run and next_run != 'None':
+                    # next_run_time 格式: "2026-03-04 12:34:56.123456"
+                    next_run_display = next_run.split('.')[0]  # 移除毫秒
+                else:
+                    next_run_display = "暫無"
 
-                    elif trigger_type == 'weekly':
-                        days = {0: '週一', 1: '週二', 2: '週三', 3: '週四', 4: '週五', 5: '週六', 6: '週日'}
-                        day = days.get(job.get('day_of_week', 0), '?')
-                        h = job.get('hour', 0)
-                        m = job.get('minute', 0)
-                        trigger_info = f"每{day} {h:02d}:{m:02d}"
-
-                    elif trigger_type == 'monthly':
-                        day = job.get('day', 1)
-                        h = job.get('hour', 0)
-                        m = job.get('minute', 0)
-                        trigger_info = f"每月{day}日 {h:02d}:{m:02d}"
-
-                    elif trigger_type == 'interval':
-                        h = job.get('hours', job.get('hour', 0))
-                        m = job.get('minutes', job.get('minute', 0))
-                        s = job.get('seconds', job.get('second', 0))
-                        if h > 0:
-                            trigger_info = f"每{h}小時"
-                        elif m > 0:
-                            trigger_info = f"每{m}分鐘"
-                        else:
-                            trigger_info = f"每{s}秒"
-
-                    elif trigger_type == 'cron':
-                        dow = job.get('day_of_week', '*')
-                        day = job.get('day', '*')
-                        h = job.get('hour', '*')
-                        m = job.get('minute', '*')
-                        trigger_info = f"Cron: {dow}/{day} {h}:{m}"
-
-                    # 生成任務詳情
-                    job_type = job.get('type', '')
-                    if job_type == 'agent_command':
-                        agent = job.get('agent', '?')
-                        cmd = job.get('command', '?')[:20]  # 限制長度
-                        type_info = f"[Agent: {agent}]"
-                    elif job_type == 'system':
-                        action = job.get('action', '?')
-                        type_info = f"[系統: {action}]"
-                    else:
-                        type_info = ""
-
-                    # 組合呈現
-                    scheduler_list.append(f"• {job['name']} | {trigger_info} {type_info}")
+                # 組合呈現（實時信息）
+                scheduler_list.append(f"• {job_id}\n  └ 觸發: {trigger_str}\n  └ 下次運行: {next_run_display}")
 
         scheduler_info = "\n".join(scheduler_list) if scheduler_list else "• 無啟用中的任務"
         
