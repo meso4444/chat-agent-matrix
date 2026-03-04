@@ -609,7 +609,8 @@ def show_help():
 <b>🔍 系統檢查與控制</b>
 • <code>/status</code> - 查看所有 Agent 狀態、排程任務、系統資訊
 • <code>/inspect [agent]</code> - 深度檢查指定 Agent 的 tmux 會話
-• <code>/interrupt</code> - 中斷當前 Agent 執行 (Ctrl+C)
+• <code>/capture [agent]</code> - 截取指定 Agent 視窗內容（最後100行）
+• <code>/interrupt</code> 或 <code>/stop</code> - 中斷當前 Agent 執行 (Ctrl+C)
 • <code>/clear</code> - 清除當前 Agent 視窗與記憶
 
 ───────────────────────────────
@@ -620,7 +621,7 @@ def show_help():
 ───────────────────────────────
 
 <b>🛠️ 進階操作</b>
-• <code>/fix [agent]</code> - 嘗試修復故障 Agent
+• <code>/fix [agent]</code> - 嘗試修復故障 Agent（清除卡住的指令）
 
 ───────────────────────────────
 
