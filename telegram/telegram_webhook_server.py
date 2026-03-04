@@ -537,6 +537,43 @@ def show_agent_selector():
     msg = f"🤖 <b>請選擇要切換的 Agent</b>\n格式: <code>/switch [名稱]</code>\n\n可用列表:\n{agent_list}"
     send_message(msg)
 
+def wait_for_agent_prompt(target_name, engine, max_wait=30):
+    """Wait for tmux pane to show corresponding CLI prompt
+
+    Args:
+        engine: 'claude' or 'gemini'
+        - claude → ❯
+        - gemini → * or >
+    """
+    start_time = time.time()
+    # Select corresponding prompt marker based on engine
+    if engine == 'claude':
+        prompt_markers = ['❯']
+    else:  # gemini - could be * or >
+        prompt_markers = ['*', '>']
+
+    while time.time() - start_time < max_wait:
+        try:
+            result = subprocess.run(
+                ['tmux', 'capture-pane', '-t', f'{TMUX_SESSION_NAME}:{target_name}', '-p'],
+                capture_output=True, text=True, timeout=5
+            )
+            output = result.stdout
+            if not output:
+                time.sleep(0.5)
+                continue
+
+            # Check if entire pane content contains any expected prompt marker
+            for marker in prompt_markers:
+                if marker in output:
+                    return True
+        except Exception as e:
+            pass
+
+        time.sleep(0.5)
+
+    return False
+
 def awake_agent(target_name, target_agent):
     """自動修復故障 Agent，精確控制時間延迿"""
     try:
@@ -588,14 +625,16 @@ def awake_agent(target_name, target_agent):
             'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
             'Enter'
         ], check=True)
-        time.sleep(5)
 
-        send_message(f"📍 [步驟 4/6] 等待啟動完成（5秒）...")
-        time.sleep(1)  # 額外穩定等待
+        send_message(f"📍 [步驟 4/6] 等待 {engine} CLI 提示符出現...")
+        if wait_for_agent_prompt(target_name, engine, max_wait=60):
+            send_message(f"✅ 偵測到 {engine} 提示符 - 啟動成功")
+        else:
+            send_message(f"⚠️ 等待 {engine} 提示符超時，繼續恢復流程...")
 
         send_message(f"📍 [步驟 5/6] 使用 /resume 恢復對話...")
 
-        # 步驟 4: 恢復對話
+        # 步驟 5: 恢復對話
         subprocess.run([
             'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
             '/resume'
