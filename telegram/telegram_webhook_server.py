@@ -537,6 +537,43 @@ def show_agent_selector():
     msg = f"🤖 <b>Please select Agent to switch to</b>\nFormat: <code>/switch [name]</code>\n\nAvailable list:\n{agent_list}"
     send_message(msg)
 
+def wait_for_agent_prompt(target_name, engine, max_wait=30):
+    """Wait for tmux pane to show corresponding CLI prompt
+
+    Args:
+        engine: 'claude' or 'gemini'
+        - claude → ❯
+        - gemini → * or >
+    """
+    start_time = time.time()
+    # Select corresponding prompt marker based on engine
+    if engine == 'claude':
+        prompt_markers = ['❯']
+    else:  # gemini - could be * or >
+        prompt_markers = ['*', '>']
+
+    while time.time() - start_time < max_wait:
+        try:
+            result = subprocess.run(
+                ['tmux', 'capture-pane', '-t', f'{TMUX_SESSION_NAME}:{target_name}', '-p'],
+                capture_output=True, text=True, timeout=5
+            )
+            output = result.stdout
+            if not output:
+                time.sleep(0.5)
+                continue
+
+            # Check if entire pane content contains any expected prompt marker
+            for marker in prompt_markers:
+                if marker in output:
+                    return True
+        except Exception as e:
+            pass
+
+        time.sleep(0.5)
+
+    return False
+
 def awake_agent(target_name, target_agent):
     """Automatically recover a faulty Agent with precise timing control"""
     try:
@@ -588,14 +625,16 @@ def awake_agent(target_name, target_agent):
             'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
             'Enter'
         ], check=True)
-        time.sleep(5)
 
-        send_message(f"📍 [Step 4/6] Waiting for startup to complete (5 seconds)...")
-        time.sleep(1)  # Additional stability wait
+        send_message(f"📍 [Step 4/6] Waiting for {engine} CLI prompt to appear...")
+        if wait_for_agent_prompt(target_name, engine, max_wait=60):
+            send_message(f"✅ Detected {engine} prompt - startup successful")
+        else:
+            send_message(f"⚠️ Timeout waiting for {engine} prompt, continuing with recovery...")
 
         send_message(f"📍 [Step 5/6] Restoring conversation with /resume...")
 
-        # Step 4: Resume conversation
+        # Step 5: Resume conversation
         subprocess.run([
             'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target_name}',
             '/resume'
