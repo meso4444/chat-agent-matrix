@@ -609,7 +609,8 @@ def show_help():
 <b>🔍 System Check and Control</b>
 • <code>/status</code> - View all Agent status, schedule tasks, system info
 • <code>/inspect [agent]</code> - Deep check specified Agent's tmux session
-• <code>/interrupt</code> - Interrupt current Agent execution (Ctrl+C)
+• <code>/capture [agent]</code> - Capture specified Agent's window content (last 100 lines)
+• <code>/interrupt</code> or <code>/stop</code> - Interrupt current Agent execution (Ctrl+C)
 • <code>/clear</code> - Clear current Agent window and memory
 
 ───────────────────────────────
@@ -620,7 +621,7 @@ def show_help():
 ───────────────────────────────
 
 <b>🛠️ Advanced Operations</b>
-• <code>/fix [agent]</code> - Try to fix faulty Agent
+• <code>/fix [agent]</code> - Try to fix faulty Agent (clear stuck commands)
 
 ───────────────────────────────
 
