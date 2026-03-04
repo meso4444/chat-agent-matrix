@@ -7,14 +7,14 @@ echo.
 
 echo [1/2] Checking Matrix location in WSL...
 
-:: Check if TG and LINE exist
+:: 偵測 TG 和 LINE 是否存在
 wsl -d Ubuntu bash -c "if [ -d ~/chat-agent-matrix/telegram ]; then echo 'YES'; else echo 'NO'; fi" > %temp%\check_tg.txt
 wsl -d Ubuntu bash -c "if [ -d ~/chat-agent-matrix/line ]; then echo 'YES'; else echo 'NO'; fi" > %temp%\check_line.txt
 
 set /p HAS_TG=<%temp%\check_tg.txt
 set /p HAS_LINE=<%temp%\check_line.txt
 
-:: Logic check
+:: 邏輯判斷
 if "%HAS_TG%"=="YES" (
     if "%HAS_LINE%"=="YES" (
         goto :MENU

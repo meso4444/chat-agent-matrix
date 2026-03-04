@@ -1,173 +1,173 @@
-# LINE message templates
-# Claude Code reads templates from this file and fills in variables
+# LINE 訊息模板
+# Claude Code 從此檔案讀取模板並填入變數
 
 # ============================================
-# Basic templates
+# 基本模板
 # ============================================
 templates:
-
-  # Start deployment template
+  
+  # 開始安裝模板
   start:
     icon: "🚀"
-    title: "Claude Code automated deployment started"
+    title: "Claude Code 自動部署開始"
     content: |
-      📦 Software: {software} {version}
-      ⏰ Start time: {timestamp}
-      🤖 Executor: Claude Code
+      📦 軟體: {software} {version}
+      ⏰ 開始時間: {timestamp}
+      🤖 執行者: Claude Code
+      
+      開始進行自動化安裝...
 
-      Starting automated installation...
-
-  # Progress update template
+  # 進度更新模板  
   progress:
     icon: "⚙️"
-    title: "{software} Installation progress"
+    title: "{software} 安裝進度"
     content: |
-      📋 Current step: {step}
-      📊 Progress: {progress}
-      ⏰ Time: {timestamp}
+      📋 目前步驟: {step}
+      📊 進度: {progress}
+      ⏰ 時間: {timestamp}
+      
+      安裝進行中...
 
-      Installation in progress...
-
-  # Success completion template
+  # 成功完成模板
   success:
     icon: "✅"
-    title: "{software} Installation complete!"
+    title: "{software} 安裝完成！"
     content: |
-      🎉 Status: Installation successful
-      ⏰ Completion time: {timestamp}
-      🤖 Executor: Claude Code
-
+      🎉 狀態: 安裝成功
+      ⏰ 完成時間: {timestamp}
+      🤖 執行者: Claude Code
+      
       {details}
+      
+      ✨ 部署完成，服務已就緒！
 
-      ✨ Deployment complete, service is ready!
-
-  # Error template
+  # 錯誤模板
   error:
     icon: "❌"
-    title: "{software} Installation failed"
+    title: "{software} 安裝失敗"
     content: |
-      ⚠️ Error message: {error}
-      ⏰ Time: {timestamp}
-      🤖 Executor: Claude Code
+      ⚠️ 錯誤訊息: {error}
+      ⏰ 時間: {timestamp}
+      🤖 執行者: Claude Code
+      
+      請檢查日誌並重新嘗試安裝。
 
-      Please check logs and retry installation.
-
-  # Custom template
+  # 自定義模板
   custom:
     icon: ""
     title: "{title}"
     content: |
       {content}
-
-      ⏰ Time: {timestamp}
+      
+      ⏰ 時間: {timestamp}
       🤖 Claude Code
 
 # ============================================
-# Software-specific templates (optional)
+# 特定軟體模板 (可選)
 # ============================================
 software_templates:
-
+  
   docker:
     success:
       icon: "🐳"
-      title: "Docker container engine installation complete!"
+      title: "Docker 容器引擎安裝完成！"
       content: |
-        🎉 Docker has been successfully installed and started
-
-        ✅ Completed items:
-        • Docker Engine - Installed and started
-        • Docker Daemon - Running normally
-        • System service - Set to autostart on boot
-
-        📊 Installation details:
+        🎉 Docker 已成功安裝並啟動
+        
+        ✅ 完成項目:
+        • Docker Engine - 已安裝並啟動
+        • Docker Daemon - 運行正常
+        • 系統服務 - 已設為開機自啟
+        
+        📊 安裝詳情:
         {details}
-
-        🐳 Docker containerization environment is ready!
-
-        Next steps:
-        • Test docker run hello-world
-        • Install Docker Compose
-        • Deploy application containers
+        
+        🐳 Docker 容器化環境已就緒！
+        
+        下一步可進行:
+        • 測試 docker run hello-world
+        • 安裝 Docker Compose
+        • 部署應用容器
 
   mysql:
     success:
       icon: "🗄️"
-      title: "MySQL database installation complete!"
+      title: "MySQL 資料庫安裝完成！"
       content: |
-        🎉 MySQL has been successfully installed and started
-
-        ✅ Completed items:
-        • MySQL Server - Installed and started
-        • Database initialization - Complete
-        • System service - Set to autostart on boot
-        • Firewall - Port 3306 opened
-
-        📊 Installation details:
+        🎉 MySQL 已成功安裝並啟動
+        
+        ✅ 完成項目:
+        • MySQL Server - 已安裝並啟動
+        • 資料庫初始化 - 完成
+        • 系統服務 - 已設為開機自啟
+        • 防火牆 - 已開放 3306 端口
+        
+        📊 安裝詳情:
         {details}
-
-        🗄️ MySQL database service is ready!
-
-        Next steps:
-        • Create application database
-        • Set user permissions
-        • Import initial data
+        
+        🗄️ MySQL 資料庫服務已就緒！
+        
+        下一步可進行:
+        • 建立應用資料庫
+        • 設定用戶權限
+        • 匯入初始資料
 
   hadoop:
     success:
       icon: "🐘"
-      title: "Hadoop big data platform installation complete!"
+      title: "Hadoop 大數據平台安裝完成！"
       content: |
-        🎉 Apache Hadoop has been successfully deployed!
-
-        ✅ Completed items:
-        • Hadoop HDFS - Formatted and started
-        • YARN ResourceManager - Running normally
-        • DataNode & NodeManager - Started
-        • WebUI interface - Can be accessed normally
-
-        📊 Deployment details:
+        🎉 Apache Hadoop 已成功部署！
+        
+        ✅ 完成項目:
+        • Hadoop HDFS - 已格式化並啟動
+        • YARN ResourceManager - 運行正常
+        • DataNode & NodeManager - 已啟動
+        • WebUI 介面 - 可正常存取
+        
+        📊 部署詳情:
         {details}
-
-        🐘 Hadoop distributed file system is ready!
-
-        Next steps:
-        • Test HDFS file operations
-        • Install Hive data warehouse
-        • Configure Ranger security management
+        
+        🐘 Hadoop 分散式檔案系統已就緒！
+        
+        下一步可進行:
+        • 測試 HDFS 檔案操作
+        • 安裝 Hive 資料倉儲
+        • 設定 Ranger 安全管理
 
   nginx:
     success:
       icon: "🌐"
-      title: "NGINX web server installation complete!"
+      title: "NGINX Web 伺服器安裝完成！"
       content: |
-        🎉 NGINX has been successfully installed and started
-
-        ✅ Completed items:
-        • NGINX Server - Installed and started
-        • Default site - Configuration complete
-        • System service - Set to autostart on boot
-        • Firewall - HTTP/HTTPS ports opened
-
-        📊 Installation details:
+        🎉 NGINX 已成功安裝並啟動
+        
+        ✅ 完成項目:
+        • NGINX Server - 已安裝並啟動
+        • 預設站點 - 配置完成
+        • 系統服務 - 已設為開機自啟
+        • 防火牆 - 已開放 HTTP/HTTPS 端口
+        
+        📊 安裝詳情:
         {details}
-
-        🌐 NGINX web server is ready!
-
-        Next steps:
-        • Configure virtual hosts
-        • Set up SSL certificates
-        • Deploy website content
+        
+        🌐 NGINX Web 伺服器已就緒！
+        
+        下一步可進行:
+        • 配置虛擬主機
+        • 設定 SSL 憑證
+        • 部署網站內容
 
 # ============================================
-# Variable explanations
+# 變數說明
 # ============================================
-# Available variables:
-# - {software}: Software name
-# - {version}: Software version
-# - {timestamp}: Timestamp
-# - {step}: Current step
-# - {progress}: Progress information
-# - {details}: Detailed content
-# - {error}: Error message
-# - {title}: Custom title
-# - {content}: Custom content
+# 可用變數:
+# - {software}: 軟體名稱
+# - {version}: 軟體版本
+# - {timestamp}: 時間戳記
+# - {step}: 當前步驟
+# - {progress}: 進度資訊
+# - {details}: 詳細內容
+# - {error}: 錯誤訊息
+# - {title}: 自定義標題
+# - {content}: 自定義內容

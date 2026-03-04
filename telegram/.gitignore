@@ -1,10 +1,10 @@
-# Sensitive configuration files
+# 敏感設定檔
 .env
 .webhook_secret
 webhook_secret.token
 .runtime_state
 
-# Runtime directories and files
+# 運行時目錄與檔案
 agent_home/
 images_temp/
 ngrok.log

@@ -1,61 +1,61 @@
-# Notification System Operation Guide
+# 通知系統操作指引
 
 ---
 
-### 🚨 Mandatory Notification Rules
+### 🚨 強制通知規則
 
-**Important**: The following situations must immediately send Telegram notifications without omission:
+**重要**：以下情況必須立即發送 Telegram 通知，不可遺漏：
 
-**System Prompt Commands**: When commands contain `【System Prompt】` or `This command is from Telegram`, you must report the results after task completion.
+**系統提示指令**：當指令中包含 `【系統提示】` 或 `此指令來自 Telegram` 字樣時，任務完成後務必回報結果。
 
-### 💻 Message Sending Specifications
+### 💻 訊息發送規範
 
-To ensure message content displays completely (especially when containing `$`, `"`, `` ` `` and other symbols), please strictly follow these sending methods:
+為確保訊息內容完整顯示（特別是包含 `$`、`"`、`` ` `` 等符號時），請嚴格遵守以下發送方式：
 
-1. **Use Script Parameter Mode**:
-   - ✅ **Correct**: `python3 telegram_notifier.py 'message content'`
-   - ❌ **Avoid**: `python3 -c "from telegram_notifier..."` (prone to escape errors)
+1. **使用腳本參數模式**：
+   - ✅ **正確**：`python3 telegram_notifier.py '訊息內容'`
+   - ❌ **避免**：`python3 -c "from telegram_notifier..."` (易發生轉義錯誤)
 
-2. **Quote Usage Principles**:
-   - Wrap the outermost layer uniformly with **single quotes** `'`.
-   - Message content can freely use double quotes `"`, dollar signs `$`, etc., without additional escaping.
-   - If the message itself contains single quotes, it's recommended to wrap with double quotes instead, or escape inner single quotes (`\'`).
-   - Do not use `**` for text emphasis in messages, as it won't work in Telegram
+2. **引號使用原則**：
+   - 最外層統一使用**單引號** `'` 包裹。
+   - 訊息內部可自由使用雙引號 `"`、金錢符號 `$` 等，無需額外轉義。
+   - 若訊息本身包含單引號，建議改為雙引號包裹外層，或對內層單引號進行轉義 (`\'`)。
+   - 訊息內不要用\*\*作為文字強調, 因telegram無法生效
 
-**Sending Examples**:
+**發送範例**：
 
 ```bash
-# Send test notification
-python3 telegram_notifier.py '🧪 {agent_name} Test message: System is operating normally!'
+# 發送測試通知
+python3 telegram_notifier.py '🧪 {agent_name} 測試訊息：系統正常運作！'
 
-# General response
-python3 telegram_notifier.py '💬 Hello! I am {agent_name}\nReceived your message and responding'
+# 一般回應
+python3 telegram_notifier.py '💬 您好！我是 {agent_name}\n已收到您的訊息並正在回應'
 
-# System interaction confirmation
-python3 telegram_notifier.py '🤖 {agent_name} received command\nProcessing your request...'
+# 系統互動確認
+python3 telegram_notifier.py '🤖 {agent_name} 收到指令\n正在處理您的請求...'
 ```
 ---
 
-### 🕐 Notification Sending Timing
-- **All user interactions**: Must immediately send Telegram notification response each time user sends any message
-- **General conversation**: All conversations including greetings, inquiries, and chat must be responded via Telegram
-- **System interaction start**: Immediately send Telegram notification to confirm receipt each time user makes a request
-- **Service status checks**: Must notify results when performing any system checks or service management
-- **Task start**: Explain what task is being executed and estimated completion time
-- **When encountering difficulties**: Describe the problem and solutions being attempted
-- **Task completion/errors**: Summarize results or error messages
+### 🕐 通知發送時機
+- **所有用戶互動**：每次用戶發送任何訊息時必須立即發送 Telegram 通知回應
+- **一般對話**：問候、詢問、閒聊等所有對話都要透過 Telegram 回應
+- **系統互動開始**：每次用戶請求時立即發送 Telegram 通知確認收到
+- **服務狀態檢查**：執行任何系統檢查或服務管理時必須通知結果
+- **任務開始時**：說明開始執行什麼任務，預計完成時間
+- **遇到困難時**：描述問題和正在嘗試的解決方案
+- **任務完成/錯誤時**：總結結果或錯誤訊息
 
-### 🛡️ Security Notes
+### 🛡️ 安全注意
 
-- Avoid including sensitive information in notifications, such as personal data, passwords, etc.
+- 避免在通知中包含敏感資訊, 如個資, 密碼...等
 
 ---
 
-### 🔗 URL Link Processing Specifications (Preventing Hallucinations)
+### 🔗 網址連結處理規範 (防止幻覺)
 
-1. **Reject Guessing**: Never "calculate" or "combine" URLs on your own (e.g., guessing based on date formats). Only use links explicitly returned by search tools.
-2. **Parse Redirects**: If search results are redirect links (such as `google.com/url?...` or `vertexaisearch...`), **must** use Python `requests.head()` or `curl -I` to resolve the original real URL (Canonical URL).
-3. **Verify Validity**: Before sending URLs to users, must confirm they can be accessed normally (returning HTTP 200/301/302).
-4. **Verify Source**: Confirm the final URL's domain matches the claimed news source (e.g., if source says PR Newswire, URL domain should be `prnewswire.com`).
+1. **拒絕猜測**：絕不自行「推算」或「組合」網址（例如根據日期格式猜測）。僅使用搜尋工具明確返回的連結。
+2. **解析轉址**：若搜尋結果為轉址連結（如 `google.com/url?...` 或 `vertexaisearch...`），**必須**使用 Python `requests.head()` 或 `curl -I` 解析出原始真實網址 (Canonical URL)。
+3. **驗證有效性**：在發送給用戶前，務必確認網址可正常訪問（回傳 HTTP 200/301/302）。
+4. **來源核實**：確認最終網址的域名與聲稱的新聞來源相符（例如：來源說是 PR Newswire，網址域名應為 `prnewswire.com`）。
 
 ---

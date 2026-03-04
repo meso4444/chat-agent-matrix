@@ -1,39 +1,39 @@
 #!/bin/bash
 # disable_systemd_telegram.sh
-# Remove Telegram version Systemd auto-startup configuration
+# 移除 Telegram 版的 Systemd 開機自啟設定
 
 SERVICE_NAME="chat-agent-matrix-telegram"
 SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
 
-# Check root privileges
+# 檢查 root 權限
 if [ "$EUID" -ne 0 ]; then
-  echo "❌ Please run this script with sudo"
-  echo "   Example: sudo ./auto-startup/disable_systemd_telegram.sh"
+  echo "❌ 請使用 sudo 執行此腳本"
+  echo "   範例: sudo ./auto-startup/disable_systemd_telegram.sh"
   exit 1
 fi
 
-echo "🛑 Removing Systemd service: $SERVICE_NAME"
+echo "🛑 正在移除 Systemd 服務: $SERVICE_NAME"
 
-# 1. Stop and disable service
+# 1. 停止並停用服務
 if systemctl is-active --quiet $SERVICE_NAME; then
-    echo "   Stopping service..."
+    echo "   停止服務..."
     systemctl stop $SERVICE_NAME
 fi
 
 if systemctl is-enabled --quiet $SERVICE_NAME 2>/dev/null; then
-    echo "   Disabling auto-startup..."
+    echo "   停用開機自啟..."
     systemctl disable $SERVICE_NAME
 fi
 
-# 2. Delete configuration file
+# 2. 刪除設定檔
 if [ -f "$SERVICE_FILE" ]; then
-    echo "   Deleting configuration file: $SERVICE_FILE"
+    echo "   刪除設定檔: $SERVICE_FILE"
     rm "$SERVICE_FILE"
     systemctl daemon-reload
-    echo "✅ Service completely removed"
+    echo "✅ 服務已完全移除"
 else
-    echo "⚠️  Configuration file does not exist, may have already been removed"
+    echo "⚠️  設定檔不存在，可能已經移除"
 fi
 
 echo ""
-echo "💡 To re-enable, please run install_systemd_telegram.sh"
+echo "💡 若要重新啟用，請執行 install_systemd_telegram.sh"

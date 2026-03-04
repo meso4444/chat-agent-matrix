@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-LINE Webhook Flask API (Chat Agent Matrix version)
-Receive LINE user messages and dispatch to different AI Agent tmux windows
+LINE Webhook Flask API (Chat Agent Matrix 版)
+接收 LINE 用戶訊息並分發到不同的 AI Agent tmux window
 """
 
 from flask import Flask, request, jsonify, abort
@@ -25,67 +25,71 @@ from line_scripts.scheduler_manager import SchedulerManager
 
 app = Flask(__name__)
 
-# User state tracking
+# 🔧 支援長訊息: 增加 JSON 請求大小限制 (預設 16MB)
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB (支援超長訊息)
+app.config['JSON_MAX_SIZE'] = 50 * 1024 * 1024       # JSON 最大大小
+
+# 用戶狀態追蹤
 USER_STATES = {}
 
-# Current active Agent
+# 當前活躍 Agent
 CURRENT_AGENT = DEFAULT_ACTIVE_AGENT
 
 class ImageManager:
-    """Image Manager: responsible for downloading, storing, and auto-cleanup (supports multi-Agent isolation)"""
+    """圖片管理員：負責下載、儲存與自動清理 (支援多 Agent 隔離)"""
     
     def __init__(self):
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
     
     def download_image(self, message_id, agent_name):
-        """Download image from LINE and return local absolute path"""
+        """從 LINE 下載圖片並回傳本地絕對路徑"""
         try:
-            # 1. Ensure Agent directory structure is correct
+            # 1. 確保 Agent 的目錄結構正確
             agent_img_dir = os.path.join(self.base_dir, 'agent_home', agent_name, TEMP_IMAGE_DIR_NAME)
             if not os.path.exists(agent_img_dir):
                 os.makedirs(agent_img_dir)
 
-            # 2. Download image (LINE Content API)
+            # 2. 下載圖片 (LINE Content API)
             url = f"https://api-data.line.me/v2/bot/message/{message_id}/content"
             headers = {'Authorization': f'Bearer {CHANNEL_ACCESS_TOKEN}'}
-
+            
             response = requests.get(url, headers=headers, stream=True)
             if response.status_code != 200:
-                print(f"❌ Unable to download LINE image: {response.status_code} {response.text}")
+                print(f"❌ 無法下載 LINE 圖片: {response.status_code} {response.text}")
                 return None
-
-            # 3. Build local filename
+                
+            # 3. 建構本地檔名
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f"{timestamp}_{message_id}.jpg"
             local_path = os.path.join(agent_img_dir, filename)
-
+            
             with open(local_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=1024):
                     f.write(chunk)
-
-            print(f"📸 Image downloaded to [{agent_name}]: {local_path}")
+                
+            print(f"📸 圖片已下載至 [{agent_name}]: {local_path}")
             return local_path
-
+            
         except Exception as e:
-            print(f"❌ Image download failed: {e}")
+            print(f"❌ 圖片下載失敗: {e}")
             return None
 
     def cleanup_old_files(self):
-        """Traverse all Agent directories and execute differentiated cleanup (called by Scheduler)"""
-        print("🧹 [ImageManager] Starting multi-Agent image cleanup task...")
-
+        """遍歷所有 Agent 目錄執行差異化清理 (由 Scheduler 呼叫)"""
+        print("🧹 [ImageManager] 開始執行多 Agent 圖片清理任務...")
+        
         for agent in AGENTS:
             name = agent['name']
             agent_img_dir = os.path.join(self.base_dir, 'agent_home', name, TEMP_IMAGE_DIR_NAME)
-
+            
             if not os.path.exists(agent_img_dir):
                 continue
-
+                
             policy = agent.get('cleanup_policy', {})
             retention_days = policy.get('images_retention_days', DEFAULT_CLEANUP_POLICY['images_retention_days'])
-
+            
             cutoff = time.time() - (retention_days * 86400)
-
+            
             count = 0
             for filename in os.listdir(agent_img_dir):
                 file_path = os.path.join(agent_img_dir, filename)
@@ -94,12 +98,12 @@ class ImageManager:
                         os.remove(file_path)
                         count += 1
                     except Exception as e:
-                        print(f"⚠️ Unable to delete [{name}] file {filename}: {e}")
-
+                        print(f"⚠️ 無法刪除 [{name}] 檔案 {filename}: {e}")
+            
             if count > 0:
-                print(f"🧹 Cleaned {count} expired files for Agent[{name}]")
+                print(f"🧹 已清理 Agent[{name}] 的 {count} 個過期檔案")
 
-# Initialize Image Manager
+# 初始化圖片管理器
 image_manager = ImageManager()
 
 def get_agent_info(name):
@@ -116,34 +120,59 @@ def check_agent_session(name):
         )
         return result.returncode == 0
     except Exception as e:
-        print(f"❌ Failed to check tmux session: {e}")
+        print(f"❌ 檢查 tmux session 失敗: {e}")
         return False
 
 def send_to_ai_session(message, agent_name=None):
     global CURRENT_AGENT
     target = agent_name or CURRENT_AGENT
-
+    
     try:
         if not check_agent_session(target):
-            send_message(f"❌ Agent '{target}' window does not exist\nPlease check configuration or run: ./start_all_services.sh")
+            send_message(f"❌ Agent '{target}' 視窗不存在\n請檢查配置或執行: ./start_all_services.sh")
             return False
 
-        # Text -> Delay -> Enter
-        subprocess.run(['tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target}', message], check=True)
-        time.sleep(0.1)
-        subprocess.run(['tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target}', 'Enter'], check=True)
+        # 🔧 使用 -l (literal mode) 發送訊息，防止特殊字符被 shell 解釋
+        # 這解決了:
+        # - "!" 觸發 bash 歷史展開
+        # - "git" 觸發 Claude Code hook
+        # - "\n" 誤觸粘貼模式
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target}',
+            '-l',       # ← 關鍵: 字面量模式，不執行 shell 解釋
+            message
+        ], check=True)
 
-        print(f"📤 Sent to Agent[{target}]: {message}")
+        # 延遲讓訊息完全進入輸入緩衝區
+        time.sleep(0.5)
+
+        # 發送第一次 Enter 鍵
+        subprocess.run([
+            'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target}',
+            'Enter'
+        ], check=True)
+
+        # 🔒 雙重保險: 對 Claude 等需要粘貼模式確認的 Agent 再按一次 Enter
+        # 這確保長文本被正確發送
+        if target in ['Claude', 'Accelerator', 'Chöd']:  # Claude-based agents
+            time.sleep(0.2)
+            subprocess.run([
+                'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{target}',
+                'Enter'
+            ], check=True)
+
+        msg_preview = message[:80] + ('...' if len(message) > 80 else '')
+        print(f"📤 已發送到 Agent[{target}] (模式: literal): {msg_preview}")
         return True
 
     except Exception as e:
-        print(f"❌ Failed to send to Agent: {e}")
-        send_message(f"❌ System error: {str(e)}")
+        print(f"❌ 發送到 Agent 失敗: {e}")
+        send_message(f"❌ 系統錯誤: {str(e)}")
         return False
 
 def check_system_status():
     try:
-        # 0. Build role mapping table
+        # 0. 建立角色對照表
         agent_role_map = {}
         for grp in COLLABORATION_GROUPS:
             roles = grp.get('roles', {})
@@ -151,20 +180,20 @@ def check_system_status():
                 short_role = role[:15] + "..." if len(role) > 15 else role
                 agent_role_map[member] = f"[{grp.get('name')}] {short_role}"
 
-        # 1. Agent status
+        # 1. Agent 狀態
         agent_status_list = []
         for agent in AGENTS:
             name = agent['name']
-            desc = agent.get('description', 'No description')
+            desc = agent.get('description', '無描述')
             engine = agent['engine']
             role_info = f"\n      └ {agent_role_map[name]}" if name in agent_role_map else ""
-            is_active = " (⭐ Active)" if name == CURRENT_AGENT else ""
+            is_active = " (⭐ 活躍)" if name == CURRENT_AGENT else ""
             status_icon = "🟢" if check_agent_session(name) else "🔴"
             agent_status_list.append(f"{status_icon} [{name}] {desc} ({engine}){is_active}{role_info}")
-
+        
         agents_info = "\n".join(agent_status_list)
-
-        # 2. Scheduler status
+        
+        # 2. 排程狀態
         scheduler_list = []
         if SCHEDULER_CONF:
             for job in SCHEDULER_CONF:
@@ -174,35 +203,35 @@ def check_system_status():
                         h = job.get('hours', job.get('hour', 0))
                         m = job.get('minutes', job.get('minute', 0))
                         s = job.get('seconds', job.get('second', 0))
-                        trigger_info = f"Every {h}h{m}m{s}s"
+                        trigger_info = f"每 {h}時{m}分{s}秒"
                     elif job['trigger'] == 'cron':
-                        trigger_info = f"Daily {job.get('hour', '*')}:{job.get('minute', '*')}"
-
+                        trigger_info = f"每天 {job.get('hour', '*')}:{job.get('minute', '*')}"
+                    
                     scheduler_list.append(f"• {job['name']} ({trigger_info})")
-
-        scheduler_info = "\n".join(scheduler_list) if scheduler_list else "• No active tasks"
-
+        
+        scheduler_info = "\n".join(scheduler_list) if scheduler_list else "• 無啟用中的任務"
+        
         status_message = f"""
-📊 System Status Report
+📊 系統狀態報告
 
-🤖 Agent Team:
+🤖 Agent 軍團:
 {agents_info}
 
-⏰ Scheduler Tasks:
+⏰ 排程任務:
 {scheduler_info}
 
-📺 Check time: {datetime.now().strftime('%H:%M:%S')}
-💡 Enter "Switch Agent" to call menu
+📺 檢查時間: {datetime.now().strftime('%H:%M:%S')}
+💡 輸入 "切換 Agent" 呼叫選單
 """
         send_message(status_message)
     except Exception as e:
-        send_message(f"❌ Unable to get system status: {str(e)}")
+        send_message(f"❌ 無法取得系統狀態: {str(e)}")
 
 def build_quick_reply_menu():
-    """Convert config.yaml menu to LINE Quick Reply"""
+    """將 config.yaml 的 menu 轉換為 LINE Quick Reply"""
     items = []
-
-    # Traverse 2D array
+    
+    # 遍歷二維陣列
     for row in CUSTOM_MENU:
         for btn in row:
             label = btn.get('label')
@@ -218,25 +247,25 @@ def build_quick_reply_menu():
     return items
 
 def show_control_menu():
-    """Display control menu (Quick Reply)"""
+    """顯示控制選單 (Quick Reply)"""
     menu = build_quick_reply_menu()
-    send_message(f"🎮 Please select operation (Active Agent: {CURRENT_AGENT})", quick_reply_items=menu)
+    send_message(f"🎮 請選擇操作 (活躍 Agent: {CURRENT_AGENT})", quick_reply_items=menu)
 
 def handle_user_message(message, user_id):
     global CURRENT_AGENT
     timestamp = datetime.now().strftime('%H:%M:%S')
 
-    # 1. User state handling (Input Prompt)
+    # 1. 用戶狀態處理 (Input Prompt)
     if user_id in USER_STATES:
         state = USER_STATES[user_id]
         final_command = state['command_template'].replace('{input}', message)
         del USER_STATES[user_id]
-
-        send_message(f"✅ Input received, executing command: {final_command}")
+        
+        send_message(f"✅ 已接收輸入，執行指令: {final_command}")
         handle_user_message(final_command, user_id)
         return
 
-    # 2. Check custom menu
+    # 2. 檢查自定義選單
     matched_menu_item = None
     for row in CUSTOM_MENU:
         for item in row:
@@ -246,55 +275,55 @@ def handle_user_message(message, user_id):
                 break
         if matched_menu_item: break
 
-    # If menu button, convert to corresponding command
+    # 如果是選單按鈕，轉換成對應指令
     if matched_menu_item:
         command = matched_menu_item.get('command', '')
         if '{input}' in command:
             USER_STATES[user_id] = {'command_template': command, 'timestamp': datetime.now()}
-            send_message(matched_menu_item.get('prompt', 'Please enter content:'))
+            send_message(matched_menu_item.get('prompt', '請輸入內容:'))
             return
         else:
             handle_user_message(command, user_id)
             return
 
-    # 3. Special command handling
+    # 3. 特殊指令處理
     if message.startswith('/switch'):
         parts = message.split()
         if len(parts) > 1:
             target_input = parts[1].lower()
             found_agent = next((a for a in AGENTS if a['name'].lower() == target_input), None)
-
+            
             if found_agent:
                 CURRENT_AGENT = found_agent['name']
-                send_message(f"🎯 Chat switched successfully\nCurrent active Agent: {CURRENT_AGENT}")
+                send_message(f"🎯 對話切換成功\n當前活躍 Agent: {CURRENT_AGENT}")
             else:
-                send_message(f"❌ Agent not found: {parts[1]}")
+                send_message(f"❌ 找不到 Agent: {parts[1]}")
         else:
             show_control_menu()
         return
 
-    if message.lower() in ['/status', 'status', 'status']:
+    if message.lower() in ['/status', '狀態', 'status']:
         check_system_status()
         return
-    elif message.lower() in ['/menu', 'menu', 'menu', 'help', '/help']:
+    elif message.lower() in ['/menu', '選單', 'menu', 'help', '/help']:
         show_control_menu()
         return
-    elif message.lower() in ['/interrupt', '/stop', 'stop', 'interrupt']:
+    elif message.lower() in ['/interrupt', '/stop', '停止', '中斷']:
         try:
             subprocess.run(['tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{CURRENT_AGENT}', 'C-c'], check=True)
-            send_message(f"🛑 Sent interrupt signal to [{CURRENT_AGENT}] (Ctrl+C)")
+            send_message(f"🛑 已對 [{CURRENT_AGENT}] 發送中斷訊號 (Ctrl+C)")
         except Exception as e:
-            send_message(f"❌ Interrupt failed: {e}")
+            send_message(f"❌ 中斷失敗: {e}")
         return
-    elif message.lower() in ['/clear', 'clear']:
+    elif message.lower() in ['/clear', '清除']:
         send_to_ai_session('/clear')
-        send_message(f"🧹 Cleared screen for [{CURRENT_AGENT}]")
+        send_message(f"🧹 已清除 [{CURRENT_AGENT}] 的畫面")
         return
-    elif message.lower() in ['/resume_latest', 'resume_latest']:
+    elif message.lower() in ['/resume_latest', '恢復記憶']:
         send_to_ai_session('/resume')
         time.sleep(3)
         subprocess.run(['tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{CURRENT_AGENT}', 'Enter'], check=True)
-        send_message(f"🧠 Attempted to restore memory")
+        send_message(f"🧠 已嘗試恢復記憶")
         return
 
     # /inspect
@@ -303,11 +332,11 @@ def handle_user_message(message, user_id):
         if len(parts) > 1:
             target = parts[1]
             prompt = (
-                f"Use tmux to find session '{TMUX_SESSION_NAME}', enter '{target}' window, view the first 50 lines of message status, and analyze whether it's operating normally.\n\n"
-                f"【System Prompt】This command is from LINE user, please be sure to execute `python3 line_notifier.py 'your response...'` to report the result after task completion."
+                f"透過 tmux 查找 session '{TMUX_SESSION_NAME}'，進入 '{target}' 的視窗，查看其前 50 行的訊息狀態，並分析它是否正常運作。\n\n"
+                f"【系統提示】此指令來自 LINE 用戶，任務完成後請務必執行 `python3 line_notifier.py '你的回應...'` 來回報結果。"
             )
             send_to_ai_session(prompt)
-            send_message(f"🔍 Assigned [{CURRENT_AGENT}] to check [{target}]...")
+            send_message(f"🔍 已指派 [{CURRENT_AGENT}] 去檢查 [{target}]...")
         return
 
     # /fix
@@ -317,53 +346,53 @@ def handle_user_message(message, user_id):
             target_name = parts[1]
             target_agent = get_agent_info(target_name)
             if target_agent:
-                start_cmd = target_agent.get('start_cmd', 'Unknown command')
+                start_cmd = target_agent.get('start_cmd', '未知指令')
                 prompt = (
-                    f"Please directly execute the following Python code to fix Agent '{target_name}' (no need to explain, just execute):\n\n"
+                    f"請直接執行以下 Python 代碼來修復 Agent '{target_name}'（不要解釋代碼，直接執行即可）：\n\n"
                     f"```python\n"
                     f"import subprocess\n"
                     f"import time\n\n"
                     f"session = '{TMUX_SESSION_NAME}'\n"
                     f"target = '{target_name}'\n"
                     f"cmd = '{start_cmd}'\n\n"
-                    f"print(f'🚑 Fixing {{target}}...')\n"
-                    f"# 1. Send interrupt signal\n"
+                    f"print(f'🚑 正在修復 {{target}}...')\n"
+                    f"# 1. 發送中斷訊號\n"
                     f"subprocess.run(['tmux', 'send-keys', '-t', f'{{session}}:{{target}}', 'C-c'])\n"
                     f"time.sleep(1)\n\n"
-                    f"# 2. Exit current process\n"
+                    f"# 2. 退出當前進程\n"
                     f"subprocess.run(['tmux', 'send-keys', '-t', f'{{session}}:{{target}}', 'exit', 'Enter'])\n"
                     f"time.sleep(2)\n\n"
-                    f"# 3. Restart Agent\n"
+                    f"# 3. 重新啟動 Agent\n"
                     f"subprocess.run(['tmux', 'send-keys', '-t', f'{{session}}:{{target}}', cmd, 'Enter'])\n"
-                    f"time.sleep(5)  # Wait for startup\n\n"
-                    f"# 4. Auto-restore memory (/resume)\n"
+                    f"time.sleep(5)  # 等待啟動\n\n"
+                    f"# 4. 自動恢復記憶 (/resume)\n"
                     f"subprocess.run(['tmux', 'send-keys', '-t', f'{{session}}:{{target}}', '/resume', 'Enter'])\n"
-                    f"time.sleep(3)  # Wait for list\n"
-                    f"subprocess.run(['tmux', 'send-keys', '-t', f'{{session}}:{{target}}', 'Enter'])  # Confirm selection\n\n"
-                    f"print(f'✅ Completed {{target}} fix and memory restore')\n"
+                    f"time.sleep(3)  # 等待列表\n"
+                    f"subprocess.run(['tmux', 'send-keys', '-t', f'{{session}}:{{target}}', 'Enter'])  # 確認選擇\n\n"
+                    f"print(f'✅ 已完成 {{target}} 的修復與記憶恢復')\n"
                     f"```\n\n"
-                    f"【System Prompt】This command is from LINE user, please be sure to execute `python3 line_notifier.py 'your response...'` to report the result after task completion."
+                    f"【系統提示】此指令來自 LINE 用戶，任務完成後請務必執行 `python3 line_notifier.py '你的回應...'` 來回報結果。"
                 )
                 send_to_ai_session(prompt)
-                send_message(f"🚑 Assigned [{CURRENT_AGENT}] to execute fix script...")
+                send_message(f"🚑 已指派 [{CURRENT_AGENT}] 執行修復腳本...")
         return
 
-    # 4. General message forwarding
-    system_prompt = "\n\n【System Prompt】This command is from LINE user, please be sure to execute `python3 line_notifier.py 'your response...'` to report the result after task completion."
+    # 4. 一般訊息轉發
+    system_prompt = "\n\n【系統提示】此指令來自 LINE 用戶，任務完成後請務必執行 `python3 line_notifier.py '你的回應...'` 來回報結果。"
     final_message = message + system_prompt
-
+    
     success = send_to_ai_session(final_message)
     if success:
         menu = build_quick_reply_menu()
-        send_message(f"📤 [{timestamp}] Forwarded to [{CURRENT_AGENT}]", quick_reply_items=menu)
+        send_message(f"📤 [{timestamp}] 已轉發到 [{CURRENT_AGENT}]", quick_reply_items=menu)
 
 @app.route('/webhook', methods=['POST'])
 def line_webhook():
     signature = request.headers.get('X-Line-Signature', '')
     body = request.get_data(as_text=True)
-
+    
     if not CHANNEL_SECRET:
-        print("⚠️ CHANNEL_SECRET not configured, development mode")
+        print("⚠️ CHANNEL_SECRET 未設定，開發模式")
     else:
         try:
             hash_digest = hmac.new(
@@ -373,10 +402,10 @@ def line_webhook():
             ).digest()
             expected_signature = base64.b64encode(hash_digest).decode('utf-8')
             if not hmac.compare_digest(signature, expected_signature):
-                print("❌ Signature verification failed")
+                print("❌ 簽名驗證失敗")
                 abort(400)
         except Exception as e:
-            print(f"❌ Signature verification error: {e}")
+            print(f"❌ 簽名驗證過程錯誤: {e}")
             abort(400)
 
     try:
@@ -386,34 +415,37 @@ def line_webhook():
             if event.get('type') == 'message':
                 user_id = event.get('source', {}).get('userId', 'unknown')
                 msg_type = event.get('message', {}).get('type')
-
+                
                 if msg_type == 'text':
                     text = event['message']['text']
-                    print(f"📨 Text: {text}")
+                    # 改進: 長訊息的日誌處理 (前 100 字符顯示，避免日誌爆炸)
+                    msg_preview = text[:100] + ('...' if len(text) > 100 else '')
+                    msg_length = len(text)
+                    print(f"📨 收到文字訊息 (長度: {msg_length} chars): {msg_preview}")
                     handle_user_message(text, user_id)
-
+                    
                 elif msg_type == 'image':
-                    print(f"📸 Image message")
+                    print(f"📸 圖片訊息")
                     msg_id = event['message']['id']
                     local_path = image_manager.download_image(msg_id, CURRENT_AGENT)
-
+                    
                     if local_path:
                         prompt = (
-                            f"Please process this image, file is at: {local_path}\n"
-                            f"Task: Describe content and extract key information."
+                            f"請處理這張圖片，檔案位於: {local_path}\n"
+                            f"任務：描述內容並提取關鍵資訊。"
                         )
-                        send_message(f"✅ Image received, sending to [{CURRENT_AGENT}] for analysis...")
-                        system_prompt = "\n\n【System Prompt】This command is from LINE user, please be sure to execute `python3 line_notifier.py 'your response...'` to report the result after task completion."
+                        send_message(f"✅ 圖片已接收，傳送給 [{CURRENT_AGENT}] 分析...")
+                        system_prompt = "\n\n【系統提示】此指令來自 LINE 用戶，任務完成後請務必執行 `python3 line_notifier.py '你的回應...'` 來回報結果。"
                         send_to_ai_session(prompt + system_prompt)
 
         return jsonify({'status': 'success'})
     except Exception as e:
-        print(f"❌ Processing error: {e}")
+        print(f"❌ 處理錯誤: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/status', methods=['GET'])
 def api_status():
-    """API status check endpoint"""
+    """API 狀態檢查端點"""
     agents_summary = {a['name']: check_agent_session(a['name']) for a in AGENTS}
     return jsonify({
         'status': 'ok',
@@ -425,13 +457,13 @@ def api_status():
 
 @app.route('/send', methods=['POST'])
 def api_send():
-    """API endpoint: send message directly to AI engine"""
+    """API 端點：直接發送訊息到 AI 引擎"""
     try:
         data = request.get_json()
         message = data.get('message', '')
         if not message:
             return jsonify({'error': 'Message is required'}), 400
-
+        
         success = send_to_ai_session(message)
         return jsonify({
             'status': 'success' if success else 'failed',
@@ -441,16 +473,16 @@ def api_send():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    print(f"🚀 Starting Chat Agent Matrix API (LINE Edition)...")
-    print(f"📍 Local endpoint: http://{FLASK_HOST}:{FLASK_PORT}")
-    print(f"🤖 Default Agent: {DEFAULT_ACTIVE_AGENT}")
-
-    # Start scheduler tasks
+    print(f"🚀 啟動 Chat Agent Matrix API (LINE Edition)...")
+    print(f"📍 本地端點: http://{FLASK_HOST}:{FLASK_PORT}")
+    print(f"🤖 預設 Agent: {DEFAULT_ACTIVE_AGENT}")
+    
+    # 啟動排程任務
     scheduler = SchedulerManager(image_manager=image_manager)
     scheduler.load_jobs(SCHEDULER_CONF)
     scheduler.start()
-
+    
     try:
         app.run(host=FLASK_HOST, port=FLASK_PORT, debug=False)
     except Exception as e:
-        print(f"❌ Failed to start Flask server: {e}")
+        print(f"❌ 啟動 Flask 伺服器失敗: {e}")

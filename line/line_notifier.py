@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Claude Code LINE Notifier
-Read message format from template file, Claude Code only needs to fill in variables
+Claude Code LINE 通知器
+從模板文件讀取訊息格式，Claude Code 只需要填入變數
 """
 
 import requests
@@ -13,33 +13,33 @@ from config import CHANNEL_ACCESS_TOKEN
 
 def load_message_template(template_name: str, software: str = None) -> dict:
     """
-    Load message template from template file
-
+    從模板文件載入訊息模板
+    
     Args:
-        template_name (str): Template name (start, progress, success, error, custom)
-        software (str): Software name for finding specific software templates
-
+        template_name (str): 模板名稱 (start, progress, success, error, custom)
+        software (str): 軟體名稱，用於查找特定軟體模板
+        
     Returns:
-        dict: Template dictionary containing icon, title, content
+        dict: 包含 icon, title, content 的模板字典
     """
     template_file = os.path.join(os.path.dirname(__file__), 'message_templates.yaml')
-
+    
     try:
         with open(template_file, 'r', encoding='utf-8') as f:
             templates = yaml.safe_load(f)
-
-        # Prioritize using software-specific templates
+        
+        # 優先使用軟體特定模板
         if software and software in templates.get('software_templates', {}):
             software_template = templates['software_templates'][software].get(template_name)
             if software_template:
                 return software_template
-
-        # Use general template
+        
+        # 使用通用模板
         return templates['templates'].get(template_name, {})
-
+        
     except Exception as e:
-        print(f"⚠️ Unable to load template: {e}")
-        # Fallback to simple template
+        print(f"⚠️ 無法載入模板: {e}")
+        # 回退到簡單模板
         return {
             'icon': '📋',
             'title': f'{template_name.upper()}',
@@ -48,100 +48,100 @@ def load_message_template(template_name: str, software: str = None) -> dict:
 
 def send_message(message: str, quick_reply_items: list = None) -> bool:
     """
-    Send LINE message (supports Quick Reply)
-
+    發送 LINE 訊息 (支援 Quick Reply)
+    
     Args:
-        message (str): Message content to send
-        quick_reply_items (list): Quick Reply button list (dict format)
-
+        message (str): 要發送的訊息內容
+        quick_reply_items (list): Quick Reply 按鈕列表 (dict format)
+        
     Returns:
-        bool: Whether sending was successful
+        bool: 發送是否成功
     """
     if not CHANNEL_ACCESS_TOKEN:
-        print("❌ Error: Please set CHANNEL_ACCESS_TOKEN in config.py")
+        print("❌ 錯誤: 請在 config.py 中設定 CHANNEL_ACCESS_TOKEN")
         return False
-
+    
     url = 'https://api.line.me/v2/bot/message/broadcast'
     headers = {
         'Authorization': f'Bearer {CHANNEL_ACCESS_TOKEN}',
         'Content-Type': 'application/json'
     }
-
+    
     msg_payload = {
         'type': 'text',
         'text': message
     }
-
-    # Add Quick Reply
+    
+    # 加入 Quick Reply
     if quick_reply_items:
         msg_payload['quickReply'] = {
             'items': quick_reply_items
         }
-
+    
     data = {
         'messages': [msg_payload]
     }
-
+    
     try:
         response = requests.post(url, headers=headers, data=json.dumps(data))
-
+        
         if response.status_code == 200:
-            print(f'✅ LINE notification sent successfully: {datetime.now().strftime("%H:%M:%S")}')
+            print(f'✅ LINE 通知發送成功: {datetime.now().strftime("%H:%M:%S")}')
             return True
         else:
-            print(f'❌ LINE notification failed: {response.status_code} - {response.text}')
+            print(f'❌ LINE 通知發送失敗: {response.status_code} - {response.text}')
             return False
-
+            
     except Exception as e:
-        print(f'❌ Error during sending: {e}')
+        print(f'❌ 發送過程發生錯誤: {e}')
         return False
 
 def format_message_from_template(template_name: str, software: str = "", **kwargs) -> str:
     """
-    Format message from template
-
+    從模板格式化訊息
+    
     Args:
-        template_name (str): Template name
-        software (str): Software name
-        **kwargs: Template variables
-
+        template_name (str): 模板名稱
+        software (str): 軟體名稱
+        **kwargs: 模板變數
+        
     Returns:
-        str: Formatted message
+        str: 格式化後的訊息
     """
     template = load_message_template(template_name, software)
-
-    # Prepare template variables
+    
+    # 準備模板變數
     variables = {
         'software': software,
         'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         **kwargs
     }
-
-    # Format template
+    
+    # 格式化模板
     try:
         icon = template.get('icon', '')
         title = template.get('title', '').format(**variables)
         content = template.get('content', '').format(**variables)
-
-        # Combine final message
+        
+        # 組合最終訊息
         message = f"{icon} {title}\n\n{content}" if icon else f"{title}\n\n{content}"
         return message.strip()
-
+        
     except KeyError as e:
-        print(f"⚠️ Template variable missing: {e}")
-        return f"Message template error: missing variable {e}"
+        print(f"⚠️ 模板變數缺失: {e}")
+        return f"訊息模板錯誤: 缺少變數 {e}"
 
-# Keep template feature for reference, but Claude Code mainly uses send_message
+# 保留模板功能供參考，但 Claude Code 主要使用 send_message
 def send_template_message(template_name: str, **variables) -> bool:
     """
-    Send message using template (optional feature)
-
+    使用模板發送訊息 (可選功能)
+    
     Args:
-        template_name (str): Template name
-        **variables: Template variables
-
+        template_name (str): 模板名稱
+        **variables: 模板變數
+        
     Returns:
-        bool: Whether sending was successful
+        bool: 發送是否成功
     """
     software = variables.get('software', '')
     message = format_message_from_template(template_name, software, **variables)
@@ -149,26 +149,26 @@ def send_template_message(template_name: str, **variables) -> bool:
 
 if __name__ == '__main__':
     import sys
-
-    print("=== LINE Notifier Test ===")
-
+    
+    print("=== LINE 通知器測試 ===")
+    
     if not CHANNEL_ACCESS_TOKEN:
-        print("❌ Please set CHANNEL_ACCESS_TOKEN in config.py first")
+        print("❌ 請先在 config.py 中設定 CHANNEL_ACCESS_TOKEN")
         sys.exit(1)
     else:
-        print("✅ Configuration correct, sending test message...")
-
-    # Check if message parameter is passed
+        print("✅ 配置正確，發送測試訊息...")
+    
+    # 檢查是否有傳入訊息參數
     if len(sys.argv) > 1:
-        # Use message passed from Claude Code, handle newlines correctly
+        # 使用 Claude Code 傳入的訊息，並正確處理換行符
         message = ' '.join(sys.argv[1:]).replace('\\n', '\n')
-        print(f"📤 Sending Claude Code message: {message[:50]}...")
+        print(f"📤 發送 Claude Code 訊息: {message[:50]}...")
         success = send_message(message)
         if success:
-            print("✅ Claude Code message sent successfully")
+            print("✅ Claude Code 訊息發送成功")
         else:
-            print("❌ Claude Code message failed to send")
+            print("❌ Claude Code 訊息發送失敗")
     else:
-        # Only send test message when no parameters
-        print("📋 No message passed, sending test message...")
-        send_message("🧪 LINE Notification System Test\n\nSystem is working normally, Claude Code can start using notification service!")
+        # 僅在沒有參數時才發送測試訊息
+        print("📋 沒有傳入訊息，發送測試訊息...")
+        send_message("🧪 LINE 通知系統測試\n\n系統運作正常，Claude Code 可以開始使用通知服務！")

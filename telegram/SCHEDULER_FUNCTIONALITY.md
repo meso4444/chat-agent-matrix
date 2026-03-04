@@ -1,41 +1,41 @@
-# Schedule Task Management Feature Detailed Guide
+# 排程任務管理功能詳細指南
 
-**Target Audience**: Agent (in knowledge base)
-**Purpose**: Help Agents understand how to manage schedule tasks for users
-
----
-
-## 🎯 Feature Overview
-
-The scheduler system allows users to set up timed tasks without restarting the service. Agents can help users:
-- Query existing schedule tasks
-- Register new schedule tasks
-- Delete unwanted tasks
+**面向**：Agent（在知識庫中）
+**用途**：幫助 Agent 理解如何為用戶管理排程任務
 
 ---
 
-## 📋 User-Delegable Tasks
+## 🎯 功能概述
 
-### 1. Query Existing Schedules
+排程系統允許用戶設置定時任務，無需重啟服務。Agent 可以幫助用戶：
+- 查詢現有排程任務
+- 註冊新的排程任務
+- 刪除不需要的任務
 
-**User Expression**:
-- "I want to know what schedule tasks are currently set up"
-- "List all schedules"
-- "Check the system's automated tasks"
+---
 
-**Agent Operation**:
+## 📋 用戶可委託的任務
+
+### 1. 查詢現有排程
+
+**用戶表達**：
+- 「我想知道目前有哪些排程任務」
+- 「列出所有的排程」
+- 「檢查系統設置的自動任務」
+
+**Agent 操作**：
 ```bash
 curl -X GET http://127.0.0.1:5002/scheduler/jobs
 ```
 
-**Expected Response**:
+**預期響應**：
 ```json
 {
   "status": "ok",
   "total": 3,
   "jobs": [
     {
-      "id": "Daily System Cleanup",
+      "id": "每日系統清理",
       "trigger": "<CronTrigger (hour=2, minute=0, second=0)>",
       "next_run_time": "2026-02-20 02:00:00"
     }
@@ -43,56 +43,56 @@ curl -X GET http://127.0.0.1:5002/scheduler/jobs
 }
 ```
 
-**Agent Response Example**:
+**Agent 回應範例**：
 ```
-✅ Currently there are 3 active schedule tasks:
-1. Daily System Cleanup - Runs at 2 AM daily
-2. Morning News - Runs at 8 AM daily
-3. Friday Report - Runs at 5 PM every Friday
+✅ 目前有 3 個活躍的排程任務：
+1. 每日系統清理 - 每天凌晨 2 點執行
+2. 晨間新聞 - 每天上午 8 點執行
+3. 週五周報 - 每週五下午 5 點執行
 ```
 
 ---
 
-### 2. Register New Schedule
+### 2. 註冊新排程
 
-**User Expression**:
-- "Set up a morning meeting reminder for me at 8 AM every day"
-- "I want to automatically run a task every Monday at 9 AM"
-- "Set a check task for the 1st of every month"
+**用戶表達**：
+- 「幫我設置每天早上 8 點的晨會提醒」
+- 「我想要每週一上午 9 點自動執行任務」
+- 「設定每月 1 號的檢查任務」
 
-**Agent Process**:
+**Agent 流程**：
 
-#### Step 1: Understand Requirements
-Extract from user description:
-- ⏰ **Frequency**: Daily / Weekly / Monthly / Custom
-- 🕐 **Time**: Specific time (e.g., 8:00)
-- 📝 **Content**: What task to execute
+#### 第一步：理解需求
+從用戶描述中提取：
+- ⏰ **頻率**：每天 / 每週 / 每月 / 自定義
+- 🕐 **時間**：具體時刻（如 8:00）
+- 📝 **內容**：執行什麼任務
 
-#### Step 2: Confirm Parameters
-Confirm with user once to avoid misunderstanding:
+#### 第二步：確認參數
+向用戶確認一遍，避免誤解：
 ```
-Let me confirm: your schedule is:
-- Frequency: Daily
-- Time: 8 AM
-- Task: Send morning meeting reminder
-- Active: Yes
+確認一下，您要設置的排程是：
+- 頻率：每天
+- 時間：早上 8 點
+- 任務：發送晨會提醒
+- 激活：是
 
-Is that correct?
+是這樣嗎？
 ```
 
-#### Step 3: Construct API Request
+#### 第三步：構造 API 請求
 
-Choose the corresponding trigger type based on frequency:
+根據頻率選擇對應的 trigger 類型：
 
-**daily (Every day)**:
+**daily（每天）**：
 ```bash
 curl -X POST http://127.0.0.1:5002/scheduler/jobs/register \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Morning Meeting Reminder",
+    "name": "晨會提醒",
     "type": "agent_command",
     "agent": "Güpa",
-    "command": "Remind user of morning meeting",
+    "command": "提醒用戶進行晨會",
     "trigger": "daily",
     "hour": 8,
     "minute": 0,
@@ -101,15 +101,15 @@ curl -X POST http://127.0.0.1:5002/scheduler/jobs/register \
   }'
 ```
 
-**weekly (Every week)**:
+**weekly（每週）**：
 ```bash
 curl -X POST http://127.0.0.1:5002/scheduler/jobs/register \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Monday Report",
+    "name": "週一報告",
     "type": "agent_command",
     "agent": "Güpa",
-    "command": "Generate this week's report",
+    "command": "生成本週報告",
     "trigger": "weekly",
     "day_of_week": 0,
     "hour": 9,
@@ -118,15 +118,15 @@ curl -X POST http://127.0.0.1:5002/scheduler/jobs/register \
   }'
 ```
 
-**monthly (Every month)**:
+**monthly（每月）**：
 ```bash
 curl -X POST http://127.0.0.1:5002/scheduler/jobs/register \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Monthly Review",
+    "name": "月初檢討",
     "type": "agent_command",
     "agent": "Güpa",
-    "command": "Conduct monthly review",
+    "command": "進行月度檢討",
     "trigger": "monthly",
     "day": 1,
     "hour": 9,
@@ -135,119 +135,119 @@ curl -X POST http://127.0.0.1:5002/scheduler/jobs/register \
   }'
 ```
 
-#### Step 4: Handle Response
+#### 第四步：處理響應
 
-**Success (HTTP 200)**:
+**成功**（HTTP 200）：
 ```json
 {
   "status": "ok",
-  "job_id": "Morning Meeting Reminder",
-  "message": "Schedule task 'Morning Meeting Reminder' registered"
+  "job_id": "晨會提醒",
+  "message": "排程任務 '晨會提醒' 已註冊"
 }
 ```
 
-Respond to user:
+回應用戶：
 ```
-✅ Schedule successfully set!
-Task name: Morning Meeting Reminder
-Execution time: Every day at 8:00 AM
-Next execution: Tomorrow at 8 AM
+✅ 排程已成功設置！
+任務名稱：晨會提醒
+執行時間：每天早上 8:00
+下次執行：明天早上 8 點
 ```
 
-**Failure (HTTP 400)**:
+**失敗**（HTTP 400）：
 ```json
 {
   "status": "error",
-  "message": "Missing required fields: hour, minute"
+  "message": "缺少必需欄位: hour, minute"
 }
 ```
 
-Respond to user:
+回應用戶：
 ```
-❌ Failed to set schedule: Missing time parameters
-Please tell me the specific time you want (e.g., 8 AM, 3 PM)
+❌ 設置排程失敗：缺少時間參數
+請告訴我您想要的具體時間（如：早上 8 點、下午 3 點）
 ```
 
 ---
 
-### 3. Delete Schedule
+### 3. 刪除排程
 
-**User Expression**:
-- "Cancel the morning meeting reminder I set earlier"
-- "Delete the Friday report task"
-- "Stop the daily cleanup task"
+**用戶表達**：
+- 「取消之前設的晨會提醒」
+- 「刪除周五的報告任務」
+- 「停止每日清理任務」
 
-**Agent Process**:
+**Agent 流程**：
 
-#### Step 1: Confirm Task Name
+#### 第一步：確認任務名稱
 ```
-I found the following related tasks:
-1. Morning Meeting Reminder - 8:00 AM daily
-2. Morning News - 8:00 AM daily
+我找到以下相關任務：
+1. 晨會提醒 - 每天 8:00
+2. 晨間新聞 - 每天 8:00
 
-Which one do you want to delete?
+您要刪除哪一個？
 ```
 
-#### Step 2: Call API
+#### 第二步：調用 API
 ```bash
-curl -X DELETE http://127.0.0.1:5002/scheduler/jobs/Morning\ Meeting\ Reminder
+curl -X DELETE http://127.0.0.1:5002/scheduler/jobs/晨會提醒
 ```
 
-#### Step 3: Confirm Result
-Success:
+#### 第三步：確認結果
+成功：
 ```
-✅ Schedule task 'Morning Meeting Reminder' deleted
-It will stop executing on next update
+✅ 排程任務 '晨會提醒' 已刪除
+下次更新時將停止執行
 ```
 
-Failure:
+失敗：
 ```
-❌ Deletion failed: No task named 'Morning Meeting Reminder' found
-Please check if the task name is correct
+❌ 刪除失敗：找不到名為 '晨會提醒' 的任務
+請檢查任務名稱是否正確
 ```
 
 ---
 
-## 🔧 Complete API Endpoint Reference
+## 🔧 API 端點完整參考
 
-### Query All Tasks
+### 查詢所有任務
 ```
 GET http://127.0.0.1:5002/scheduler/jobs
 ```
 
-### Register New Schedule
+### 註冊新排程
 ```
 POST http://127.0.0.1:5002/scheduler/jobs/register
 Content-Type: application/json
 ```
 
-### Delete Schedule
+### 刪除排程
 ```
 DELETE http://127.0.0.1:5002/scheduler/jobs/{job_id}
 ```
 
-### Refresh Configuration
+### 刷新配置
 ```
 POST http://127.0.0.1:5002/scheduler/refresh
 ```
 
 ---
 
-## ⏰ Trigger Type Details
+## ⏰ Trigger 類型詳解
 
-### daily (Every day)
-**When to use**: Need to execute at a fixed time every day
+### daily（每天）
+**何時使用**：需要每天的固定時間執行
 
 ```json
 {
   "trigger": "daily",
   "hour": 8,        // 0-23
   "minute": 0,      // 0-59
-  "second": 0       // 0-59 (optional, default 0)
+  "second": 0       // 0-59 (可選，默認 0)
 }
 ```
 
-**Example**: Every day at 8:30 AM
+**示例**：每天早上 8:30
 ```json
 {
   "hour": 8,
@@ -258,19 +258,19 @@ POST http://127.0.0.1:5002/scheduler/refresh
 
 ---
 
-### weekly (Every week)
-**When to use**: Need to execute on a specific day of the week at a specific time
+### weekly（每週）
+**何時使用**：需要每週特定日期的特定時間執行
 
 ```json
 {
   "trigger": "weekly",
-  "day_of_week": 0,  // 0=Monday, 1=Tuesday, ..., 6=Sunday
+  "day_of_week": 0,  // 0=週一, 1=週二, ..., 6=週日
   "hour": 9,
   "minute": 0
 }
 ```
 
-**Example**: Every Friday at 5 PM
+**示例**：每週五下午 5 點
 ```json
 {
   "day_of_week": 4,
@@ -281,19 +281,19 @@ POST http://127.0.0.1:5002/scheduler/refresh
 
 ---
 
-### monthly (Every month)
-**When to use**: Need to execute on a specific day of the month
+### monthly（每月）
+**何時使用**：需要每月特定日期執行
 
 ```json
 {
   "trigger": "monthly",
-  "day": 1,         // 1-31 (1 = 1st of every month)
+  "day": 1,         // 1-31（1 = 每月 1 號）
   "hour": 9,
   "minute": 0
 }
 ```
 
-**Example**: 15th of every month at noon
+**示例**：每月 15 號中午 12 點
 ```json
 {
   "day": 15,
@@ -304,19 +304,19 @@ POST http://127.0.0.1:5002/scheduler/refresh
 
 ---
 
-### interval (Fixed interval)
-**When to use**: Need to execute every N hours/minutes/seconds
+### interval（固定間隔）
+**何時使用**：需要每隔 N 小時/分鐘/秒執行
 
 ```json
 {
   "trigger": "interval",
-  "hours": 6,       // Hours (optional)
-  "minutes": 0,     // Minutes (optional)
-  "seconds": 0      // Seconds (optional)
+  "hours": 6,       // 小時數（可選）
+  "minutes": 0,     // 分鐘數（可選）
+  "seconds": 0      // 秒數（可選）
 }
 ```
 
-**Example**: Check every 6 hours
+**示例**：每 6 小時檢查一次
 ```json
 {
   "hours": 6,
@@ -327,43 +327,43 @@ POST http://127.0.0.1:5002/scheduler/refresh
 
 ---
 
-### cron (Complex expression)
-**When to use**: Need complex time logic
+### cron（複雜表達式）
+**何時使用**：需要複雜的時間邏輯
 
 ```json
 {
   "trigger": "cron",
-  "day_of_week": "0-4",  // Monday to Friday
+  "day_of_week": "0-4",  // 週一到週五
   "hour": 9,
   "minute": 0
 }
 ```
 
-**Common usage**:
-- `"0-4"` = Monday to Friday
-- `"5,6"` = Saturday, Sunday
-- `"1,15"` = 1st and 15th of each month
-- `"L"` = Last day of month
+**常見用法**：
+- `"0-4"` = 週一到週五
+- `"5,6"` = 週六、週日
+- `"1,15"` = 每月 1 號和 15 號
+- `"L"` = 月末最後一天
 
 ---
 
-## 🎬 Task Types
+## 🎬 任務類型
 
-### agent_command (Agent instruction)
-**Purpose**: Periodically send instructions to an Agent
+### agent_command（Agent 指令）
+**用途**：定時向 Agent 發送指令
 
 ```json
 {
   "type": "agent_command",
   "agent": "Güpa",
-  "command": "Generate today's report"
+  "command": "生成今日報告"
 }
 ```
 
-At the specified time, the system automatically sends the command to that Agent's tmux window.
+指定時間時，系統會自動向該 Agent 的 tmux 窗口發送命令。
 
-### system (System action)
-**Purpose**: Execute system-level operations
+### system（系統動作）
+**用途**：執行系統級操作
 
 ```json
 {
@@ -372,34 +372,34 @@ At the specified time, the system automatically sends the command to that Agent'
 }
 ```
 
-**Currently supported actions**:
-- `cleanup_images` - Clean up expired images
+**目前支持的動作**：
+- `cleanup_images` - 清理過期圖片
 
 ---
 
-## 📝 Complete Workflow Example
+## 📝 完整工作流範例
 
-**User requirement**: "I want to automatically generate a weekly report every Monday at 9 AM"
+**用戶需求**：「我想每週一早上 9 點自動生成週報」
 
-### Step 1: Agent Confirms Requirements
+### Step 1：Agent 確認需求
 ```
-Let me confirm:
-- Frequency: Every Monday
-- Time: 9 AM
-- Task: Automatically generate weekly report
+讓我確認一下：
+- 頻率：每週一
+- 時間：早上 9 點
+- 內容：自動生成週報
 
-Is that correct?
+是這樣對嗎？
 ```
 
-### Step 2: Construct Request
+### Step 2：構造請求
 ```bash
 curl -X POST http://127.0.0.1:5002/scheduler/jobs/register \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Monday Weekly Report Generation",
+    "name": "週一週報生成",
     "type": "agent_command",
     "agent": "Güpa",
-    "command": "Generate weekly report based on this week's data",
+    "command": "根據本週數據生成周報",
     "trigger": "weekly",
     "day_of_week": 0,
     "hour": 9,
@@ -408,46 +408,46 @@ curl -X POST http://127.0.0.1:5002/scheduler/jobs/register \
   }'
 ```
 
-### Step 3: Confirm Success
+### Step 3：確認成功
 ```
-✅ Schedule successfully set!
-Task: Monday Weekly Report Generation
-Frequency: Every Monday
-Time: 9:00 AM
-Next execution: This Monday at 9 AM
+✅ 排程已設置成功！
+任務：週一週報生成
+頻率：每週一
+時間：早上 9:00
+下次執行：本週一早上 9 點
 ```
 
 ---
 
-## 🛡️ Error Handling
+## 🛡️ 錯誤處理
 
-### Common Errors
+### 常見錯誤
 
-| Error Message | Reason | Solution |
+| 錯誤訊息 | 原因 | 解決方案 |
 |---------|------|--------|
-| Missing required fields | Missing name/type/trigger/active | Check all required fields are filled |
-| Invalid trigger type | trigger is not one of the 5 supported types | Confirm using daily/weekly/monthly/cron/interval |
-| agent_command requires agent | type is agent_command but missing agent | Add agent field |
-| Schedule task 'X' not found | Task doesn't exist when deleting | Query first to confirm task name |
+| 缺少必需欄位 | 缺少 name/type/trigger/active | 檢查所有必需字段是否填寫 |
+| 無效的 trigger 類型 | trigger 不是支援的 5 種 | 確認使用 daily/weekly/monthly/cron/interval |
+| agent_command 需要 agent | type 為 agent_command 但缺少 agent | 添加 agent 字段 |
+| 找不到名為 X 的排程任務 | 刪除時任務不存在 | 先查詢確認任務名稱 |
 
 ---
 
-## 💡 Best Practices
+## 💡 最佳實踐
 
-### ✅ Do (Should do)
-1. Communicate with users in natural language, hide technical details
-2. Confirm user requirements before executing
-3. Provide clear feedback on execution results
-4. Remind users to check if schedule is activated
-5. Explain errors and provide solutions
+### ✅ Do（應該做）
+1. 用自然語言與用戶溝通，隱藏技術細節
+2. 在執行前確認用戶的需求
+3. 給出清晰的執行結果反饋
+4. 提醒用戶檢查排程是否已激活
+5. 遇到錯誤時解釋原因並提供解決方案
 
-### ❌ Don't (Should not do)
-1. Expose JSON format or API details to users
-2. Assume users know trigger types
-3. Create schedules without confirmation
-4. Ignore API error messages
-5. Use unclear task names (like "task1", "test")
+### ❌ Don't（不應該做）
+1. 向用戶暴露 JSON 格式或 API 細節
+2. 假設用戶知道 trigger 類型
+3. 在未確認的情況下創建排程
+4. 忽視 API 返回的錯誤信息
+5. 使用不明確的任務名稱（如 "task1", "test"）
 
 ---
 
-**Last updated**: 2026-02-19
+**最後更新**：2026-02-19

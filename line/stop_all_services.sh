@@ -1,11 +1,11 @@
 #!/bin/bash
-# Stop all LINE services (Chat Agent Matrix)
+# 停止所有 LINE 服務 (Chat Agent Matrix)
 
-# Read configuration from Python config
+# 從 Python config 讀取設定
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/.env"
 
-# Load environment variables
+# 載入環境變數
 if [ -f "$ENV_FILE" ]; then
     set -a
     source "$ENV_FILE"
@@ -14,33 +14,33 @@ fi
 
 TMUX_SESSION_NAME=$(python3 -c "import sys; sys.path.append('$SCRIPT_DIR'); from config import TMUX_SESSION_NAME; print(TMUX_SESSION_NAME)")
 
-echo "🛑 Stopping all LINE system services..."
+echo "🛑 停止 LINE 系統服務..."
 
-# Check if tmux is installed
+# 檢查 tmux 是否安裝
 if ! command -v tmux &> /dev/null; then
-    echo "❌ tmux not installed"
+    echo "❌ tmux 未安裝"
     exit 1
 fi
 
-# Check if session exists
+# 檢查 session 是否存在
 if ! tmux has-session -t "$TMUX_SESSION_NAME" 2>/dev/null; then
-    echo "⚠️ Session '$TMUX_SESSION_NAME' not found, services may already be stopped"
+    echo "⚠️ 未找到 session '$TMUX_SESSION_NAME'，服務可能已經停止"
     exit 0
 fi
 
-echo "🔄 Stopping all services..."
+echo "🔄 正在停止所有服務..."
 
-# Stop windows individually (give services time to shut down gracefully)
-echo "Stopping Cloudflare Tunnel..."
+# 逐個停止 window (給服務時間正常關閉)
+echo "停止 Cloudflare Tunnel..."
 tmux send-keys -t "$TMUX_SESSION_NAME:cloudflared" C-c 2>/dev/null
 sleep 1
 
-echo "Stopping LINE Webhook API..."
+echo "停止 LINE Webhook API..."
 tmux send-keys -t "$TMUX_SESSION_NAME:line_api" C-c 2>/dev/null
 sleep 1
 
-# Force terminate entire session (including all Agents)
-echo "Terminating tmux session..."
+# 強制終止整個 session (包含所有 Agent)
+echo "終止 tmux session..."
 tmux kill-session -t "$TMUX_SESSION_NAME"
 
-echo "🎉 All LINE services stopped"
+echo "🎉 LINE 所有服務已停止"

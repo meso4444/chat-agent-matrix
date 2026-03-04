@@ -1,35 +1,35 @@
 #!/bin/bash
-# install_docker.sh - Intelligent Docker & Docker Compose Installation Script
-# Detects environment (WSL/macOS/Linux) and applies appropriate installation method
+# install_docker_zh.sh - 智能 Docker & Docker Compose 安装腳本
+# 自動偵測環境（WSL/macOS/Linux）並應用最適當的安裝方法
 
 set -e
 
-echo "🐳 Docker Installation Wizard"
+echo "🐳 Docker 安裝精靈"
 echo "========================================"
 echo ""
 
 # ============================================================================
-# Step 1: Detect Environment
+# 第 1 步：偵測環境
 # ============================================================================
 
 detect_environment() {
     local os_type=$(uname -s)
     local uname_release=$(uname -r)
 
-    # Check for WSL
+    # 檢查 WSL
     if grep -qi "microsoft" /proc/version 2>/dev/null; then
-        # Detect WSL version
+        # 偵測 WSL 版本
         if grep -qi "WSL2" /proc/version 2>/dev/null; then
             echo "WSL2"
         else
             echo "WSL1"
         fi
-    # Check for macOS
+    # 檢查 macOS
     elif [[ "$os_type" == "Darwin" ]]; then
         echo "macOS"
-    # Check for Linux
+    # 檢查 Linux
     elif [[ "$os_type" == "Linux" ]]; then
-        # Detect Linux distribution
+        # 偵測 Linux 發行版
         if command -v lsb_release &> /dev/null; then
             local distro=$(lsb_release -si)
             echo "Linux-$distro"
@@ -46,49 +46,49 @@ detect_environment() {
 
 ENVIRONMENT=$(detect_environment)
 
-echo "✅ Detected Environment: $ENVIRONMENT"
+echo "✅ 偵測到的環境：$ENVIRONMENT"
 echo ""
 
 # ============================================================================
-# Step 2: Environment-Specific Installation
+# 第 2 步：環境特定安裝
 # ============================================================================
 
 install_docker_wsl2() {
-    echo "🔧 Installing Docker for WSL2 (in WSL)..."
+    echo "🔧 為 WSL2 安裝 Docker (in WSL)..."
     echo ""
 
-    # ===== WSL2 Systemd Auto-Enable =====
+    # ===== WSL2 Systemd 自動啟用 =====
     if grep -qi "Microsoft" /proc/version; then
-        echo "🔍 WSL environment detected, checking systemd configuration..."
+        echo "🔍 檢測到 WSL 環境，正在檢查 systemd 設定..."
         WSL_CONF="/etc/wsl.conf"
 
-        # Create file if it doesn't exist
+        # 檢查檔案是否存在，若無則建立
         if [ ! -f "$WSL_CONF" ]; then
-            echo "   Creating new $WSL_CONF..."
+            echo "   建立新的 $WSL_CONF..."
             touch "$WSL_CONF"
         fi
 
-        # Check if systemd=true is already configured
+        # 檢查是否已設定 systemd=true
         if ! grep -q "systemd=true" "$WSL_CONF"; then
-            echo "🔧 Enabling WSL Systemd support..."
+            echo "🔧 正在啟用 WSL Systemd 支援..."
 
-            # Ensure [boot] section exists
+            # 確保 [boot] 區塊存在
             if ! grep -q "\[boot\]" "$WSL_CONF"; then
                 echo -e "\n[boot]" | tee -a "$WSL_CONF" > /dev/null
             fi
 
-            # Add systemd=true
+            # 加入 systemd=true
             echo "systemd=true" | tee -a "$WSL_CONF" > /dev/null
 
-            echo "✅ Updated $WSL_CONF"
+            echo "✅ 已更新 $WSL_CONF"
             echo ""
-            echo "⚠️  Important: You must completely restart WSL for Systemd to take effect!"
-            echo "   Execute in Windows PowerShell: wsl --shutdown"
-            echo "   Then re-enter Ubuntu and run this script again."
+            echo "⚠️  重要提示：您必須完全重啟 WSL 才能使 Systemd 生效！"
+            echo "   請在 Windows PowerShell 執行: wsl --shutdown"
+            echo "   然後重新進入 Ubuntu 並執行此腳本。"
             echo ""
             exit 1
         else
-            echo "✅ WSL Systemd configuration already exists ($WSL_CONF)"
+            echo "✅ WSL Systemd 設定已存在 ($WSL_CONF)"
         fi
     fi
 
@@ -98,76 +98,76 @@ install_docker_wsl2() {
 
 install_docker_in_wsl() {
     echo ""
-    echo "📦 Docker in WSL (Direct Installation)"
+    echo "📦 WSL 中的 Docker (直接安裝)"
     echo "========================================"
     echo ""
 
-    # Check if Docker is already installed
+    # 檢查 Docker 是否已安裝
     if command -v docker &> /dev/null; then
-        echo "✅ Docker is already installed: $(docker --version)"
+        echo "✅ Docker 已安裝：$(docker --version)"
         return
     fi
 
-    echo "Installing Docker via apt..."
+    echo "正在透過 apt 安裝 Docker..."
 
-    # Add Docker GPG key
-    echo "🔑 Adding Docker GPG key..."
+    # 新增 Docker GPG 鑰匙
+    echo "🔑 正在新增 Docker GPG 鑰匙..."
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg 2>/dev/null || {
-        echo "⚠️  Using alternative method..."
+        echo "⚠️  使用替代方式..."
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     }
 
-    # Add Docker repository
-    echo "📋 Adding Docker repository..."
+    # 新增 Docker 儲存庫
+    echo "📋 正在新增 Docker 儲存庫..."
     echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null || {
         echo "deb https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     }
 
-    # Install Docker
-    echo "📦 Installing Docker Engine..."
+    # 安裝 Docker
+    echo "📦 正在安裝 Docker Engine..."
     sudo apt-get update
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-    # Verify installation
+    # 驗證安裝
     if command -v docker &> /dev/null; then
-        echo "✅ Docker installed successfully: $(docker --version)"
+        echo "✅ Docker 安裝成功：$(docker --version)"
     else
-        echo "❌ Docker installation failed"
+        echo "❌ Docker 安裝失敗"
         exit 1
     fi
 
-    # Set user permissions
-    echo "🔐 Setting up user permissions..."
+    # 設定使用者權限
+    echo "🔐 正在設定使用者權限..."
     sudo usermod -aG docker $USER
-    echo "⚠️  Please log out and back in, or run: newgrp docker"
+    echo "⚠️  請登出並重新登入，或執行：newgrp docker"
 }
 
 install_docker_wsl1() {
     echo ""
-    echo "⚠️  WSL1 Detected"
+    echo "⚠️  偵測到 WSL1"
     echo "========================================"
     echo ""
-    echo "❌ Docker cannot run natively in WSL1."
+    echo "❌ Docker 無法在 WSL1 中原生執行。"
     echo ""
-    echo "Solutions:"
-    echo "1. Upgrade to WSL2 (Recommended):"
-    echo "   • Run: wsl --set-version <distro-name> 2"
+    echo "解決方案："
+    echo "1. 升級到 WSL2 (推薦)："
+    echo "   • 執行：wsl --set-version <distro-name> 2"
     echo ""
-    echo "2. Continue without installing Docker (local development only)"
+    echo "2. 繼續不安裝 Docker (僅本機開發)"
     echo ""
-    read -p "Choose option (1 or 2): " wsl1_choice
+    read -p "選擇選項 (1 或 2)：" wsl1_choice
 
     case "$wsl1_choice" in
         1)
-            echo "❌ WSL upgrade must be done from Windows PowerShell. Aborting."
+            echo "❌ WSL 升級必須從 Windows PowerShell 執行。正在中止。"
             exit 1
             ;;
         2)
-            echo "⏭️  Skipping Docker installation"
+            echo "⏭️  跳過 Docker 安裝"
             return
             ;;
         *)
-            echo "Invalid choice"
+            echo "無效選擇"
             exit 1
             ;;
     esac
@@ -175,49 +175,49 @@ install_docker_wsl1() {
 
 install_docker_macos() {
     echo ""
-    echo "🍎 Installing Docker for macOS"
+    echo "🍎 為 macOS 安裝 Docker"
     echo "========================================"
     echo ""
 
-    # Check if Docker is already installed
+    # 檢查 Docker 是否已安裝
     if command -v docker &> /dev/null; then
-        echo "✅ Docker is already installed: $(docker --version)"
+        echo "✅ Docker 已安裝：$(docker --version)"
         return
     fi
 
-    # Check if Homebrew is installed
+    # 檢查 Homebrew 是否已安裝
     if ! command -v brew &> /dev/null; then
-        echo "❌ Homebrew is required. Install from: https://brew.sh"
+        echo "❌ 需要 Homebrew。從以下位置安裝：https://brew.sh"
         exit 1
     fi
 
-    echo "📦 Installing Docker via Homebrew + colima..."
+    echo "📦 正在透過 Homebrew + colima 安裝 Docker..."
     echo ""
 
-    echo "Installing Docker CLI with colima..."
+    echo "正在安裝 Docker CLI with colima..."
     brew install docker colima
 
-    # Start colima
-    echo "🚀 Starting colima..."
+    # 啟動 colima
+    echo "🚀 正在啟動 colima..."
     colima start || {
-        echo "⚠️  Please start colima manually: colima start"
+        echo "⚠️  請手動啟動 colima：colima start"
     }
 
-    echo "✅ Docker installed via Homebrew + colima"
-    echo "💡 Tip: Start colima before using Docker: colima start"
+    echo "✅ 已透過 Homebrew + colima 安裝 Docker"
+    echo "💡 提示：使用 Docker 前請先啟動 colima：colima start"
 }
 
 install_docker_linux() {
     local distro=$1
 
     echo ""
-    echo "🐧 Installing Docker for Linux ($distro)"
+    echo "🐧 為 Linux ($distro) 安裝 Docker"
     echo "========================================"
     echo ""
 
-    # Check if Docker is already installed
+    # 檢查 Docker 是否已安裝
     if command -v docker &> /dev/null; then
-        echo "✅ Docker is already installed: $(docker --version)"
+        echo "✅ Docker 已安裝：$(docker --version)"
         return
     fi
 
@@ -232,197 +232,197 @@ install_docker_linux() {
             install_docker_arch
             ;;
         *)
-            echo "⚠️  Unsupported distribution: $distro"
-            echo "Please refer to: https://docs.docker.com/engine/install/"
+            echo "⚠️  不支援的發行版：$distro"
+            echo "請參考：https://docs.docker.com/engine/install/"
             exit 1
             ;;
     esac
 }
 
 install_docker_ubuntu_debian() {
-    echo "📦 Installing Docker for Ubuntu/Debian..."
+    echo "📦 為 Ubuntu/Debian 安裝 Docker..."
 
-    # Add Docker GPG key
-    echo "🔑 Adding Docker GPG key..."
+    # 新增 Docker GPG 鑰匙
+    echo "🔑 正在新增 Docker GPG 鑰匙..."
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg 2>/dev/null || {
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     }
 
-    # Add Docker repository
-    echo "📋 Adding Docker repository..."
+    # 新增 Docker 儲存庫
+    echo "📋 正在新增 Docker 儲存庫..."
     echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1 || {
         echo "deb https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     }
 
-    # Install
-    echo "📦 Installing Docker packages..."
+    # 安裝
+    echo "📦 正在安裝 Docker 套件..."
     sudo apt-get update
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-    # Verify
+    # 驗證
     if command -v docker &> /dev/null; then
-        echo "✅ Docker installed successfully: $(docker --version)"
+        echo "✅ Docker 安裝成功：$(docker --version)"
     else
-        echo "❌ Docker installation failed"
+        echo "❌ Docker 安裝失敗"
         exit 1
     fi
 
-    # User permissions
-    echo "🔐 Setting up user permissions..."
+    # 使用者權限
+    echo "🔐 正在設定使用者權限..."
     sudo usermod -aG docker $USER
-    echo "⚠️  Please log out and back in, or run: newgrp docker"
+    echo "⚠️  請登出並重新登入，或執行：newgrp docker"
 }
 
 install_docker_fedora() {
-    echo "📦 Installing Docker for Fedora/RHEL/CentOS..."
+    echo "📦 為 Fedora/RHEL/CentOS 安裝 Docker..."
 
     sudo dnf install -y dnf-plugins-core
     sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
     sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
     if command -v docker &> /dev/null; then
-        echo "✅ Docker installed successfully: $(docker --version)"
+        echo "✅ Docker 安裝成功：$(docker --version)"
     else
-        echo "❌ Docker installation failed"
+        echo "❌ Docker 安裝失敗"
         exit 1
     fi
 
-    # Start service
+    # 啟動服務
     sudo systemctl start docker
     sudo systemctl enable docker
 
-    # User permissions
+    # 使用者權限
     sudo usermod -aG docker $USER
-    echo "⚠️  Please log out and back in, or run: newgrp docker"
+    echo "⚠️  請登出並重新登入，或執行：newgrp docker"
 }
 
 install_docker_arch() {
-    echo "📦 Installing Docker for Arch Linux..."
+    echo "📦 為 Arch Linux 安裝 Docker..."
 
     sudo pacman -S docker docker-compose
 
     if command -v docker &> /dev/null; then
-        echo "✅ Docker installed successfully: $(docker --version)"
+        echo "✅ Docker 安裝成功：$(docker --version)"
     else
-        echo "❌ Docker installation failed"
+        echo "❌ Docker 安裝失敗"
         exit 1
     fi
 
-    # Start service
+    # 啟動服務
     sudo systemctl start docker
     sudo systemctl enable docker
 
-    # User permissions
+    # 使用者權限
     sudo usermod -aG docker $USER
-    echo "⚠️  Please log out and back in, or run: newgrp docker"
+    echo "⚠️  請登出並重新登入，或執行：newgrp docker"
 }
 
 # ============================================================================
-# Step 3: Install Docker Compose (if needed)
+# 第 3 步：安裝 Docker Compose (如需要)
 # ============================================================================
 
 install_docker_compose() {
     echo ""
-    echo "📦 Docker Compose Status"
+    echo "📦 Docker Compose 狀態"
     echo "========================================"
 
-    # Check if Docker Compose v2 is available
+    # 檢查 Docker Compose v2 是否可用
     if docker compose version &> /dev/null; then
-        echo "✅ Docker Compose v2 found: $(docker compose version --short)"
+        echo "✅ 找到 Docker Compose v2：$(docker compose version --short)"
         return
     fi
 
-    # Check for legacy docker-compose
+    # 檢查舊版 docker-compose
     if command -v docker-compose &> /dev/null; then
-        echo "✅ Docker Compose (legacy) found: $(docker-compose --version)"
+        echo "✅ 找到 Docker Compose (舊版)：$(docker-compose --version)"
         return
     fi
 
-    echo "⚠️  Docker Compose not found. Installing..."
+    echo "⚠️  找不到 Docker Compose。正在安裝..."
 
     if [[ "$ENVIRONMENT" == "macOS" ]]; then
         brew install docker-compose
     else
-        # For Linux systems, Docker Compose v2 comes with docker-compose-plugin
-        echo "💡 Docker Compose v2 plugin already installed with docker-ce-cli"
-        echo "   Use: docker compose (instead of docker-compose)"
+        # 對於 Linux 系統，Docker Compose v2 隨 docker-compose-plugin 提供
+        echo "💡 Docker Compose v2 外掛已隨 docker-ce-cli 安裝"
+        echo "   使用：docker compose (而不是 docker-compose)"
     fi
 }
 
 # ============================================================================
-# Step 4: Verification
+# 第 4 步：驗證
 # ============================================================================
 
 verify_installation() {
     echo ""
-    echo "✅ Verification"
+    echo "✅ 驗證"
     echo "========================================"
     echo ""
 
-    # Check Docker
+    # 檢查 Docker
     if command -v docker &> /dev/null; then
-        echo "✅ Docker: $(docker --version)"
+        echo "✅ Docker：$(docker --version)"
     else
-        echo "❌ Docker: Not found"
+        echo "❌ Docker：未找到"
         return 1
     fi
 
-    # Check Docker Compose
+    # 檢查 Docker Compose
     if docker compose version &> /dev/null; then
-        echo "✅ Docker Compose: $(docker compose version --short)"
+        echo "✅ Docker Compose：$(docker compose version --short)"
     elif command -v docker-compose &> /dev/null; then
-        echo "✅ Docker Compose (legacy): $(docker-compose --version)"
+        echo "✅ Docker Compose (舊版)：$(docker-compose --version)"
     else
-        echo "⚠️  Docker Compose: Not found (may need manual installation)"
+        echo "⚠️  Docker Compose：未找到 (可能需要手動安裝)"
     fi
 
-    # Try a test run
+    # 嘗試測試執行
     echo ""
-    echo "🧪 Running test: docker ps"
+    echo "🧪 執行測試：docker ps"
     if docker ps > /dev/null 2>&1; then
-        echo "✅ Docker is working correctly!"
+        echo "✅ Docker 正常運作！"
     else
-        echo "⚠️  Docker test failed, running diagnostics..."
+        echo "⚠️  Docker 測試失敗，進行診斷..."
         echo ""
 
-        # WSL2-specific diagnostics
+        # WSL2 特定診斷
         if grep -qi "microsoft" /proc/version 2>/dev/null && grep -qi "WSL2" /proc/version 2>/dev/null; then
-            echo "📋 WSL2 Diagnostic Information:"
+            echo "📋 WSL2 診斷資訊："
             echo ""
 
-            # Check systemd
+            # 檢查 systemd
             if systemctl is-active systemd &> /dev/null || [ -d /run/systemd/system ]; then
-                echo "  ✅ systemd: Enabled"
+                echo "  ✅ systemd：已啟用"
             else
-                echo "  ❌ systemd: Not enabled (needs to be enabled)"
-                echo "     Reference: Edit %USERPROFILE%\\.wslconfig, set systemd=true"
+                echo "  ❌ systemd：未啟用 (需要啟用)"
+                echo "     參考：編輯 %USERPROFILE%\\.wslconfig，設置 systemd=true"
             fi
 
-            # Check Docker daemon
+            # 檢查 Docker daemon
             if sudo systemctl is-active docker &> /dev/null; then
-                echo "  ✅ Docker daemon: Running"
+                echo "  ✅ Docker daemon：運行中"
             else
-                echo "  ⚠️  Docker daemon: Not running"
-                echo "     Try manually starting: sudo systemctl start docker"
+                echo "  ⚠️  Docker daemon：未運行"
+                echo "     嘗試手動啟動：sudo systemctl start docker"
             fi
 
-            # Check user group
+            # 檢查使用者組
             if groups | grep -q docker; then
-                echo "  ✅ docker user group: Configured"
+                echo "  ✅ docker 使用者組：已設置"
             else
-                echo "  ❌ docker user group: Not configured"
-                echo "     Try: newgrp docker or sudo usermod -aG docker \$USER"
+                echo "  ❌ docker 使用者組：未設置"
+                echo "     嘗試：newgrp docker 或 sudo usermod -aG docker \$USER"
             fi
 
             echo ""
-            echo "💡 Common WSL2 Docker Problem Solutions:"
-            echo "   1. If systemd is not enabled, edit .wslconfig and restart WSL"
-            echo "   2. Restart Docker daemon: sudo systemctl restart docker"
-            echo "   3. Check Docker logs: sudo journalctl -u docker -n 50"
-            echo "   4. Re-login to shell or run: newgrp docker"
+            echo "💡 常見 WSL2 Docker 問題解決方案："
+            echo "   1. 如果 systemd 未啟用，請編輯 .wslconfig 並重啟 WSL"
+            echo "   2. 重啟 Docker daemon：sudo systemctl restart docker"
+            echo "   3. 檢查 Docker 日誌：sudo journalctl -u docker -n 50"
+            echo "   4. 重新登入 Shell 或執行：newgrp docker"
         else
-            echo "⚠️  Docker may need additional configuration (user permissions, daemon)"
-            echo "   Try: newgrp docker or sudo systemctl restart docker"
+            echo "⚠️  Docker 可能需要額外設定 (使用者權限、守護程序)"
+            echo "   嘗試：newgrp docker 或 sudo systemctl restart docker"
         fi
     fi
 
@@ -431,7 +431,7 @@ verify_installation() {
 }
 
 # ============================================================================
-# Main Execution
+# 主要執行
 # ============================================================================
 
 case "$ENVIRONMENT" in
@@ -449,22 +449,22 @@ case "$ENVIRONMENT" in
         install_docker_linux "$distro"
         ;;
     *)
-        echo "❌ Unknown environment: $ENVIRONMENT"
+        echo "❌ 未知環境：$ENVIRONMENT"
         exit 1
         ;;
 esac
 
-# Install Docker Compose
+# 安裝 Docker Compose
 install_docker_compose
 
-# Verify
+# 驗證
 verify_installation
 
 echo ""
-echo "🎉 Docker installation wizard completed!"
+echo "🎉 Docker 安裝精靈已完成！"
 echo ""
-echo "Next steps:"
-echo "1. If you logged in as root or made permission changes, restart your terminal"
-echo "2. Test with: docker run hello-world"
-echo "3. For containerized deployment, run: docker-compose up -d"
+echo "下一步："
+echo "1. 如果您以 root 身份登入或做了權限變更，請重啟終端機"
+echo "2. 透過以下指令測試：docker run hello-world"
+echo "3. 進行容器化部署，執行：docker-compose up -d"
 echo ""

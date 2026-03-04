@@ -1,32 +1,32 @@
 #!/bin/bash
 # setup_systemd.sh
-# Automatically register Chat Agent Matrix as Systemd service to enable auto-startup on boot
+# 自動將 Chat Agent Matrix 註冊為 Systemd 服務，實現開機自啟
 
-# 1. Prepare paths and variables
-# Point to line project directory
+# 1. 準備路徑與變數
+# 指向 line 專案目錄
 SCRIPT_DIR="$(cd "$(dirname "$0")/../line" && pwd)"
 START_SCRIPT="$SCRIPT_DIR/start_all_services.sh"
 STOP_SCRIPT="$SCRIPT_DIR/stop_all_services.sh"
 SERVICE_NAME="chat-agent-matrix-line"
 SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
 
-# Detect real user (avoid becoming root when sudo is executed)
+# 偵測真實用戶 (避免 sudo 執行時變成 root)
 REAL_USER=${SUDO_USER:-$(whoami)}
 USER_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
 
-# Check root privileges
+# 檢查 root 權限
 if [ "$EUID" -ne 0 ]; then
-  echo "❌ Please run this script with sudo (because it needs to write to /etc/systemd/system)"
-  echo "   Example: sudo ./auto-startup/install_systemd_line.sh"
+  echo "❌ 請使用 sudo 執行此腳本 (因為需要寫入 /etc/systemd/system)"
+  echo "   範例: sudo ./auto-startup/install_systemd_line.sh"
   exit 1
 fi
 
-echo "🔧 Configuring Systemd service (LINE Edition)..."
-echo "   - Service name: $SERVICE_NAME"
-echo "   - Run as user: $REAL_USER"
-echo "   - Start script: $START_SCRIPT"
+echo "🔧 正在配置 Systemd 服務 (LINE Edition)..."
+echo "   - 服務名稱: $SERVICE_NAME"
+echo "   - 執行用戶: $REAL_USER"
+echo "   - 啟動腳本: $START_SCRIPT"
 
-# 2. Create Service file
+# 2. 建立 Service 檔案
 cat > "$SERVICE_FILE" <<EOF
 [Unit]
 Description=Chat Agent Matrix - AI Remote Commander (LINE)
@@ -49,51 +49,51 @@ Environment="TERM=xterm-256color"
 WantedBy=multi-user.target
 EOF
 
-echo "✅ Service file created: $SERVICE_FILE"
+echo "✅ 服務檔案已建立: $SERVICE_FILE"
 
-# 3. Enable service
-echo "🔄 Enabling service..."
+# 3. 啟用服務
+echo "🔄 正在啟用服務..."
 systemctl daemon-reload
 systemctl enable $SERVICE_NAME
 
-# 4. Check WSL Systemd support
+# 4. 檢查 WSL Systemd 支援
 if grep -qi "Microsoft" /proc/version; then
-    echo "🔍 WSL environment detected, checking systemd configuration..."
+    echo "🔍 檢測到 WSL 環境，正在檢查 systemd 設定..."
     WSL_CONF="/etc/wsl.conf"
-
-    # Check if file exists, create if not
+    
+    # 檢查檔案是否存在，若無則建立
     if [ ! -f "$WSL_CONF" ]; then
-        echo "   Creating new $WSL_CONF..."
+        echo "   建立新的 $WSL_CONF..."
         touch "$WSL_CONF"
     fi
 
-    # Check if systemd=true is already configured
+    # 檢查是否已設定 systemd=true
     if ! grep -q "systemd=true" "$WSL_CONF"; then
-        echo "🔧 Enabling WSL Systemd support..."
-
-        # Ensure [boot] section exists
+        echo "🔧 正在啟用 WSL Systemd 支援..."
+        
+        # 確保 [boot] 區塊存在
         if ! grep -q "\[boot\]" "$WSL_CONF"; then
             echo -e "\n[boot]" | tee -a "$WSL_CONF" > /dev/null
         fi
-
-        # Add systemd=true
+        
+        # 加入 systemd=true
         echo "systemd=true" | tee -a "$WSL_CONF" > /dev/null
-
-        echo "✅ Updated $WSL_CONF"
-        echo "⚠️  Important notice: You must fully restart WSL for Systemd to take effect!"
-        echo "   Please run in Windows PowerShell: wsl --shutdown"
-        echo "   Then re-enter Ubuntu."
+        
+        echo "✅ 已更新 $WSL_CONF"
+        echo "⚠️  重要提示：您必須完全重啟 WSL 才能使 Systemd 生效！"
+        echo "   請在 Windows PowerShell 執行: wsl --shutdown"
+        echo "   然後重新進入 Ubuntu。"
     else
-        echo "✅ WSL Systemd configuration already exists ($WSL_CONF)"
+        echo "✅ WSL Systemd 設定已存在 ($WSL_CONF)"
     fi
 fi
 
-echo "✅ Auto-startup has been enabled!"
+echo "✅ 開機自啟已啟用！"
 echo ""
-echo "👉 You can now use the following commands to manage the service:"
-echo "   sudo systemctl start chat-agent-matrix-line"
-echo "   sudo systemctl stop chat-agent-matrix-line"
-echo "   sudo systemctl status chat-agent-matrix-line"
-echo ""
-echo "📝 Next steps (Windows users):"
-echo "   Please run ./auto-startup/setup_windows_scheduler.sh to configure host machine wake-up scheduling."
+👉 您現在可以使用以下指令管理服務：
+   sudo systemctl start chat-agent-matrix-line
+   sudo systemctl stop chat-agent-matrix-line
+   sudo systemctl status chat-agent-matrix-line
+
+📝 下一步 (Windows 用戶):
+   請執行 ./auto-startup/setup_windows_scheduler.sh 設定宿主機喚醒排程。

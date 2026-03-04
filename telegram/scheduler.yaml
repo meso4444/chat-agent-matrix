@@ -1,55 +1,55 @@
 # ==========================================
-# Schedule Task Configuration File (Scheduler Configuration)
+# 排程任務配置檔案 (Scheduler Configuration)
 # ==========================================
-# Supports 5 trigger types: daily / weekly / monthly / interval / cron
+# 支援 5 種觸發方式：daily / weekly / monthly / interval / cron
 
 scheduler:
 
   # ═══════════════════════════════════════════════════════════════
-  # 🧠 Agent Memory Management
+  # 🧠 Agent Memory 管理
   # ═══════════════════════════════════════════════════════════════
 
-  # 【Built-in Default Schedule】Rotate Agent memory files at 00:00 every day
-  - name: "Daily Memory File Rotation"
+  # 【預設內建排程】每天 00:00 輪轉 Agent 記憶檔
+  - name: "每日記憶檔輪轉"
     type: "system"
     action: "rotate_memory_files"
     trigger: "daily"
     hour: 0
     minute: 0
     second: 0
-    active: true    # ✅ Enabled by default
+    active: true    # ✅ 預設啟用
 
-  # 【Built-in Default Schedule】Update all Agent memories every hour
-  - name: "All Agents Hourly Memory Update"
+  # 【預設內建排程】每小時更新所有 Agent 記憶
+  - name: "全體 Agent 每小時記憶更新"
     type: "system"
     action: "update_agent_memories"
-    prompt: "Summary and key points of tasks completed in the past period. Record details for key tasks or important turning points. Update the current day's memory file in the memory directory"
+    prompt: "過去一段時間若有進行任務的摘要及重點整理,於重點任務或重要轉折點則需紀錄細節,更新紀錄到memory目錄的當日記憶檔md,這是你的個人記憶任務,不需回報給用戶。"
     trigger: "interval"
     hours: 1
     minutes: 0
     seconds: 0
-    active: true    # ✅ Enabled by default
+    active: true    # ✅ 預設啟用
 
   # ═══════════════════════════════════════════════════════════════
-  # 📅 Daily (Execute at specified time every day)
-  # Parameters: hour (0-23), minute (0-59), second (0-59)
+  # 📅 Daily（每天指定時間執行）
+  # 參數：hour (0-23), minute (0-59), second (0-59)
   # ═══════════════════════════════════════════════════════════════
 
-  # 【Built-in Default Schedule】Clean up expired images daily
-  - name: "Daily System Cleanup"
+  # 【預設內建排程】每天清理過期圖片
+  - name: "每日系統清理"
     type: "system"
     action: "cleanup_images"
     trigger: "daily"
     hour: 2
     minute: 0
     second: 0
-    active: true    # ✅ Enabled by default
+    active: true    # ✅ 預設啟用
 
-  # Example: Execute at 08:00 every day
-  - name: "Morning News"
+  # 範例：每天 08:00 執行
+  - name: "晨間新聞"
     type: "agent_command"
     agent: "Güpa"
-    command: "Please summarize today's top news for me"
+    command: "請為我總結一下今天的頭條新聞"
     trigger: "daily"
     hour: 8
     minute: 0
@@ -57,32 +57,32 @@ scheduler:
     active: true
 
   # ═══════════════════════════════════════════════════════════════
-  # 📊 Weekly (Execute at specified day and time every week)
-  # day_of_week: 0=Monday, 1=Tuesday, 2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday
-  # Parameters: day_of_week, hour (0-23), minute (0-59), second (0-59)
+  # 📊 Weekly（每週指定日期時間執行）
+  # day_of_week: 0=周一, 1=周二, 2=周三, 3=周四, 4=周五, 5=周六, 6=周日
+  # 參數：day_of_week, hour (0-23), minute (0-59), second (0-59)
   # ═══════════════════════════════════════════════════════════════
 
-  - name: "Friday Report"
+  - name: "週五周報"
     type: "agent_command"
     agent: "Güpa"
-    command: "What important itinerary planning was completed this week, and what are the plans for next week"
+    command: "本週完成了哪些重要的行程規劃，下週有什麼計畫"
     trigger: "weekly"
-    day_of_week: 4      # Friday
+    day_of_week: 4      # 周五
     hour: 17
     minute: 0
     second: 0
     active: true
 
   # ═══════════════════════════════════════════════════════════════
-  # 📈 Monthly (Execute at specified date and time every month)
-  # day: 1-31 (which day of the month, use 28 for end of month to avoid month length issues)
-  # Parameters: day, hour (0-23), minute (0-59), second (0-59)
+  # 📈 Monthly（每月指定日期時間執行）
+  # day: 1-31（月中的第幾天，28 用於月末以避免月份長度問題）
+  # 參數：day, hour (0-23), minute (0-59), second (0-59)
   # ═══════════════════════════════════════════════════════════════
 
-  - name: "Monthly Review"
+  - name: "月初檢討"
     type: "agent_command"
     agent: "Güpa"
-    command: "Generate a summary report of last month's travel itineraries, including completion rate and satisfaction"
+    command: "生成上月的旅遊行程總結報告，統計完成率和滿意度"
     trigger: "monthly"
     day: 1
     hour: 9
@@ -91,133 +91,133 @@ scheduler:
     active: true
 
   # ═══════════════════════════════════════════════════════════════
-  # ⏱️ Interval (Execute at fixed intervals)
-  # Description: Execute once every N hours/minutes/seconds (not at fixed time points)
-  # Parameters: hours, minutes, seconds
+  # ⏱️ Interval（固定間隔執行）
+  # 說明：每隔 N 小時/分鐘/秒執行一次（不是固定時間點）
+  # 參數：hours, minutes, seconds
   #
-  # ⚠️ Note:
-  # - interval hours:24 ≠ every day at 08:00
-  # - interval hours:24 = execute every 24 hours (timer resets when service restarts)
-  # - If you need "fixed time every day", it's recommended to use daily instead
+  # ⚠️ 注意：
+  # - interval hours:24 ≠ 每天 08:00
+  # - interval hours:24 = 每隔 24 小時執行一次（服務重啟時計時器重置）
+  # - 如果需要「每天固定時間」，建議改用 daily
   # ═══════════════════════════════════════════════════════════════
 
-  # Example 1: Poll every 30 minutes (status check)
-  - name: "Status Poll"
+  # 範例 1：每 30 分鐘輪詢一次（狀態檢查）
+  - name: "狀態輪詢"
     type: "agent_command"
     agent: "Chöd"
-    command: "Check if the current system is running normally"
+    command: "檢查一下當前系統是否正常運行"
     trigger: "interval"
     hours: 0
     minutes: 30
     seconds: 0
-    active: false  # Example, disabled by default
+    active: false  # 示例，預設關閉
 
-  # Example 4: Execute every 12 hours (mid-term report)
-  - name: "Mid-term Status Report"
+  # 範例 4：每 12 小時執行一次（中期報告）
+  - name: "中期狀態報告"
     type: "agent_command"
     agent: "Güpa"
-    command: "What important travel market changes have occurred in the past 12 hours"
+    command: "過去 12 小時有哪些重要的旅遊市場變化"
     trigger: "interval"
     hours: 12
     minutes: 0
     seconds: 0
-    active: false  # Example, disabled by default
+    active: false  # 示例，預設關閉
 
   # ═══════════════════════════════════════════════════════════════
-  # 🔄 Cron (Cron expression, supports complex time logic)
-  # Description: Use APScheduler's CronTrigger syntax
+  # 🔄 Cron（Cron 表達式，支援複雜時間邏輯）
+  # 說明：使用 APScheduler 的 CronTrigger 語法
   #
-  # Parameters:
-  # - year: Year (optional, usually use *)
-  # - month: Month (1-12 or *)
-  # - day: Date (1-31 or * or L for end of month)
-  # - week: Week number (1-53 or *)
-  # - day_of_week: Day of week (0-6 or 0-4 for Monday to Friday or *)
-  # - hour: Hour (0-23 or *)
-  # - minute: Minute (0-59 or *)
-  # - second: Second (0-59 or *)
+  # 參數：
+  # - year: 年份（可選，通常用 *）
+  # - month: 月份 (1-12 或 *)
+  # - day: 日期 (1-31 或 * 或 L 表示月末)
+  # - week: 周數 (1-53 或 *)
+  # - day_of_week: 星期幾 (0-6 或 0-4 表示周一到周五 或 *)
+  # - hour: 小時 (0-23 或 *)
+  # - minute: 分鐘 (0-59 或 *)
+  # - second: 秒 (0-59 或 *)
   #
-  # Special values:
-  # - * = any value
-  # - 0-4 = range (Monday to Friday)
-  # - 1,15 = multiple values (1st and 15th)
-  # - L = Last (end of month)
+  # 特殊值：
+  # - * = 任何值
+  # - 0-4 = 範圍（周一到周五）
+  # - 1,15 = 多個值（1 號和 15 號）
+  # - L = Last（月末）
   # ═══════════════════════════════════════════════════════════════
 
-  # Example 1: Weekdays (Monday to Friday) at 09:00 every day
-  # Purpose: Weekday morning meeting
-  - name: "Weekday Morning Meeting"
+  # 範例 1：工作日（周一到周五）每天 09:00
+  # 用途：工作日晨會
+  - name: "工作日晨會"
     type: "agent_command"
     agent: "Chöd"
-    command: "Prepare today's work plan and priorities"
+    command: "準備今天的工作計畫和優先順序"
     trigger: "cron"
-    day_of_week: "0-4"      # 0=Monday, 4=Friday, so 0-4 = Monday to Friday
+    day_of_week: "0-4"      # 0=周一, 4=周五，所以 0-4 = 周一到周五
     hour: 9
     minute: 0
     second: 0
-    active: false  # Example, disabled by default
+    active: false  # 示例，預設關閉
 
-  # Example 2: End of month (last day) at 23:59
-  # Purpose: End-of-month backup (in addition to daily cleanup, this is deep cleanup at month end)
-  - name: "End-of-Month Deep Cleanup"
+  # 範例 2：月末（最後一天）的 23:59
+  # 用途：月末備份（預設已有每日清理，此為月末深度清理）
+  - name: "月末深度清理"
     type: "system"
     action: "cleanup_images"
     trigger: "cron"
-    day: "L"                # L = last day of month
+    day: "L"                # L = 月份的最後一天
     hour: 23
     minute: 59
     second: 0
-    active: false  # Example, disabled by default
+    active: false  # 示例，預設關閉
 
-  # Example 3: 1st and 15th of every month at 10:00
-  # Purpose: Mid-month check
-  - name: "Mid-Month Check"
+  # 範例 3：每月 1 號和 15 號的 10:00
+  # 用途：半月檢查
+  - name: "半月檢查"
     type: "agent_command"
     agent: "Güpa"
-    command: "Conduct progress checks for the first/second half of this month"
+    command: "進行本月上/下旬的進度檢查"
     trigger: "cron"
-    day: "1,15"             # 1st and 15th
+    day: "1,15"             # 1 號和 15 號
     hour: 10
     minute: 0
     second: 0
-    active: false  # Example, disabled by default
+    active: false  # 示例，預設關閉
 
-  # Example 4: Weekends (Saturday and Sunday) at 10:00 every day
-  # Purpose: Weekend travel planning
-  - name: "Weekend Planning"
+  # 範例 4：周末（周六、周日）每天 10:00
+  # 用途：週末行程規劃
+  - name: "週末規劃"
     type: "agent_command"
     agent: "Güpa"
-    command: "Plan the travel itinerary for this weekend"
+    command: "規劃一下這個週末的旅遊行程"
     trigger: "cron"
-    day_of_week: "5,6"      # 5=Saturday, 6=Sunday
+    day_of_week: "5,6"      # 5=周六, 6=周日
     hour: 10
     minute: 0
     second: 0
-    active: false  # Example, disabled by default
+    active: false  # 示例，預設關閉
 
-  # Example 5: Weekdays (Monday to Friday) every 4 hours (09:00, 13:00, 17:00, 21:00)
-  # Purpose: Regular synchronization on weekdays
-  - name: "Weekday Regular Sync"
+  # 範例 5：工作日（周一到周五）每隔 4 小時（09:00, 13:00, 17:00, 21:00）
+  # 用途：工作日定期同步
+  - name: "工作日定期同步"
     type: "agent_command"
     agent: "Chöd"
-    command: "Sync the latest itinerary progress"
+    command: "同步最新的行程進度"
     trigger: "cron"
-    day_of_week: "0-4"      # Monday to Friday
-    hour: "9,13,17,21"      # 9 AM, 1 PM, 5 PM, 9 PM
+    day_of_week: "0-4"      # 周一到周五
+    hour: "9,13,17,21"      # 9點、13點、17點、21點
     minute: 0
     second: 0
-    active: false  # Example, disabled by default
+    active: false  # 示例，預設關閉
 
-  # Example 6: Specific date (10th of every month) at 14:00 on weekdays
-  # Purpose: Mid-month financial review
-  - name: "Mid-Month Financial Review"
+  # 範例 6：特定日期（每月 10 號）的工作日 14:00
+  # 用途：中旬財務審核
+  - name: "中旬財務審核"
     type: "agent_command"
     agent: "Chöd"
-    command: "Conduct mid-month financial review and budget adjustment"
+    command: "進行本月中旬的財務審核和預算調整"
     trigger: "cron"
-    day: "10"               # 10th of every month
-    day_of_week: "0-4"      # Execute only if it happens to be a weekday
+    day: "10"               # 每月 10 號
+    day_of_week: "0-4"      # 如果剛好是工作日才執行
     hour: 14
     minute: 0
     second: 0
-    active: false  # Example, disabled by default
+    active: false  # 示例，預設關閉

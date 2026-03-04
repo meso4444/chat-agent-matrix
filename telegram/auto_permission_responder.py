@@ -5,24 +5,24 @@ import time
 import re
 import os
 
-TARGET = sys.argv[1]              # e.g., session:0.0
+TARGET = sys.argv[1]              # 例如 session:0.0
 KEYWORDS = ["allow", "approve", "trust", "apply"]
 
-MAX_RETRY = 9                     # Maximum 9 retries (covering 40 second wait: 8 × 5s = 40s + 1 buffer)
-INTERVAL = 5                      # 5 second interval between attempts
-ATTEMPT_TIMEOUT = 40              # Total timeout for single trigger (seconds), needs to cover MAX_RETRY × INTERVAL
+MAX_RETRY = 9                     # 最多重試 9 次（覆蓋 40 秒等待: 8 × 5秒 = 40秒 + 1次緩衝）
+INTERVAL = 5                      # 每次間隔 5 秒
+ATTEMPT_TIMEOUT = 40              # 單次觸發的總超時時間（秒），需要覆蓋 MAX_RETRY × INTERVAL
 
 monitoring = False
-last_alert_time = {}  # Track last alert time for each agent, cooldown time is 300 seconds (5 minutes)
-ALERT_COOLDOWN = 300  # 5 minute cooldown time
+last_alert_time = {}  # 記錄各 agent 的上次告警時間，冷卻時間為 300 秒（5分鐘）
+ALERT_COOLDOWN = 300  # 5 分鐘冷卻時間
 
-# Debug logging (enabled when DEBUG=1)
+# 調試日誌（DEBUG=1 時啟用）
 DEBUG = os.getenv('DEBUG', '0') == '1'
 log_file = f"/tmp/monitor_{TARGET.replace(':', '_')}.log"
 
 def log(msg):
     if not DEBUG:
-        return  # Don't log normally, zero overhead
+        return  # 平常不寫日誌，零開銷
 
     with open(log_file, 'a') as f:
         f.write(f"[{time.strftime('%H:%M:%S')}] {msg}\n")
@@ -51,42 +51,42 @@ def send_enter():
     )
 
 def get_screen_hash():
-    """Get hash of screen content, used to compare if screen content changed"""
+    """獲取屏幕的哈希值，用於比較屏幕內容是否改變"""
     screen = capture()
     return hash(screen)
 
 def contains_keyword(text):
-    """Detect if text contains authorization keywords (whole word match, avoid false triggers)"""
+    """檢測文本是否包含授權關鍵詞（整字匹配，避免誤觸發）"""
     import re
     for keyword in KEYWORDS:
-        # Use \b (word boundary) to ensure it's an independent word, not a substring
+        # 使用 \b（單詞邊界）確保是獨立單詞，不是子字符串
         if re.search(r'\b' + re.escape(keyword) + r'\b', text):
             return True
     return False
 
 def has_stuck_command_pattern(text):
-    """Detect if pattern matches stuck command (prompt followed by unexecuted command)
-    Examples: "* show output", "❯ command"
+    """檢測是否符合卡住指令的 pattern（提示符後面有指令未執行）
+    例如："* show output", "❯ command"
     """
     import re
-    # Detect *, ❯ followed by text (need space in between)
-    # Note: MULTILINE mode makes ^ match line start, not just string start
-    pattern = r'^\s*[*❯]\s+\S'  # Prompt + space + non-space character
+    # 檢測 *, ❯ 後面跟有文本的情況（需要中間有空格）
+    # 注：MULTILINE 模式讓 ^ 匹配每行的開頭，而不只是字符串開頭
+    pattern = r'^\s*[*❯]\s+\S'  # 提示符 + 空格 + 非空格字符
     return bool(re.search(pattern, text, re.MULTILINE))
 
 
 def should_interrupt_stuck_command(previous_hash, current_hash, text):
-    """Determine if stuck command should be interrupted
-    Conditions:
-    1. Matches stuck command pattern (prompt followed by text)
-    2. Screen hash unchanged for 30 seconds (indicates truly stuck)
+    """判斷是否應該中斷卡住指令
+    條件：
+    1. 符合卡住指令 pattern（提示符後有文字）
+    2. 畫面哈希值已 30 秒無變化（說明真的卡住了）
     """
-    # Check if matches stuck command pattern
+    # 檢查是否符合卡住指令 pattern
     if not has_stuck_command_pattern(text):
         return False
 
-    # Check if screen hash is consistent (no change within 30 seconds)
-    # Note: Actually need to track time on caller side, here only check pattern and hash
+    # 檢查畫面哈希值是否一致（30 秒內無變化）
+    # 注：實際需要通過調用端追蹤時間，這裡只做 pattern 和哈希值檢查
     if previous_hash != current_hash:
         return False
 
@@ -94,12 +94,12 @@ def should_interrupt_stuck_command(previous_hash, current_hash, text):
 
 
 def should_send_alert(agent_name):
-    """Check if alert should be sent (considering cooldown time)"""
+    """檢查是否應該發送告警（考慮冷卻時間）"""
     global last_alert_time
 
     current_time = time.time()
 
-    # If first alert or cooldown time has passed
+    # 若是第一次告警或已過冷卻時間
     if agent_name not in last_alert_time or \
        (current_time - last_alert_time[agent_name]) > ALERT_COOLDOWN:
         last_alert_time[agent_name] = current_time
@@ -109,14 +109,14 @@ def should_send_alert(agent_name):
 
 
 def send_telegram_notification(agent_name, event_type):
-    """Send Telegram notification to user (must check cooldown time first)"""
+    """發送 Telegram 通知給用戶（需先檢查冷卻時間）"""
     try:
         telegram_script = os.path.join(os.path.dirname(__file__), "telegram_notifier.py")
 
-        if event_type == "Sudo password interrupt":
-            message = f"⚠️ [Agent: {agent_name}] Detected Sudo password prompt\n\nPlease instruct agent on next step"
-        else:  # Authorization action
-            message = f"⚠️ [Agent: {agent_name}] Executed {event_type}\n\nInterrupt or question agent if concerned"
+        if event_type == "Sudo 密碼中斷":
+            message = f"⚠️ [Agent: {agent_name}] 偵測到 Sudo 密碼提示\n\n請指示 agent 進行下一步"
+        else:  # 授權操作
+            message = f"⚠️ [Agent: {agent_name}] 已執行 {event_type}\n\n若有疑慮可對 agent 中斷操作或提問"
 
         subprocess.run(
             ["python3", telegram_script, message],
@@ -142,13 +142,13 @@ try:
             start_time = time.time()
 
             try:
-                # Extract agent name
+                # 提取 agent 名稱
                 agent_name = TARGET.split(':')[1] if ':' in TARGET else TARGET
 
                 initial_hash = get_screen_hash()
 
                 for attempt in range(MAX_RETRY):
-                    # 🛡️ Safety check: force stop if total timeout exceeded
+                    # 🛡️ 安全檢查：超過總超時時間就強制停止
                     if time.time() - start_time > ATTEMPT_TIMEOUT:
                         log(f"Attempt timeout ({ATTEMPT_TIMEOUT}s), stopping")
                         break
@@ -170,14 +170,14 @@ try:
 
                 log(f"Trigger cycle complete")
 
-                # Send Telegram notification (check cooldown time)
+                # 發送 Telegram 通知（檢查冷卻時間）
                 if should_send_alert(agent_name):
-                    send_telegram_notification(agent_name, "Authorization action")
+                    send_telegram_notification(agent_name, "授權操作")
                 else:
                     log(f"Alert for {agent_name} in cooldown, skipping")
 
             finally:
-                # 🛡️ Always reset monitoring flag
+                # 🛡️ 無論如何都要重置 monitoring 標誌
                 monitoring = False
 
         elif has_stuck_command_pattern(clean_line):
@@ -198,12 +198,12 @@ try:
                 monitoring = False
 
 except (EOFError, KeyboardInterrupt, BrokenPipeError):
-    # Clean exit when stdin closes or process is interrupted
+    # stdin 關閉或進程被中斷時乾淨退出
     if DEBUG:
         log("Monitor stopped (stdin closed or interrupted)")
     sys.exit(0)
 except Exception as e:
-    # Other exceptions also exit cleanly
+    # 其他異常也要乾淨退出
     if DEBUG:
         log(f"Monitor error: {e}")
     sys.exit(1)

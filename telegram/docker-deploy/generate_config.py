@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Configuration Generator for Chat Agent Matrix
-Generates instance-specific configuration files (docker-compose, config.yaml, etc.)
+生成實例特定的配置檔案（docker-compose、config.yaml 等）
 """
 
 import sys
@@ -9,7 +9,7 @@ import yaml
 import os
 
 def generate_docker_compose(instance, user, script_dir):
-    """Generate complete docker-compose file from template"""
+    """根據模板生成完整的 docker-compose 檔案"""
     return {
         "services": {
             "bot": {
@@ -45,7 +45,7 @@ def generate_docker_compose(instance, user, script_dir):
     }
 
 def generate_config(instance, data, flask_port=5000, ngrok_api_port=4040):
-    """Generate instance configuration yaml (complete structure)"""
+    """生成實例配置 yaml（完整結構）"""
     agents = []
     if data:
         for entry in data.split('|||'):
@@ -60,7 +60,7 @@ def generate_config(instance, data, flask_port=5000, ngrok_api_port=4040):
     if not agents:
         agents = [{"name": "Default", "engine": "gemini", "usecase": "Default", "description": "Default"}]
 
-    # Get default agent name (first agent)
+    # 取得預設 Agent 名稱（第一個 Agent）
     default_agent = agents[0]["name"] if agents else "Default"
 
     return {
@@ -87,18 +87,18 @@ def generate_config(instance, data, flask_port=5000, ngrok_api_port=4040):
         },
         "menu": [
             [
-                {"label": "🔄 Switch Agent", "command": "/switch {input}", "prompt": "Enter agent name to switch to:"}
+                {"label": "🔄 切換 Agent", "command": "/switch {input}", "prompt": "請輸入要切換的 Agent 名稱:"}
             ],
             [
-                {"label": "🔍 Health Check", "command": "/inspect {input}", "prompt": "Enter agent name to inspect:"},
-                {"label": "🚑 Repair", "command": "/fix {input}", "prompt": "Enter agent name to repair:"},
-                {"label": "🧠 Restore Memory", "command": "/resume_latest"}
+                {"label": "🔍 健檢", "command": "/inspect {input}", "prompt": "請輸入要檢查的 Agent 名稱:"},
+                {"label": "🚑 修復", "command": "/fix {input}", "prompt": "請輸入要修復的 Agent 名稱:"},
+                {"label": "🧠 恢復記憶", "command": "/resume_latest"}
             ],
             [
-                {"label": "🛑 Interrupt", "command": "/interrupt"},
-                {"label": "🧹 Reset", "command": "/clear"},
-                {"label": "📖 Help", "command": "/help"},
-                {"label": "📊 System Status", "command": "/status"}
+                {"label": "🛑 中斷", "command": "/interrupt"},
+                {"label": "🧹 重置", "command": "/clear"},
+                {"label": "📖 幫助", "command": "/help"},
+                {"label": "📊 系統狀態", "command": "/status"}
             ]
         ]
     }
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     ngrok_api_port = 4040
     user = os.environ.get('USER', 'appuser')
 
-    # Parse optional parameters
+    # 解析可選參數
     if len(sys.argv) >= 6:
         try:
             flask_port = int(sys.argv[5])
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     if len(sys.argv) >= 8:
         user = sys.argv[7]
 
-    # Generate configuration
+    # 生成配置
     if mode == "compose":
         compose = generate_docker_compose(instance, user, script_dir)
         output_file = os.path.join(script_dir, f"docker-compose.{instance}.yml")
@@ -145,39 +145,39 @@ if __name__ == "__main__":
         config = generate_config(instance, data, flask_port, ngrok_api_port)
         output_file = os.path.join(script_dir, f"config.{instance}.yaml")
 
-        # Generate YAML with comments (using string template)
+        # 生成包含註解的 YAML（用字符串模板）
         agents_yaml = yaml.dump({"agents": config["agents"]}, allow_unicode=True, default_flow_style=False)
         menu_yaml = yaml.dump({"menu": config["menu"]}, allow_unicode=True, default_flow_style=False)
 
         config_content = f"""# ==========================================
-# Chat Agent Matrix Configuration File (Telegram Edition)
+# Chat Agent Matrix 配置檔案 (Telegram Edition)
 # ==========================================
 
-# 🌐 Server and Network Configuration
+# 🌐 伺服器與網路設定
 server:
   host: {config['server']['host']}
   port: {config['server']['port']}
   ngrok_api_port: {config['server']['ngrok_api_port']}
 
-# 🤖 AI Agent Configuration
+# 🤖 AI Agent 軍團配置
 {agents_yaml}
 
-# Default active agent name on startup
+# 預設啟動時活躍的 Agent 名稱
 default_active_agent: "{config['default_active_agent']}"
 
-# 🤝 Collaboration Groups
-# Members will automatically establish bidirectional interconnection (Full Mesh) via soft links
+# 🤝 協作群組 (Collaboration Groups)
+# 組內成員會自動建立雙向互連 (Full Mesh) 的軟連結
 #collaboration_groups:
 #  - name: "core_team"
-#    description: "Collaborate to plan cost-effective travel itineraries"
+#    description: "協作規劃高CP值的旅遊行程"
 #    members: ["Güpa", "Chöd"]
 #    roles:
-#      Güpa: "Responsible for planning travel itineraries per user requests and delivering to Chöd for budget estimation"
-#      Chöd: "Responsible for budgeting all expenses. If per-person cost exceeds 50,000 TWD, submit budget report to Güpa for adjustment"
+#      Güpa: "負責依照使用者要求規劃旅遊行程，並將旅遊行程交付Chöd來估算預算"
+#      Chöd: "負責行程所有花費的預算估算，若單人花費超出台幣五萬時，就提交預算報告給Güpa，讓他調整行程"
 
-# ⏰ Scheduled Tasks (Scheduler)
+# ⏰ 排程任務 (Scheduler)
 #scheduler:
-#  - name: "Daily System Cleanup"
+#  - name: "每日系統清理"
 #    type: "system"
 #    action: "cleanup_images"
 #    trigger: "interval"
@@ -186,72 +186,72 @@ default_active_agent: "{config['default_active_agent']}"
 #    second: 0
 #    active: true
 #
-#  - name: "International News Daily Report"
+#  - name: "國際新聞日報"
 #    type: "agent_command"
 #    agent: "Güpa"
-#    command: "Find important international news from the past two days"
+#    command: "查詢一下這兩天重要的國際新聞"
 #    trigger: "cron"
 #    hour: 12
 #    minute: 0
 #    second: 0
 #    active: true
 #
-#  - name: "Chöd Regular Stock Price Report"
+#  - name: "Chöd 定期股價回報"
 #    type: "agent_command"
 #    agent: "Chöd"
-#    command: "Check current NVIDIA stock price"
+#    command: "查詢英偉達當前股價"
 #    trigger: "interval"
 #    hour: 12
 #    minute: 0
 #    second: 0
 #    active: true
 
-# 🧹 Global Default Cleanup Policy
+# 🧹 全域預設清理規則
 default_cleanup_policy:
   images_retention_days: {config['default_cleanup_policy']['images_retention_days']}
 
-# 📱 Telegram API Configuration
+# 📱 Telegram API 設定
 telegram:
   api_base_url: "{config['telegram']['api_base_url']}"
   webhook_path: "{config['telegram']['webhook_path']}"
 
-# 🖼️ Multimodal Image Processing
+# 🖼️ 多模態圖片處理
 image_processing:
   temp_dir_name: "{config['image_processing']['temp_dir_name']}"
 
-# tmux Configuration
+# tmux 設定
 tmux:
   session_name: "{config['tmux']['session_name']}"
   working_dir: "{config['tmux']['working_dir']}"
 
-# 🎮 Custom Menu
+# 🎮 自定義選單 (Custom Menu)
 menu:
-#  - - label: "🌤 Taipei Today Weather"
-#      command: "Check Taipei weather today, divided into morning, afternoon, and evening"
-#    - label: "International News"
-#      command: "Find major international news from recent days"
-  - - label: "🔄 Switch Agent"
+#  - - label: "🌤 台北今日天氣"
+#      command: "查詢台北今天的天氣，分成早中晚"
+#    - label: "國際新聞"
+#      command: "查詢近日的重大國際新聞"
+  - - label: "🔄 切換 Agent"
       command: "/switch {{input}}"
-      prompt: "Enter agent name to switch to:"
-#    - label: "🧘 Wake Güpa"
+      prompt: "請輸入要切換的 Agent 名稱:"
+#    - label: "🧘 喚醒 Güpa"
 #      command: "/switch Güpa"
-#    - label: "🔪 Wake Chöd"
+#    - label: "🔪 喚醒 Chöd"
 #      command: "/switch Chöd"
-  - - label: "🔍 Health Check"
+  - - label: "🔍 健檢"
       command: "/inspect {{input}}"
-      prompt: "Enter agent name to inspect:"
-    - label: "🚑 Repair"
+      prompt: "請輸入要檢查的 Agent 名稱:"
+    - label: "🚑 修復"
       command: "/fix {{input}}"
-      prompt: "Enter agent name to repair:"
-    - label: "🧠 Restore Memory"
+      prompt: "請輸入要修復的 Agent 名稱:"
+    - label: "🧠 恢復記憶"
       command: "/resume_latest"
-  - - label: "🛑 Interrupt"
+  - - label: "🛑 中斷"
       command: "/interrupt"
-    - label: "🧹 Reset"
+    - label: "🧹 重置"
       command: "/clear"
-    - label: "📖 Help"
+    - label: "📖 幫助"
       command: "/help"
-    - label: "📊 System Status"
+    - label: "📊 系統狀態"
       command: "/status"
 """
 

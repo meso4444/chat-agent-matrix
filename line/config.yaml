@@ -1,103 +1,103 @@
 # ==========================================
-# Chat Agent Matrix Configuration File (LINE Edition)
+# Chat Agent Matrix 配置檔案 (LINE Edition)
 # ==========================================
 
-# 🌐 Server and network settings
+# 🌐 伺服器與網路設定
 server:
   host: 127.0.0.1
   port: 5001
 
-# 🟩 LINE Bot and Cloudflare configuration
-# Please use ./setup_config.sh to configure credentials, system will automatically read from .env:
+# 🟩 LINE Bot 與 Cloudflare 設定
+# 請使用 ./setup_config.sh 設定憑證，系統將自動從 .env 讀取：
 # - LINE_CHANNEL_ACCESS_TOKEN
 # - LINE_CHANNEL_SECRET
 # - CLOUDFLARE_CUSTOM_DOMAIN
 
-# Cloudflare Tunnel name (non-sensitive information)
+# Cloudflare Tunnel 名稱 (非敏感資訊)
 cloudflare_tunnel_name: "claude-line-bot"
 
-# 🤖 AI Agent team configuration
+# 🤖 AI Agent 軍團配置
 agents:
   - name: "Güpa"
     engine: "gemini"
-    description: "Respectful, devout (attitude towards teachers and dharma)"
-    usecase: You are a travel itinerary planning expert
+    description: "恭敬、虔誠（對上師、佛法的態度）"
+    usecase: 你是一個旅遊行程規劃專家
     start_cmd: "gemini --yolo"
     cleanup_policy:
       images_retention_days: 3
 
   - name: "Chöd"
     engine: "claude"
-    description: "Cutting, severance practice (cutting through ego)"
-    usecase: You are a travel budgeting expert
+    description: "斷、施身法（切斷我執）"
+    usecase: 你是一個旅遊估價專家
     start_cmd: "claude --permission-mode bypassPermissions"
 
 default_active_agent: "Güpa"
 
-# 🤝 Collaboration groups
+# 🤝 協作群組
 collaboration_groups:
   - name: "core_team"
-    description: "Core development and operations team"
+    description: "核心研發與維運團隊"
     members: ["Güpa", "Chöd"]
     roles:
-      Güpa: "Responsible for information retrieval, market analysis and requirement collection"
-      Chöd: "Responsible for code implementation, system architecture and troubleshooting"
+      Güpa: "負責資訊檢索、市場分析與需求整理"
+      Chöd: "負責代碼實作、系統架構與故障排除"
 
-# ⏰ Scheduler tasks
+# ⏰ 排程任務
 scheduler:
-  - name: "International news daily report"
+  - name: "國際新聞日報"
     type: "agent_command"
     agent: "Güpa"
-    command: "Check important international news from the past two days"
+    command: "查詢一下這兩天重要的國際新聞"
     trigger: "cron"
     hour: 12
     minute: 0
     second: 0
     active: true
-
-  - name: "Chöd periodic stock price report"
+    
+  - name: "Chöd 定期股價回報"
     type: "agent_command"
     agent: "Chöd"
-    command: "Query Nvidia current stock price"
+    command: "查詢英偉達當前股價"
     trigger: "interval"
     hour: 12
     minute: 0
     second: 0
     active: true
 
-# tmux configuration
+# tmux 設定
 tmux:
   session_name: "ai_line_session"
   working_dir: ""
 
-# 🎮 Custom Menu (LINE Quick Reply)
-# Note: LINE does not support text buttons to directly send Slash Commands (such as /switch),
-# therefore we will send label directly as text, backend server needs to handle accordingly.
+# 🎮 自定義選單 (LINE Quick Reply)
+# 注意：LINE 不支援文字按鈕直接發送 Slash Command (如 /switch)，
+# 因此我們會將 label 直接作為 text 發送，後端 server 需做對應處理。
 menu:
-  - - label: "🌤 Taipei today's weather"
-      command: "Check Taipei's weather today, divided into morning, afternoon, evening"
-    - label: "International news"
-      command: "Check major international news in recent days"
-  - - label: "🔄 Switch Agent"
+  - - label: "🌤 台北今日天氣"
+      command: "查詢台北今天的天氣，分成早中晚"
+    - label: "國際新聞"
+      command: "查詢近日的重大國際新聞"
+  - - label: "🔄 切換 Agent"
       command: "/switch {input}"
-      prompt: "Please enter the Agent name to switch to:"
-    - label: "🧘 Awaken Güpa"
+      prompt: "請輸入要切換的 Agent 名稱:"
+    - label: "🧘 喚醒 Güpa"
       command: "/switch Güpa"
-    - label: "🔪 Awaken Chöd"
+    - label: "🔪 喚醒 Chöd"
       command: "/switch Chöd"
-  - - label: "🔍 Health check"
+  - - label: "🔍 健檢"
       command: "/inspect {input}"
-      prompt: "Please enter the Agent name to check:"
-    - label: "🚑 Repair"
+      prompt: "請輸入要檢查的 Agent 名稱:"
+    - label: "🚑 修復"
       command: "/fix {input}"
-      prompt: "Please enter the Agent name to repair:"
-    - label: "🧠 Restore memory"
+      prompt: "請輸入要修復的 Agent 名稱:"
+    - label: "🧠 恢復記憶"
       command: "/resume_latest"
-  - - label: "🛑 Interrupt"
+  - - label: "🛑 中斷"
       command: "/interrupt"
-    - label: "🧹 Reset"
+    - label: "🧹 重置"
       command: "/clear"
-    - label: "📖 Help"
+    - label: "📖 幫助"
       command: "/help"
-    - label: "📊 System status"
+    - label: "📊 系統狀態"
       command: "/status"

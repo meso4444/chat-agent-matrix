@@ -1,320 +1,337 @@
-# Chat Agent Matrix - WSL Installation Guide
+# Chat Agent Matrix - WSL 安裝說明
 
-## Overview
+## 概述
 
-This installer automatically:
-- ✅ Install WSL (if not already installed)
-- ✅ Automatically enable Virtual Machine Platform (Hyper-V)
-- ✅ Configure all necessary settings
-- ✅ Prompt you to restart your computer
+此安裝程式會自動為您：
+- ✅ 安裝 WSL (如果未安裝)
+- ✅ 自動啟用虛擬機器平台 (Hyper-V)
+- ✅ 配置所有必要設定
+- ✅ 提示您重新啟動電腦
 
-**Users simply need to double-click to run, then restart!**
+**用戶只需雙擊執行，然後重新啟動即可！**
 
-## Installation Steps
+## 使用步驟
 
-### Step 1: Double-Click to Run
+### 第一步：雙擊執行
 
-1. Find the **install_wsl.bat** file
-2. **Double-click it**
-3. If you see "Do you want to allow this app to make changes to your device?", click **Yes**
+1. 找到 **install_wsl.bat** 檔案
+2. **雙擊此檔案**
+3. 如果看到「是否允許此應用進行變更？」，點擊「是」
 
-### Step 2: Wait for Installation to Complete
+### 第二步：等待安裝完成
 
-The installer will automatically:
+安裝程式會自動執行以下操作：
 
-1. **Check WSL status** - Verify if WSL is installed
-2. **Check Virtual Machine Platform** - Verify if Hyper-V is enabled
-3. **Enable features if needed** - Automatically enable Virtual Machine Platform if required
-4. **Prompt for restart** - Ask if you want to restart your computer
+1. **檢查 WSL 狀態** - 檢查 WSL 是否已安裝
+2. **檢查虛擬機平台** - 檢查 Hyper-V 是否已啟用
+3. **自動啟用功能** - 如需要，自動啟用虛擬機平台
+4. **提示重新啟動** - 詢問是否立即重新啟動電腦
 
-### Step 3: Choose Restart Option
+### 第三步：選擇重新啟動方式
 
-After installation completes, you'll see:
+安裝程式完成後，會詢問您：
 
-**Restart computer now? (Y/N)**
+**現在重新啟動電腦嗎？(Y/N)**
 
-- Enter **Y** → Restart immediately (recommended)
-- Enter **N** → Restart later manually
+- 輸入 **Y** → 立即重新啟動（推薦）
+- 輸入 **N** → 稍後手動重新啟動
 
-#### ⚠️ Important Notice
+#### ⚠️ 重要提醒
 
-**Virtual Machine Platform settings only take effect after restart!**
+**虛擬機平台的設定只有在重新啟動後才會生效！**
 
-Without restarting, WSL2 will not work properly.
+不重新啟動的話，WSL2 將無法正常使用。
 
-### Step 4: Setup After Restart
+### 第四步：重新啟動後的設定
 
-After restart:
+重新啟動完成後：
 
-1. Open the **Start** menu
-2. Search for and open **Ubuntu** application
-3. First run will prompt you to create a username and password - follow the instructions
+1. 打開「開始」菜單
+2. 搜尋並打開 **Ubuntu** 應用
+3. 首次執行時會要求建立用戶名和密碼，請按照指示設定
 
-### Step 5: Install Git Tool
+#### 第五步：安裝 Git 工具
 
-After initial setup, install Git in the Ubuntu window:
+設定完成後，在 Ubuntu 視窗中先安裝 Git：
 
 ```bash
 sudo apt update
 sudo apt install git -y
 ```
 
-The system will prompt for your password. Enter the password you set in Step 3 and press Enter (password won't be visible while typing).
+系統會提示輸入您剛才設定的密碼，請輸入密碼並按 Enter（輸入時不會顯示密碼）。
 
-### Step 6: Clone and Install Chat Agent Matrix
+#### 第六步：克隆並安裝 Chat Agent Matrix
 
-Once Git is installed, clone the repository:
+Git 安裝完成後，執行以下命令克隆倉庫：
 
 ```bash
 git clone https://github.com/meso4444/chat-agent-matrix.git
 ```
 
-Then choose which chat platform you want to install:
+然後選擇要安裝的聊天機器人平台：
 
-**For Telegram Bot:**
+**如果要使用 Telegram Bot：**
 ```bash
 cd chat-agent-matrix/telegram
 ./install_dependencies.sh
 ```
 
-**For Line Bot:**
+**如果要使用 Line Bot：**
 ```bash
 cd chat-agent-matrix/line
 ./install_dependencies.sh
 ```
 
-7. Follow the setup wizard to complete configuration
+7. 按照安裝精靈的指示完成設定
 
-## Troubleshooting
+## 故障排除
 
-### Problem 1: No Response After Double-Clicking
+### 問題 1：雙擊後沒有反應
 
-**Solution:**
-1. Make sure both `install_wsl.bat` and `install_wsl.ps1` are in the same folder
-2. Try right-clicking `install_wsl.bat`
-3. Select "Run as administrator"
+**解決方案：**
+1. 確保您已將 `install_wsl.bat` 和 `install_wsl.ps1` 放在同一個文件夾中
+2. 嘗試右鍵點擊 `install_wsl.bat`
+3. 選擇「以管理員身份執行」
 
-### Problem 2: See User Account Control Prompt
+### 問題 2：看到「使用者帳戶控制」提示
 
-**Solution:**
-This is normal. Click **Yes** to allow the installer to make necessary system changes.
+**解決方案：**
+這是正常的。點擊「是」以允許安裝程式進行必要的系統變更。
 
-### Problem 3: Ubuntu Won't Start After Virtual Machine Platform is Enabled
+### 問題 3：虛擬機平台啟用後，Ubuntu 仍無法啟動
 
-**Possible cause:** Virtualization not enabled in BIOS
+**可能原因：** BIOS 中未啟用虛擬化
 
-**Solution:**
+**解決方案：**
 
-#### Step 1: Enter BIOS (choose key by your computer brand)
+#### 第一步：進入 BIOS（按電腦品牌選擇按鍵）
 
-**Lenovo (ThinkPad/IdeaCentre/Yoga/Legion):**
-- Restart your computer
-- **During restart**, when you see the Lenovo logo:
-  1. Press **Enter**
-  2. After the menu appears, press **F1**
-- You're now in BIOS
+**Lenovo 電腦（ThinkPad/IdeaCentre/Yoga/Legion）：**
+- 重新啟動電腦
+- **在重新啟動時**，當看到 Lenovo 標誌時：
+  1. 按 **Enter** 鍵
+  2. 菜單跳出來後按 **F1**
+- 進入 BIOS 設定
 
-**Other brands:**
-- **Dell**: Press **F2** or **Del**
-- **HP/Pavilion**: Press **F2** or **Esc**
-- **ASUS**: Press **Del** or **F2**
-- **MSI**: Press **Del**
-- **Other**: Try **Del**, **F2**, **F10**, or **F12**
+**其他品牌：**
+- **Dell**：按 **F2** 或 **Del**
+- **HP/Pavilion**：按 **F2** 或 **Esc**
+- **ASUS**：按 **Del** 或 **F2**
+- **MSI**：按 **Del**
+- **其他**：嘗試 **Del**、**F2**、**F10** 或 **F12**
 
-#### Step 2: Find Virtualization Option
+#### 第二步：尋找虛擬化選項
 
-In BIOS settings, look for any of these options (names vary by brand):
-- "Virtualization Technology" (Intel VT-x)
-- "VT-x"
-- "AMD-V" (for AMD processors)
-- "SVM Mode" (for AMD processors)
-- "Enable Virtualization"
+在 BIOS 設定中尋找以下任何一個選項（名稱因品牌而異）：
+- 「虛擬化技術」(Virtualization Technology)
+- 「Intel VT-x」或「VT-x」
+- 「AMD-V」或「SVM Mode」
+- 「Enable Virtualization」
 
-Options are usually in these menus:
-- **Security**
-- **Processor**
-- **Chipset**
-- **Advanced**
+選項通常位於以下標籤：
+- **Security** (安全)
+- **Processor** (處理器)
+- **Chipset** (晶片組)
+- **Advanced** (進階)
 
-#### Step 3: Enable Virtualization
+#### 第三步：啟用虛擬化
 
-1. Select the virtualization option using arrow keys
-2. Press Enter to open the option menu
-3. After menu appears, press F1
-4. Select "On" to enable using arrow keys
-5. Press F10 to save and exit BIOS
-6. System will restart
+**Lenovo ThinkPad 實際操作步驟：**
 
-#### Step 4: Retry
+1. **選中虛擬化選項**
+   - 用方向鍵移動到「Intel® Virtualization Technology」
 
-After restarting:
-1. Open Ubuntu from Start Menu
-2. Or open PowerShell and type: `wsl`
-3. Ubuntu should now work properly
+2. **按 Enter 進入選項**
+   - 按 Enter 鍵
 
-### Problem 3.5: Can't Find Virtualization Option in BIOS
+3. **菜單跳出來後按 F1**
+   - 選單會顯示啟用/停用的選項
 
-**If you can't find the "Virtualization Technology" option:**
+4. **選擇「On」(啟用)**
+   - 用方向鍵選擇 **On**
+   - 按 Enter 確認
 
-#### Possible Causes
+5. **按 F10 保存並退出**
+   - 按 F10 保存設定
+   - 系統會自動重新啟動返回 Windows
 
-**Cause 1: Different option name**
-- Search for any of these names:
+**按鍵參考：**
+- **方向鍵**：在菜單中移動
+- **Enter**：進入選項或菜單
+- **F1**：顯示選項幫助和內容
+- **F10**：保存並退出 BIOS
+
+#### 第四步：重新嘗試
+1. 返回 Windows 後
+2. 從開始菜單開啟 **Ubuntu** 應用
+3. 或在 PowerShell 中輸入：`wsl`
+4. 完成初始設定
+
+### 問題 3.5：找不到虛擬化技術選項
+
+**如果在 BIOS 中找不到「虛擬化技術」選項：**
+
+#### 可能的原因
+
+**原因 1：選項名稱不同**
+- 搜尋以下任一名稱：
   - Virtualization Technology
   - Intel VT-x
   - VT-x Support
   - Virtualization Mode
-  - AMD-V (AMD processors)
-  - SVM Mode (AMD processors)
+  - AMD-V（AMD 處理器）
+  - SVM Mode（AMD 處理器）
 
-**Cause 2: In a different menu**
-- Check these menus:
-  - Security
-  - Processor
-  - CPU
-  - Chipset
-  - Advanced
-  - Features
+**原因 2：在不同菜單中**
+- 檢查以下菜單：
+  - Security（安全）
+  - Processor（處理器）
+  - CPU（CPU 設定）
+  - Chipset（晶片組）
+  - Advanced（進階）
+  - Features（功能）
 
-**Cause 3: Already enabled**
-- Virtualization might already be on
-- Return to Windows and try WSL again
+**原因 3：已預設啟用**
+- 虛擬化技術可能已經啟用
+- 返回 Windows 試試 WSL 是否能正常運作
 
-**Cause 4: CPU doesn't support virtualization**
-- Not all CPUs support virtualization
-- Check your CPU specifications
-- Alternative: Use WSL 1 instead (run `wsl --set-default-version 1`)
+**原因 4：CPU 不支援虛擬化**
+- 並非所有 CPU 都支援虛擬化技術
+- 檢查您的 CPU 型號規格
+- 如不支援，WSL 2 無法使用，但 WSL 1 可以
 
-#### Solutions
-1. Take screenshots of all BIOS CPU menu options
-2. Check all the menus mentioned above
-3. If CPU doesn't support virtualization, switch to WSL 1 (run `wsl --set-default-version 1`)
+#### 解決方案
+1. 截圖 BIOS 中 CPU 菜單的所有選項
+2. 將選項名稱告訴技術人員
+3. 逐個檢查上述所有菜單
+4. 如 CPU 不支援虛擬化，改為安裝 WSL 1（執行 `wsl --set-default-version 1`）
 
-### Problem 4: Error Message "HCS_E_HYPERV_NOT_INSTALLED"
+### 問題 4：看到錯誤訊息 "HCS_E_HYPERV_NOT_INSTALLED"
 
-**Meaning:** Virtual Machine Platform is not enabled
+**表示：** 虛擬機平台未啟用
 
-**Solution:**
-1. Make sure you completed Steps 2 and 3 above
-2. **Must restart your computer**
-3. If still not fixed, check BIOS virtualization setting (see Problem 3)
+**解決方案：**
+1. 確認已完成「第二步」和「第三步」
+2. **必須重新啟動電腦**
+3. 如果仍未解決，檢查 BIOS 虛擬化設定（參考「問題 3」）
 
-### Problem 5: Windows Version Not Compatible
+### 問題 5：Windows 版本不符
 
-**Requirement:**
-- Windows 10 version 2004 or newer
-- Or Windows 11
+**要求：**
+- Windows 10 版本 2004 或更新
+- 或 Windows 11
 
-**Check method:**
-1. Press **Win+R**
-2. Type **winver**
-3. Check the "OS Build" number
-4. Should be 19041 or higher
+**檢查方法：**
+1. 按 **Win+R**
+2. 輸入 **winver**
+3. 查看「OS 組建」編號
+4. 應該是 19041 或更高
 
-If your Windows version is too old, please update Windows first.
+如果您的 Windows 版本太舊，請先更新 Windows。
 
-## WSL 1 vs WSL 2 - Selection Guide
+## WSL 1 vs WSL 2 - 選擇指南
 
-### When to Use WSL 1?
+### 什麼時候應該使用 WSL 1？
 
-**WSL 1 is good for:**
-- ✅ Simple command-line operations
-- ✅ Text processing and editing
-- ✅ Basic development (no Docker needed)
-- ✅ System administration tasks
-- ✅ Learning Linux commands
+**WSL 1 適合的情況：**
+- ✅ 簡單的命令行操作
+- ✅ 文字處理和編輯
+- ✅ 基礎開發（不需要 Docker）
+- ✅ 系統管理任務
+- ✅ 學習 Linux 命令
 
-**WSL 1 is NOT good for:**
-- ❌ Docker / containerized development
-- ❌ Kubernetes or complex orchestration
-- ❌ Some databases (PostgreSQL, etc)
-- ❌ GPU acceleration applications
-- ❌ Production environments
+**WSL 1 不適合的情況：**
+- ❌ Docker / 容器化開發
+- ❌ Kubernetes 或複雜編排
+- ❌ 某些資料庫（PostgreSQL 等）
+- ❌ GPU 加速應用
+- ❌ 生產環境工作
 
-### WSL 1 Limitations
+### WSL 1 的限制
 
-| Feature | WSL 1 | WSL 2 |
-|---------|-------|-------|
-| **Startup time** | Fast (1-2 sec) | Slower (3-5 sec) |
-| **Performance** | Slow | Fast |
-| **File I/O** | Slow (cross-system) | Fast (native) |
-| **Docker support** | ❌ Not supported | ✅ Supported |
-| **Linux compatibility** | 70% | 100% |
-| **Resource usage** | Lightweight | Medium (VM) |
-| **System calls** | Incomplete | Complete |
-| **GPU acceleration** | ❌ Not supported | ✅ Supported |
+| 項目 | WSL 1 | WSL 2 |
+|------|-------|-------|
+| **啟動時間** | 快（1-2秒）| 較慢（3-5秒）|
+| **執行速度** | 慢 | 快 |
+| **檔案 I/O** | 慢（跨系統）| 快（原生） |
+| **Docker 支援** | ❌ 不支援 | ✅ 支援 |
+| **Linux 相容性** | 70% | 100% |
+| **資源使用** | 輕量級 | 中等（VM）|
+| **系統呼叫** | 不完整 | 完整 |
+| **GPU 加速** | ❌ 不支援 | ✅ 支援 |
 
-### How to Use WSL 1
+### 如何使用 WSL 1
 
-**Install WSL 1:**
+**安裝 WSL 1：**
 ```powershell
 wsl --install -d Ubuntu --web-download
 wsl --set-default-version 1
 ```
 
-**Check current version:**
+**檢查目前版本：**
 ```powershell
 wsl --list --verbose
 ```
 
-### Which Should You Choose?
+### 我應該選擇哪一個？
 
-**Choose WSL 1 if:**
-- Your CPU doesn't support virtualization
-- You only need basic Linux tools
-- You need the most lightweight environment
+**選擇 WSL 1：**
+- 您的 CPU 不支援虛擬化
+- 您只需要基礎 Linux 工具
+- 您需要最輕量級的環境
 
-**Choose WSL 2 if:**
-- Your computer supports virtualization
-- You do software development
-- You need Docker / container technology
-- You need full Linux compatibility
+**選擇 WSL 2：**
+- 您的電腦支援虛擬化
+- 您從事軟體開發
+- 您需要 Docker / 容器技術
+- 您需要完整的 Linux 相容性
 
-## FAQ
+## 常見問題
 
-### Q: Will this installer modify my computer?
+### Q: 這個安裝程式會修改我的電腦嗎？
 
-**A:** Yes, it will:
-- Install WSL (Windows Subsystem for Linux)
-- Enable Virtual Machine Platform (Hyper-V)
+**A:** 是的，它會進行以下變更：
+- 安裝 WSL (Windows Subsystem for Linux)
+- 啟用虛擬機器平台 (Hyper-V)
 
-These are required to use WSL2.
+這些是使用 WSL2 所必需的。
 
-### Q: Do I need internet connection?
+### Q: 需要網路連線嗎？
 
-**A:** Yes.
-- First-time WSL installation downloads the Ubuntu distribution
-- Later `install_dependencies.sh` commands download dependencies
+**A:** 是的。
+- 首次安裝 WSL 時需要下載 Ubuntu 發行版
+- 後續的 `install_dependencies.sh` 命令也會下載依賴套件
 
-### Q: How long does installation take?
+### Q: 安裝需要多久？
 
-**A:** Usually 5-15 minutes, depending on your internet speed and system performance.
+**A:** 通常需要 5-15 分鐘，取決於您的網路速度和系統效能。
 
-### Q: Can I restart later?
+### Q: 我可以稍後重新啟動電腦嗎？
 
-**A:** Yes.
-- When the installer asks, enter **N**
-- Restart manually later
-- But without restarting, WSL won't work
+**A:** 可以。
+- 在安裝程式詢問時輸入 **N**
+- 稍後手動重新啟動電腦
+- 但不重新啟動的話，WSL 將無法使用
 
-### Q: How do I uninstall WSL?
+### Q: 如何卸載 WSL？
 
-**A:** If needed:
-1. Press **Win+R**
-2. Type **optionalfeatures**
-3. Uncheck:
-   - Virtual Machine Platform
+**A:** 如果需要卸載：
+1. 按 **Win+R**
+2. 輸入 **optionalfeatures**
+3. 在視窗中取消勾選：
+   - 虛擬機器平台
    - Windows Subsystem for Linux
-4. Click OK and restart
+4. 點擊「確定」並重新啟動電腦
 
-## Need Help?
+## 需要幫助？
 
-For more information, visit:
-- [Microsoft WSL Official Documentation](https://docs.microsoft.com/en-us/windows/wsl/install)
-- [Virtualization Support Check](https://aka.ms/enablevirtualization)
+更多資訊請訪問：
+- [微軟 WSL 官方文檔](https://docs.microsoft.com/zh-tw/windows/wsl/install)
+- [虛擬化支援檢查](https://aka.ms/enablevirtualization)
 
 ---
 
-**Version:** v3.4
-**Last Updated:** 2026-02-09
-**Supported Systems:** Windows 10 version 2004 or newer, Windows 11
+**版本：** v2.0（雙擊執行版）
+**最後更新：** 2026-02-09
+**支援系統：** Windows 10 版本 2004 或更新、Windows 11

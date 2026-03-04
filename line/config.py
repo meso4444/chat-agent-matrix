@@ -1,14 +1,14 @@
-# config.py - LINE version configuration loader
+# config.py - LINE 版本配置載入器
 
 import os
 import sys
 import yaml
 
-# Get current script directory
+# 獲取當前腳本所在目錄
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, 'config.yaml')
 
-# Manually load .env (ensure it can be read in systemd/tmux environment)
+# 手動載入 .env (確保在 systemd/tmux 環境下能讀取)
 ENV_PATH = os.path.join(BASE_DIR, '.env')
 if os.path.exists(ENV_PATH):
     try:
@@ -17,65 +17,65 @@ if os.path.exists(ENV_PATH):
                 line = line.strip()
                 if line and not line.startswith('#') and '=' in line:
                     key, value = line.split('=', 1)
-                    # Only write if environment variable doesn't exist (avoid overwriting existing)
+                    # 只有在環境變數不存在時才寫入 (避免覆蓋已存在的)
                     if key not in os.environ:
-                        os.environ[key] = value.strip('"\'') # Remove possible quotes
+                        os.environ[key] = value.strip('"\'') # 去除可能引號
     except Exception as e:
-        sys.stderr.write(f"⚠️  Cannot read .env: {e}\n")
+        sys.stderr.write(f"⚠️  無法讀取 .env: {e}\n")
 
-# Load YAML configuration
+# 載入 YAML 配置
 try:
     with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
         _config = yaml.safe_load(f)
 except FileNotFoundError:
-    print(f"❌ Error: Configuration file not found {CONFIG_PATH}")
+    print(f"❌ 錯誤: 找不到設定檔 {CONFIG_PATH}")
     sys.exit(1)
 except yaml.YAMLError as e:
-    print(f"❌ Error: config.yaml format is incorrect: {e}")
+    print(f"❌ 錯誤: config.yaml 格式有誤: {e}")
     sys.exit(1)
 
 # ==========================================
-# Variable export
+# 變數導出
 # ==========================================
 
-# Server configuration
+# 伺服器設定
 FLASK_HOST = _config['server']['host']
 FLASK_PORT = _config['server']['port']
 
-# LINE Bot configuration
-# Prioritize reading from environment variables (for security)
+# LINE Bot 設定
+# 優先讀取環境變數 (安全性考量)
 CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
 CHANNEL_SECRET = os.environ.get("LINE_CHANNEL_SECRET")
 
-# Cloudflare configuration
-# Read from environment variables first, use default if not available
+# Cloudflare 設定
+# 優先從環境變數讀取，若無則使用預設值
 CLOUDFLARE_TUNNEL_NAME = os.environ.get("CLOUDFLARE_TUNNEL_NAME", "line-bot-tunnel")
 CLOUDFLARE_CUSTOM_DOMAIN = os.environ.get("CLOUDFLARE_CUSTOM_DOMAIN")
-CLOUDFLARE_CONFIG_FILE = "" # Leave empty by default
+CLOUDFLARE_CONFIG_FILE = "" # 預設留空
 
-# Check required configuration
+# 檢查必要設定
 if not CHANNEL_ACCESS_TOKEN or not CHANNEL_SECRET:
-    sys.stderr.write("⚠️  Warning: No LINE Token environment variables detected\n")
-    sys.stderr.write("   Please run ./setup_config.sh to configure, or check .env file\n")
+    sys.stderr.write("⚠️  警告: 未偵測到 LINE Token 環境變數\n")
+    sys.stderr.write("   請執行 ./setup_config.sh 進行設定，或檢查 .env 檔案\n")
 
-# AI Agent configuration
+# AI Agent 設定
 AGENTS = _config['agents']
 DEFAULT_ACTIVE_AGENT = _config['default_active_agent']
 
-# tmux configuration
+# tmux 設定
 TMUX_SESSION_NAME = _config['tmux']['session_name']
 TMUX_WORKING_DIR = _config['tmux']['working_dir']
 
-# Image processing configuration
+# 圖片處理設定
 DEFAULT_CLEANUP_POLICY = _config.get('default_cleanup_policy', {'images_retention_days': 7})
-# Use safe retrieval method, as LINE version config.yaml may not contain image_processing
+# 使用安全獲取方式，因為 LINE 版 config.yaml 可能不包含 image_processing
 TEMP_IMAGE_DIR_NAME = _config.get('image_processing', {}).get('temp_dir_name', 'images_temp')
 
-# Custom menu
+# 自定義選單
 CUSTOM_MENU = _config['menu']
 
-# Scheduler tasks
+# 排程任務
 SCHEDULER_CONF = _config.get('scheduler', [])
 
-# Collaboration groups
+# 協作群組
 COLLABORATION_GROUPS = _config.get('collaboration_groups', [])

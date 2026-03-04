@@ -1,31 +1,31 @@
 #!/bin/bash
-# Install dependencies for LINE → AI Remote Control System (Cloudflare Tunnel version)
-# Automatically detects environment (WSL/Linux/macOS) and applies appropriate installation method
+# 安裝 LINE → AI 遠端控制系統 (Cloudflare Tunnel 版) 所需的依賴
+# 自動偵測環境 (WSL/Linux/macOS) 並應用適當的安裝方法
 
 set -e
 
-echo "🔧 Checking system environment..."
+echo "🔧 正在檢查系統環境..."
 
 # ============================================================================
-# Step 1: Detect Environment
+# 步驟 1: 環境偵測
 # ============================================================================
 
 detect_environment() {
     local os_type=$(uname -s)
     local uname_release=$(uname -r)
 
-    # Check for WSL
+    # 檢查 WSL
     if grep -qi "microsoft" /proc/version 2>/dev/null; then
-        # Detect WSL version
+        # 偵測 WSL 版本
         if grep -qi "WSL2" /proc/version 2>/dev/null; then
             echo "WSL2"
         else
             echo "WSL1"
         fi
-    # Check for macOS
+    # 檢查 macOS
     elif [[ "$os_type" == "Darwin" ]]; then
         echo "macOS"
-    # Check for Linux
+    # 檢查 Linux
     elif [[ "$os_type" == "Linux" ]]; then
         echo "Linux"
     else
@@ -34,70 +34,70 @@ detect_environment() {
 }
 
 ENVIRONMENT=$(detect_environment)
-echo "✅ Detected Environment: $ENVIRONMENT"
+echo "✅ 偵測到的環境: $ENVIRONMENT"
 echo ""
 
 # ============================================================================
-# Step 2: Environment-Specific Dependency Installation
+# 步驟 2: 環境特定的依賴安裝
 # ============================================================================
 
-# ===== Homebrew Check (macOS only) =====
+# ===== Homebrew 檢查 (僅 macOS) =====
 install_homebrew_if_needed() {
     if [[ "$ENVIRONMENT" != "macOS" ]]; then
         return
     fi
 
     if ! command -v brew &> /dev/null; then
-        echo "📦 Installing Homebrew..."
+        echo "📦 正在安裝 Homebrew..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-        # Additional configuration for Apple Silicon Mac
+        # 針對 Apple Silicon Mac 的額外配置
         if [[ $(uname -m) == 'arm64' ]]; then
-            echo "🍎 Detected Apple Silicon (M1/M2/M3), configuring Homebrew..."
+            echo "🍎 偵測到 Apple Silicon (M1/M2/M3)，配置 Homebrew..."
             eval "$(/opt/homebrew/bin/brew shellenv)"
         fi
     else
-        echo "✅ Homebrew is already installed"
+        echo "✅ Homebrew 已安裝"
     fi
 }
 
-# ===== Basic Tools Installation (tmux only for LINE) =====
+# ===== 基礎工具安裝 (僅 tmux，LINE 版本) =====
 install_basic_tools() {
-    echo "📦 Checking and installing basic tools (tmux)..."
+    echo "📦 正在檢查並安裝基礎工具 (tmux)..."
 
     if [[ "$ENVIRONMENT" == "macOS" ]]; then
-        # macOS: Use brew
+        # macOS: 使用 brew
         if ! command -v tmux &> /dev/null; then
-            echo "   Installing tmux..."
+            echo "   正在安裝 tmux..."
             brew install tmux
         else
-            echo "   ✅ tmux is already installed"
+            echo "   ✅ tmux 已安裝"
         fi
     else
-        # Linux/WSL: Use apt-get or yum
+        # Linux/WSL: 使用 apt-get 或 yum
         if command -v apt-get &> /dev/null; then
             sudo apt-get update
             sudo apt-get install -y tmux
         elif command -v yum &> /dev/null; then
             sudo yum install -y tmux
         else
-            echo "⚠️  Unable to automatically install tmux. Please manually confirm: tmux"
+            echo "⚠️  無法自動安裝 tmux，請手動確認已安裝: tmux"
         fi
     fi
 }
 
-# ===== Python 3 Installation (may be needed on macOS) =====
+# ===== Python 3 安裝 (macOS 可能需要) =====
 install_python3_if_needed() {
     if command -v python3 &> /dev/null; then
-        echo "✅ Python 3 is already installed: $(python3 --version)"
+        echo "✅ Python 3 已安裝: $(python3 --version)"
         return
     fi
 
     if [[ "$ENVIRONMENT" == "macOS" ]]; then
-        echo "📦 Installing Python 3..."
+        echo "📦 正在安裝 Python 3..."
         brew install python3
     elif [[ "$ENVIRONMENT" == "Linux" || "$ENVIRONMENT" == "WSL2" || "$ENVIRONMENT" == "WSL1" ]]; then
-        echo "📦 Installing Python 3..."
+        echo "📦 正在安裝 Python 3..."
         if command -v apt-get &> /dev/null; then
             sudo apt-get install -y python3 python3-pip
         elif command -v yum &> /dev/null; then
@@ -106,14 +106,14 @@ install_python3_if_needed() {
     fi
 }
 
-# ===== Python Packages Installation =====
+# ===== Python 套件安裝 =====
 install_python_packages() {
     echo ""
-    echo "🐍 Installing Python dependencies..."
+    echo "🐍 正在安裝 Python 依賴..."
 
-    # Check pip3
+    # 檢查 pip3
     if ! command -v pip3 &> /dev/null; then
-        echo "📦 Installing pip3..."
+        echo "📦 正在安裝 pip3..."
         if [[ "$ENVIRONMENT" == "macOS" ]]; then
             python3 -m ensurepip --upgrade
         else
@@ -125,24 +125,24 @@ install_python_packages() {
         fi
     fi
 
-    # Install packages (LINE-specific: no apscheduler needed)
+    # 安裝套件 (LINE 特定: 無需 apscheduler)
     PACKAGES="flask requests pyyaml"
-    echo "📦 Installing Python packages: $PACKAGES"
+    echo "📦 正在安裝 Python 套件: $PACKAGES"
     if pip3 install $PACKAGES; then
-        echo "✅ Python packages installed successfully"
+        echo "✅ Python 套件安裝成功"
     else
-        echo "⚠️  Attempting installation with --user..."
+        echo "⚠️  嘗試使用 --user 安裝..."
         pip3 install --user $PACKAGES
     fi
 }
 
-# ===== Cloudflare Tunnel Installation =====
+# ===== Cloudflare Tunnel 安裝 =====
 install_cloudflared() {
     echo ""
-    echo "📦 Installing Cloudflare Tunnel (cloudflared)..."
+    echo "📦 正在安裝 Cloudflare Tunnel (cloudflared)..."
 
     if command -v cloudflared &> /dev/null; then
-        echo "✅ cloudflared is already installed: $(cloudflared --version 2>&1 | head -1)"
+        echo "✅ cloudflared 已安裝: $(cloudflared --version 2>&1 | head -1)"
         return
     fi
 
@@ -150,17 +150,17 @@ install_cloudflared() {
     local install_method=""
 
     if [[ "$ENVIRONMENT" == "macOS" ]]; then
-        # macOS: Use Homebrew (handles both Intel and Apple Silicon)
+        # macOS: 使用 Homebrew (自動處理 Intel 和 Apple Silicon)
         if command -v brew &> /dev/null; then
-            echo "   (Using brew installation)"
+            echo "   (使用 brew 安裝)"
             brew install cloudflare/cloudflare/cloudflared
             install_method="brew"
         else
-            echo "⚠️  Homebrew not found. Please install manually: https://github.com/cloudflare/cloudflared/releases"
+            echo "⚠️  找不到 Homebrew，請手動安裝: https://github.com/cloudflare/cloudflared/releases"
             return
         fi
     elif [[ "$ENVIRONMENT" == "WSL2" || "$ENVIRONMENT" == "WSL1" || "$ENVIRONMENT" == "Linux" ]]; then
-        # Linux/WSL: Download binary directly
+        # Linux/WSL: 直接下載二進制
         local arch=$(uname -m)
         case "$arch" in
             x86_64)
@@ -170,97 +170,97 @@ install_cloudflared() {
                 cloudflared_url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64"
                 ;;
             *)
-                echo "⚠️  Unsupported architecture: $arch. Please install cloudflared manually."
+                echo "⚠️  不支援的架構: $arch，請手動安裝 cloudflared"
                 return
                 ;;
         esac
 
         if [[ -z "$cloudflared_url" ]]; then
-            echo "⚠️  Unable to determine download URL for architecture: $arch"
+            echo "⚠️  無法確定架構下載 URL: $arch"
             return
         fi
 
         if command -v curl &> /dev/null; then
-            echo "   (Using direct download method for $arch)"
+            echo "   (使用直接下載方式，架構: $arch)"
             curl -L "$cloudflared_url" -o cloudflared
             chmod +x cloudflared
             sudo mv cloudflared /usr/local/bin/
             install_method="download"
         elif command -v wget &> /dev/null; then
-            echo "   (Using wget download method for $arch)"
+            echo "   (使用 wget 下載方式，架構: $arch)"
             wget "$cloudflared_url" -O cloudflared
             chmod +x cloudflared
             sudo mv cloudflared /usr/local/bin/
             install_method="wget"
         else
-            echo "⚠️  Neither curl nor wget found. Please install cloudflared manually: $cloudflared_url"
+            echo "⚠️  找不到 curl 或 wget，請手動下載: $cloudflared_url"
             return
         fi
     fi
 
     if command -v cloudflared &> /dev/null; then
-        echo "✅ cloudflared installed successfully via $install_method"
+        echo "✅ cloudflared 安裝成功 (方式: $install_method)"
     else
-        echo "⚠️  cloudflared installation may have failed. Please verify: cloudflared --version"
+        echo "⚠️  cloudflared 安裝可能失敗，請驗證: cloudflared --version"
     fi
 }
 
-# ===== Summary =====
+# ===== 摘要 =====
 print_summary() {
     echo ""
-    echo "📋 System Dependencies Check ($ENVIRONMENT):"
-    echo "   • Environment: $ENVIRONMENT"
+    echo "📋 系統依賴檢查 ($ENVIRONMENT):"
+    echo "   • 環境: $ENVIRONMENT"
     if [[ "$ENVIRONMENT" == "macOS" ]]; then
-        echo "   • Homebrew:  $(brew --version 2>/dev/null | head -1 || echo 'Not installed')"
+        echo "   • Homebrew:  $(brew --version 2>/dev/null | head -1 || echo '未安裝')"
     fi
-    echo "   • tmux:      $(tmux -V 2>/dev/null || echo 'Not installed')"
-    echo "   • Python:    $(python3 --version 2>/dev/null || echo 'Not installed')"
-    echo "   • Flask:     $(python3 -c 'import flask; print(f"Flask {flask.__version__}")' 2>/dev/null || echo 'Not installed')"
-    echo "   • cloudflared: $(cloudflared --version 2>&1 | head -1 || echo 'Not installed')"
+    echo "   • tmux:      $(tmux -V 2>/dev/null || echo '未安裝')"
+    echo "   • Python:    $(python3 --version 2>/dev/null || echo '未安裝')"
+    echo "   • Flask:     $(python3 -c 'import flask; print(f"Flask {flask.__version__}")' 2>/dev/null || echo '未安裝')"
+    echo "   • cloudflared: $(cloudflared --version 2>&1 | head -1 || echo '未安裝')"
     echo ""
-    echo "✅ Core dependencies installation completed!"
+    echo "✅ 核心依賴安裝完成！"
     echo ""
 }
 
-# ===== Next Steps =====
+# ===== 下一步 =====
 print_next_steps() {
-    echo "📋 Next steps to perform:"
-    echo "1. Fill in CHANNEL_SECRET in config.py (if not already filled)"
-    echo "2. Update CLOUDFLARE_CUSTOM_DOMAIN in config.py to your domain name"
-    echo "3. Configure Cloudflare fixed URL: ./setup_cloudflare_fixed_url.sh"
-    echo "4. Configure LINE Webhook URL (don't verify yet)"
-    echo "5. Start all services: ./start_all_services.sh"
-    echo "6. Verify Webhook connection in LINE Console"
+    echo "📋 接下來執行的步驟："
+    echo "1. 在 config.py 中填入 CHANNEL_SECRET (如尚未填入)"
+    echo "2. 在 config.py 中更新 CLOUDFLARE_CUSTOM_DOMAIN 為您的網域名稱"
+    echo "3. 設定 Cloudflare 固定 URL: ./setup_cloudflare_fixed_url.sh"
+    echo "4. 在 LINE Console 中設定 Webhook URL (先勿驗證)"
+    echo "5. 啟動所有服務: ./start_all_services.sh"
+    echo "6. 在 LINE Console 中驗證 Webhook 連接"
     echo ""
-    echo "💡 Important reminders:"
-    echo "• Need to own a domain name and host it on Cloudflare"
-    echo "• Webhook verification must be performed after service startup"
-    echo "• See SETUP_GUIDE.md for detailed configuration"
-    echo "• See TMUX_GUIDE.md for tmux operation instructions"
+    echo "💡 重要提醒："
+    echo "• 需要擁有網域名稱並在 Cloudflare 上託管"
+    echo "• Webhook 驗證必須在服務啟動後進行"
+    echo "• 詳細設定請參考 SETUP_GUIDE.md"
+    echo "• tmux 操作說明請參考 TMUX_GUIDE.md"
     echo ""
 }
 
 # ============================================================================
-# Main Execution Flow
+# 主執行流程
 # ============================================================================
 
-# Check for unknown environment
+# 檢查未知環境
 if [[ "$ENVIRONMENT" == "Unknown" ]]; then
-    echo "❌ Unrecognized operating system"
+    echo "❌ 無法辨識的作業系統"
     exit 1
 fi
 
-# WSL1 Warning
+# WSL1 警告
 if [[ "$ENVIRONMENT" == "WSL1" ]]; then
-    echo "⚠️  WSL1 detected. Some features may be limited."
-    echo "   Recommended to upgrade to WSL2: wsl --set-version <distro-name> 2"
-    read -p "Continue anyway? (y/N): " continue_install
+    echo "⚠️  偵測到 WSL1，某些功能可能受限。"
+    echo "   建議升級至 WSL2: wsl --set-version <distro-name> 2"
+    read -p "是否繼續? (y/N): " continue_install
     if [[ ! $continue_install =~ ^[Yy]$ ]]; then
         exit 1
     fi
 fi
 
-# Execute installation steps
+# 執行安裝步驟
 install_homebrew_if_needed
 install_basic_tools
 install_python3_if_needed
@@ -269,5 +269,5 @@ install_cloudflared
 print_summary
 print_next_steps
 
-echo "🚀 Setup preparation complete! Ready to configure LINE integration."
+echo "🚀 設定準備完成！已準備好設定 LINE 整合。"
 echo ""

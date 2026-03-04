@@ -1,73 +1,73 @@
-# ⚡ Autostart Guide
+# ⚡ 開機自動啟動 (Autostart) 指南
 
-This module provides integration scripts for Systemd and Windows Task Scheduler, implementing **"Phoenix Mode"**: even if the server restarts, agents will automatically resurrect in the background.
+本模組提供 Systemd 與 Windows Task Scheduler 的整合腳本，實現 **「不死鳥模式」**：即使伺服器重啟，Agent 也會自動在背景復活。
 
 ---
 
-## 🐧 Linux / WSL Setup (Systemd)
+## 🐧 Linux / WSL 內部設定 (Systemd)
 
-First, we need to tell the Linux system to treat the Agent as a background service.
+首先，我們需要告訴 Linux 系統將 Agent 視為一個背景服務。
 
-### 1. Run Registration Script
-In the Ubuntu window, execute the corresponding command based on your platform version:
+### 1. 執行註冊腳本
+在 Ubuntu 視窗中，根據您的平台版本執行對應指令：
 
-**Telegram Edition:**
+**Telegram 版:**
 ```bash
-# Go back to project root directory
+# 回到專案根目錄
 cd ~/chat-agent-matrix
 sudo ./auto-startup/install_systemd_telegram.sh
 ```
 
-**LINE Edition:**
+**LINE 版:**
 ```bash
 sudo ./auto-startup/install_systemd_line.sh
 ```
 
 ---
 
-## 🪟 Windows Host Setup (Task Scheduler)
+## 🪟 Windows 宿主機設定 (Task Scheduler)
 
-If you are running on Windows WSL, to prevent service failure after Windows updates restart, please follow these steps.
+如果您是在 Windows WSL 上運行，為了避免 Windows 更新重啟後服務掛掉，請執行以下步驟。
 
-### 1. Configure Automatic Scheduling (Recommended Method)
-You don't need to leave the Linux terminal. Simply execute the following command to call Windows for setup:
+### 1. 設定自動排程 (推薦方法)
+您無需離開 Linux 終端機，直接執行以下指令即可呼叫 Windows 進行設定：
 
 ```bash
-# In the project directory (chat-agent-matrix)
+# 在專案目錄下 (chat-agent-matrix)
 ./auto-startup/setup_windows_scheduler.sh
 ```
 
-This will automatically open a blue PowerShell window (if asked for permissions, press "Yes"), then press Enter as prompted to complete.
+這會自動彈出一個藍色的 PowerShell 視窗（若有權限詢問請按「是」），依照提示按 Enter 即可完成。
 
-> **⚠️ Important Note: About Session 0 Isolation**
-> To achieve "run without login" server-level capability, this task will run in Windows **Session 0**.
-> *   **No visible window**: After your computer restarts, you **will not** see any Ubuntu window on the desktop, which is normal.
-> *   **Background execution**: Although invisible, WSL is starting in the background and the Agent is online.
-> *   **How to manage**: Use `ssh` to connect, or send commands via Telegram/LINE. To manually bring up the window, execute `start_agent.bat`.
+> **⚠️ 重要提示：關於 Session 0 隔離**
+> 為了實現「不登入也能執行」的伺服器級能力，此任務會在 Windows 的 **Session 0** 運行。
+> *   **看不到視窗**：當電腦重啟後，您**不會**在桌面上看到任何 Ubuntu 視窗，這是正常的。
+> *   **背景運行**：雖然看不到，但 WSL 已經在背景啟動，且 Agent 已經上線。
+> *   **如何管理**：請使用 `ssh` 連入，或透過 Telegram/LINE 傳送指令。若要手動叫出視窗，請執行 `start_agent.bat`。
 
-### 2. Alternative Method (Manual Execution)
-If the above method fails, you can manually execute in Windows PowerShell (Administrator):
+### 2. 備用方法 (手動執行)
+如果上述方法失敗，您可以手動在 Windows PowerShell (管理員) 中執行：
 
-1.  Open PowerShell in Windows (run as administrator).
-2.  Enter the following command (replace the path with your actual path):
+1.  在 Windows 中打開 PowerShell (以系統管理員身分執行)。
+2.  輸入以下指令 (請將路徑替換為您的實際路徑)：
     ```powershell
-    powershell -ExecutionPolicy Bypass -File "\\wsl.localhost\Ubuntu\home\YOUR_USERNAME\...\setup_autostart.ps1"
+    powershell -ExecutionPolicy Bypass -File "\\wsl.localhost\Ubuntu\home\您的使用者名稱\...\setup_autostart.ps1"
     ```
 
 ---
 
-## 🛠️ FAQ
+## 🛠️ 常見問題
 
-**Q: How do I know if the service is running?**
-A: Open Telegram/LINE and send `/status` to your Bot.
+**Q: 我怎麼知道服務有沒有在跑？**
+A: 打開 Telegram/LINE，傳送 `/status` 給您的 Bot。
 
-**Q: I want to manually stop the service?**
-A: Open Ubuntu and enter `sudo systemctl stop chat-agent-matrix-telegram` (or `chat-agent-matrix-line`).
+**Q: 我想手動停止服務？**
+A: 打開 Ubuntu，輸入 `sudo systemctl stop chat-agent-matrix-telegram` (或 `chat-agent-matrix-line`)。
 
-**Q: I want to remove autostart on boot?**
-A: Please execute the removal script:
+**Q: 我想移除開機自動啟動？**
+A: 請執行移除腳本：
    *   Telegram: `sudo ./auto-startup/disable_systemd_telegram.sh`
    *   LINE: `sudo ./auto-startup/disable_systemd_line.sh`
 
-**Q: The script shows "WSL distro not found"?**
-A: Our script defaults to using `Ubuntu`. If you have installed a different version, please edit the `$WSLDistro` variable in `setup_autostart.ps1`.
+**Q: 腳本顯示 "WSL distro not found"？**
+A: 我們的腳本預設使用 `Ubuntu`。如果您安裝的是其他版本，請編輯 `setup_autostart.ps1` 中的 `$WSLDistro` 變數。

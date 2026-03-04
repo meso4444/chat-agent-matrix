@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # scheduler_manager.py
-# Responsible for handling scheduled tasks
+# 負責處理定時任務
 
 import os
 import sys
@@ -12,7 +12,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
-# Import configuration
+# 導入配置
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import TMUX_SESSION_NAME, SCHEDULER_YAML_PATH
 
@@ -24,51 +24,51 @@ class SchedulerManager:
         self.jobs = []
 
     def send_command_to_agent(self, agent_name, command):
-        """Callback function for scheduled tasks: send command to tmux"""
-        system_prompt = f"\n\n【System Prompt】This command is from system scheduled task. After task completion, you must execute python3 telegram_notifier.py 'Task report...' to report the result."
+        """定時任務的回調函數：發送指令到 tmux"""
+        system_prompt = f"\n\n【系統提示】此指令來自系統排程任務，任務完成後請務必執行 python3 telegram_notifier.py '任務報告...' 來回報結果。"
         final_message = command + system_prompt
-
-        print(f"⏰ [Scheduler] Executing scheduled task -> [{agent_name}]: {command}", flush=True)
-
+        
+        print(f"⏰ [Scheduler] 正在執行定時任務 -> [{agent_name}]: {command}", flush=True)
+        
         try:
             subprocess.run([
                 'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{agent_name}',
                 final_message
             ], check=True)
-
-            # Add delay to ensure command input is complete before sending Enter
+            
+            # 增加延遲，確保指令輸入完成後才發送 Enter
             time.sleep(1)
-
-            # Send Enter
+            
+            # 發送 Enter
             subprocess.run([
                 'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{agent_name}',
                 'Enter'
             ], check=True)
-
+            
         except Exception as e:
-            print(f"❌ [Scheduler] Scheduled task execution failed: {e}", flush=True)
+            print(f"❌ [Scheduler] 定時任務執行失敗: {e}", flush=True)
 
     def load_jobs(self, job_list):
-        """Load jobs from configuration"""
-        print(f"🔧 [Scheduler] Starting to load {len(job_list)} tasks...", flush=True)
+        """從配置載入任務"""
+        print(f"🔧 [Scheduler] 開始載入 {len(job_list)} 個任務...", flush=True)
         for job_cfg in job_list:
             if not job_cfg or not job_cfg.get('active', True):
                 continue
-
+                
             name = job_cfg['name']
             trigger_type = job_cfg['trigger']
-
+            
             func = None
             args = []
-
-            # A. Agent command task
+            
+            # A. Agent 指令任務
             if job_cfg['type'] == 'agent_command':
                 target_agent = job_cfg['agent']
                 command = job_cfg['command']
                 func = self.send_command_to_agent
                 args = [target_agent, command]
-
-            # B. System-level task
+                
+            # B. 系統級任務
             elif job_cfg['type'] == 'system':
                 action = job_cfg.get('action', '')
                 if action == 'cleanup_images' and self.image_manager:
@@ -81,12 +81,12 @@ class SchedulerManager:
                     func = self._update_agent_memories
                     args = [job_cfg.get('prompt', '')]
                 else:
-                    print(f"⚠️ [Scheduler] Unknown or unimplemented system action: {action}", flush=True)
+                    print(f"⚠️ [Scheduler] 未知或未實作的系統動作: {action}", flush=True)
                     continue
             else:
                 continue
 
-            # Set up trigger
+            # 設定觸發器
             try:
                 if trigger_type == 'daily':
                     trigger = CronTrigger(
@@ -121,117 +121,117 @@ class SchedulerManager:
                         seconds=job_cfg.get('seconds', job_cfg.get('second', 0))
                     )
                 else:
-                    print(f"⚠️ [Scheduler] Unknown trigger type: {trigger_type}", flush=True)
+                    print(f"⚠️ [Scheduler] 未知的觸發類型: {trigger_type}", flush=True)
                     continue
 
                 self.scheduler.add_job(
-                    func,
-                    trigger,
-                    args=args,
-                    id=name,
+                    func, 
+                    trigger, 
+                    args=args, 
+                    id=name, 
                     replace_existing=True
                 )
-                print(f"📅 [Scheduler] Task registered: {name} ({trigger_type})", flush=True)
-
+                print(f"📅 [Scheduler] 已註冊任務: {name} ({trigger_type})", flush=True)
+                
             except Exception as e:
-                print(f"❌ [Scheduler] Failed to register task {name}: {e}", flush=True)
+                print(f"❌ [Scheduler] 註冊任務 {name} 失敗: {e}", flush=True)
 
     def start(self):
         if not self.scheduler.running:
             self.scheduler.start()
-            print("🚀 [Scheduler] Background scheduler started", flush=True)
+            print("🚀 [Scheduler] 背景排程器已啟動", flush=True)
 
     def stop(self):
         self.scheduler.shutdown()
 
     def register_job(self, job_config):
-        """Dynamically register new scheduled task"""
-        # Validate required fields
+        """動態註冊新排程任務"""
+        # 驗證必需欄位
         required_fields = ['name', 'type', 'trigger', 'active']
         missing_fields = [f for f in required_fields if f not in job_config]
         if missing_fields:
             return {
                 'status': 'error',
-                'message': f"Missing required fields: {', '.join(missing_fields)}"
+                'message': f"缺少必需欄位: {', '.join(missing_fields)}"
             }
 
         name = job_config['name']
         trigger_type = job_config['trigger']
 
-        # Validate trigger type
+        # 驗證 trigger 類型
         valid_triggers = ['daily', 'weekly', 'monthly', 'interval', 'cron']
         if trigger_type not in valid_triggers:
             return {
                 'status': 'error',
-                'message': f"Invalid trigger type: {trigger_type}. Allowed: {', '.join(valid_triggers)}"
+                'message': f"無效的 trigger 類型: {trigger_type}。允許: {', '.join(valid_triggers)}"
             }
 
-        # Validate type field
+        # 驗證 type 欄位
         if job_config['type'] == 'agent_command':
             if 'agent' not in job_config or 'command' not in job_config:
                 return {
                     'status': 'error',
-                    'message': "agent_command type requires 'agent' and 'command' fields"
+                    'message': "agent_command 類型需要 'agent' 和 'command' 欄位"
                 }
         elif job_config['type'] == 'system':
             if 'action' not in job_config:
                 return {
                     'status': 'error',
-                    'message': "system type requires 'action' field"
+                    'message': "system 類型需要 'action' 欄位"
                 }
         else:
             return {
                 'status': 'error',
-                'message': f"Invalid type: {job_config['type']}. Allowed: agent_command, system"
+                'message': f"無效的 type: {job_config['type']}。允許: agent_command, system"
             }
 
-        # Add to scheduler
+        # 添加到 scheduler
         try:
             self.load_jobs([job_config])
 
-            # Persist to YAML
+            # 持久化到 YAML
             self._save_job_to_yaml(job_config)
 
             return {
                 'status': 'ok',
                 'job_id': name,
-                'message': f"Schedule task '{name}' registered"
+                'message': f"排程任務 '{name}' 已註冊"
             }
         except Exception as e:
             return {
                 'status': 'error',
-                'message': f"Registration failed: {str(e)}"
+                'message': f"註冊失敗: {str(e)}"
             }
 
     def delete_job(self, job_id):
-        """Delete scheduled task"""
+        """刪除排程任務"""
         try:
-            # Remove from APScheduler
+            # 從 APScheduler 移除
             self.scheduler.remove_job(job_id)
 
-            # Remove from YAML
+            # 從 YAML 移除
             self._remove_job_from_yaml(job_id)
 
             return {
                 'status': 'ok',
                 'job_id': job_id,
-                'message': f"Schedule task '{job_id}' deleted"
+                'message': f"排程任務 '{job_id}' 已刪除"
             }
         except Exception as e:
             return {
                 'status': 'error',
-                'message': f"Deletion failed: {str(e)}"
+                'message': f"刪除失敗: {str(e)}"
             }
 
     def refresh_jobs(self):
-        """Re-read scheduler.yaml and refresh schedules"""
+        """重新讀取 scheduler.yaml 並刷新排程"""
         try:
-            # Stop all existing schedules
+            # 停止所有現有排程
             existing_jobs = len(self.scheduler.get_jobs())
             for job in self.scheduler.get_jobs():
                 self.scheduler.remove_job(job.id)
 
-            # Re-read YAML
+            # 重新讀取 YAML
             if os.path.exists(SCHEDULER_YAML_PATH):
                 with open(SCHEDULER_YAML_PATH, 'r', encoding='utf-8') as f:
                     config = yaml.safe_load(f)
@@ -239,28 +239,28 @@ class SchedulerManager:
             else:
                 return {
                     'status': 'error',
-                    'message': f"Schedule config file not found: {SCHEDULER_YAML_PATH}"
+                    'message': f"排程配置檔案不存在: {SCHEDULER_YAML_PATH}"
                 }
 
-            # Reload new schedules
+            # 重新載入新排程
             self.load_jobs(job_list)
 
             new_jobs = len(self.scheduler.get_jobs())
 
             return {
                 'status': 'ok',
-                'message': f"Schedule refreshed",
+                'message': f"排程已刷新",
                 'removed_jobs': existing_jobs,
                 'loaded_jobs': new_jobs
             }
         except Exception as e:
             return {
                 'status': 'error',
-                'message': f"Refresh failed: {str(e)}"
+                'message': f"刷新失敗: {str(e)}"
             }
 
     def list_jobs(self):
-        """List all scheduled tasks"""
+        """列出所有排程任務"""
         jobs = []
         for job in self.scheduler.get_jobs():
             job_info = {
@@ -276,9 +276,9 @@ class SchedulerManager:
         }
 
     def _save_job_to_yaml(self, job_config):
-        """Save new task to scheduler.yaml"""
+        """將新任務保存到 scheduler.yaml"""
         if not os.path.exists(SCHEDULER_YAML_PATH):
-            # Create new file if it doesn't exist
+            # 如果檔案不存在，創建新的
             config = {'scheduler': [job_config]}
         else:
             with open(SCHEDULER_YAML_PATH, 'r', encoding='utf-8') as f:
@@ -286,72 +286,72 @@ class SchedulerManager:
                 if 'scheduler' not in config:
                     config['scheduler'] = []
 
-                # Check if task with same name already exists
+                # 檢查是否已存在同名任務
                 for i, job in enumerate(config['scheduler']):
                     if job.get('name') == job_config['name']:
-                        config['scheduler'][i] = job_config  # Override
+                        config['scheduler'][i] = job_config  # 覆蓋
                         break
                 else:
-                    config['scheduler'].append(job_config)  # Add
+                    config['scheduler'].append(job_config)  # 新增
 
-        # Write back to YAML
+        # 寫回 YAML
         with open(SCHEDULER_YAML_PATH, 'w', encoding='utf-8') as f:
             yaml.dump(config, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
 
-        print(f"✅ [Scheduler] Task '{job_config['name']}' saved to scheduler.yaml", flush=True)
+        print(f"✅ [Scheduler] 任務 '{job_config['name']}' 已保存到 scheduler.yaml", flush=True)
 
     def _remove_job_from_yaml(self, job_id):
-        """Remove task from scheduler.yaml"""
+        """從 scheduler.yaml 移除任務"""
         if not os.path.exists(SCHEDULER_YAML_PATH):
-            raise Exception(f"Schedule config file not found: {SCHEDULER_YAML_PATH}")
+            raise Exception(f"排程配置檔案不存在: {SCHEDULER_YAML_PATH}")
 
         with open(SCHEDULER_YAML_PATH, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f) or {}
 
         if 'scheduler' not in config:
-            raise Exception("Cannot find 'scheduler' field in scheduler.yaml")
+            raise Exception("scheduler.yaml 中找不到 'scheduler' 欄位")
 
-        # Remove matching task
+        # 移除匹配的任務
         original_count = len(config['scheduler'])
         config['scheduler'] = [job for job in config['scheduler'] if job.get('name') != job_id]
 
         if len(config['scheduler']) == original_count:
-            raise Exception(f"Schedule task '{job_id}' not found")
+            raise Exception(f"找不到名為 '{job_id}' 的排程任務")
 
-        # Write back to YAML
+        # 寫回 YAML
         with open(SCHEDULER_YAML_PATH, 'w', encoding='utf-8') as f:
             yaml.dump(config, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
 
-        print(f"✅ [Scheduler] Task '{job_id}' removed from scheduler.yaml", flush=True)
+        print(f"✅ [Scheduler] 任務 '{job_id}' 已從 scheduler.yaml 移除", flush=True)
 
     def _rotate_agent_memory_files(self):
-        """Rotate memory files for Agents in config list (execute at 00:00 daily)"""
-        print("🔄 [Scheduler] Starting Agent memory file rotation…", flush=True)
+        """輪轉配置清單中 Agent 的記憶檔（每天 00:00 執行）"""
+        print("🔄 [Scheduler] 開始輪轉 Agent 記憶檔…", flush=True)
 
         try:
             from config import AGENTS
         except ImportError:
-            print(f"⚠️ [Scheduler] Unable to import AGENTS list", flush=True)
+            print(f"⚠️ [Scheduler] 無法導入 AGENTS 清單", flush=True)
             return
 
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         agent_home_path = os.path.join(base_dir, 'agent_home')
 
         if not os.path.exists(agent_home_path):
-            print(f"⚠️ [Scheduler] Agent home directory not found: {agent_home_path}", flush=True)
+            print(f"⚠️ [Scheduler] Agent home 目錄不存在: {agent_home_path}", flush=True)
             return
 
-        # Get yesterday's date
+        # 獲取前一天的日期
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
 
-        # Only process Agents in config list
+        # 只處理配置清單中的 Agent
         try:
             for agent in AGENTS:
                 agent_name = agent['name']
                 agent_dir = os.path.join(agent_home_path, agent_name)
 
                 if not os.path.isdir(agent_dir):
-                    print(f"⚠️ [Scheduler] Agent directory not found: {agent_dir}", flush=True)
+                    print(f"⚠️ [Scheduler] Agent 目錄不存在: {agent_dir}", flush=True)
                     continue
 
                 memory_dir = os.path.join(agent_dir, 'memory')
@@ -361,51 +361,51 @@ class SchedulerManager:
                 memory_file = os.path.join(memory_dir, 'memory.md')
                 archived_file = os.path.join(memory_dir, f'memory_{yesterday}.md')
 
-                # If current memory file exists, back it up to yesterday
+                # 如果當日記憶檔存在，備份到前一天
                 if os.path.exists(memory_file):
                     try:
                         with open(memory_file, 'r', encoding='utf-8') as f:
                             content = f.read()
 
-                        # Write to history file
+                        # 寫入歷史檔
                         with open(archived_file, 'w', encoding='utf-8') as f:
                             f.write(content)
 
-                        # Re-initialize current memory file
+                        # 重新初始化當日檔
                         today = datetime.now().strftime('%Y-%m-%d')
                         with open(memory_file, 'w', encoding='utf-8') as f:
-                            f.write(f"# {agent_name} Daily Memory\n\n")
-                            f.write(f"**Date**: {today}\n\n")
-                            f.write("## Today's Task Record\n\n")
+                            f.write(f"# {agent_name} 的每日記憶\n\n")
+                            f.write(f"**日期**: {today}\n\n")
+                            f.write("## 今日任務記錄\n\n")
 
-                        print(f"✅ [Scheduler] {agent_name} memory file rotated → {archived_file}", flush=True)
+                        print(f"✅ [Scheduler] {agent_name} 記憶檔已輪轉 → {archived_file}", flush=True)
 
                     except Exception as e:
-                        print(f"❌ [Scheduler] {agent_name} memory file rotation failed: {e}", flush=True)
+                        print(f"❌ [Scheduler] {agent_name} 記憶檔輪轉失敗: {e}", flush=True)
 
         except Exception as e:
-            print(f"❌ [Scheduler] Error during memory file rotation: {e}", flush=True)
+            print(f"❌ [Scheduler] 記憶檔輪轉過程出錯: {e}", flush=True)
 
     def _update_agent_memories(self, prompt):
-        """Inject memory update prompt to all Agents in config list"""
+        """向配置清單中的所有 Agent 注入記憶更新 prompt"""
         if not prompt:
-            print(f"⚠️ [Scheduler] Memory update prompt is empty", flush=True)
+            print(f"⚠️ [Scheduler] 記憶更新 prompt 為空", flush=True)
             return
 
         try:
             from config import AGENTS
         except ImportError:
-            print(f"⚠️ [Scheduler] Unable to import AGENTS list", flush=True)
+            print(f"⚠️ [Scheduler] 無法導入 AGENTS 清單", flush=True)
             return
 
-        print(f"📝 [Scheduler] Starting to inject memory update prompt to all Agents…", flush=True)
+        print(f"📝 [Scheduler] 開始向所有 Agent 注入記憶更新 prompt…", flush=True)
 
-        # Inject prompt to each Agent in config list
+        # 向配置清單中的每個 Agent 注入 prompt
         try:
             for agent in AGENTS:
                 agent_name = agent['name']
                 try:
-                    # Use tmux send-keys to inject prompt to Agent window
+                    # 使用 tmux send-keys 向 Agent 窗口注入 prompt
                     subprocess.run([
                         'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{agent_name}',
                         '-l', prompt
@@ -418,17 +418,17 @@ class SchedulerManager:
                         'Enter'
                     ], check=True)
 
-                    # Double insurance
+                    # 雙重保險
                     time.sleep(0.2)
                     subprocess.run([
                         'tmux', 'send-keys', '-t', f'{TMUX_SESSION_NAME}:{agent_name}',
                         'Enter'
                     ], check=True)
 
-                    print(f"✅ [Scheduler] Memory update prompt injected to {agent_name}", flush=True)
+                    print(f"✅ [Scheduler] 已向 {agent_name} 注入記憶更新 prompt", flush=True)
 
                 except Exception as e:
-                    print(f"❌ [Scheduler] Failed to inject prompt to {agent_name}: {e}", flush=True)
+                    print(f"❌ [Scheduler] 向 {agent_name} 注入 prompt 失敗: {e}", flush=True)
 
         except Exception as e:
-            print(f"❌ [Scheduler] Error during memory update: {e}", flush=True)
+            print(f"❌ [Scheduler] 記憶更新過程出錯: {e}", flush=True)

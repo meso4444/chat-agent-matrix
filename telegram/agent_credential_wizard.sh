@@ -1,170 +1,170 @@
 #!/bin/bash
-# agent_credential_wizard.sh - AI Agent Credential Wizard (Universal Version)
-# Supports authentication configuration for both local and container environments
+# agent_credential_wizard.sh - AI Agent 認證精靈 (通用版)
+# 支持本地和容器兩種環境的認證配置
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "=========================================="
-echo "🔐 AI Agent Credential Wizard"
+echo "🔐 AI Agent 認證精靈 (Credential Wizard)"
 echo "=========================================="
 echo ""
 
-# Local environment authentication function
+# 本地環境認證函數
 run_local_auth() {
   echo ""
-  echo "📍 Environment: Local (~)"
-  echo "🎯 Goal: Authenticate and store credentials in local home directory"
+  echo "📍 環境: 本地 (~)"
+  echo "🎯 目標: 直接認證存放在本地 home 目錄"
   echo ""
 
-  # Choose CLI tool
-  echo "Select AI CLI tool:"
+  # 選擇 CLI 工具
+  echo "請選擇 AI CLI 工具："
   echo "1) Gemini"
   echo "2) Claude"
   echo ""
-  read -p "Enter choice (1 or 2): " CLI_CHOICE
+  read -p "請輸入選擇 (1 或 2): " CLI_CHOICE
 
   case "$CLI_CHOICE" in
     1)
       echo ""
-      echo "🚀 Starting Gemini CLI authentication..."
+      echo "🚀 啟動 Gemini CLI 認證..."
       echo "📂 HOME: $HOME"
-      echo "💡 Tip: After authentication, credentials will be stored in ~/.gemini"
+      echo "💡 提示: 完成認證後，凭证將存放在 ~/.gemini"
       echo ""
       gemini --yolo
       echo ""
-      echo "✅ Gemini authentication completed!"
-      echo "📦 Credential location: $(eval echo ~)/.gemini"
+      echo "✅ Gemini 認證完成！"
+      echo "📦 凭证位置: $(eval echo ~)/.gemini"
       ;;
     2)
       echo ""
-      echo "🚀 Starting Claude CLI authentication..."
+      echo "🚀 啟動 Claude CLI 認證..."
       echo "📂 HOME: $HOME"
-      echo "💡 Tip: After authentication, credentials will be stored in ~/.claude"
+      echo "💡 提示: 完成認證後，凭证將存放在 ~/.claude"
       echo ""
       claude --permission-mode bypassPermissions
       echo ""
-      echo "✅ Claude authentication completed!"
-      echo "📦 Credential location: $(eval echo ~)/.claude"
+      echo "✅ Claude 認證完成！"
+      echo "📦 凭证位置: $(eval echo ~)/.claude"
       ;;
     *)
-      echo "❌ Invalid choice"
+      echo "❌ 無效選擇"
       exit 1
       ;;
   esac
 }
 
-# Container environment authentication function
+# 容器環境認證函數
 run_container_auth() {
   echo ""
-  echo "📍 Environment: Container"
-  echo "🎯 Goal: Authenticate and store credentials in container instance directory"
+  echo "📍 環境: 容器"
+  echo "🎯 目標: 認證存放在容器 instance 目錄"
   echo ""
-  echo "💡 Naming suggestions:"
-  echo "   • Environment: dev, staging, production, test, sandbox"
-  echo "   • Use case: travel_planner, investment_advisor, meditation_coach"
-  echo "   • Project code: gupta, chod, omega, alpha, nexus"
-  echo "   • Personal use: work, hobby, research, learning, experiment"
+  echo "💡 命名建議範例："
+  echo "   • 技術環境：dev, staging, production, test, sandbox"
+  echo "   • 應用場景：travel_planner, investment_advisor, meditation_coach"
+  echo "   • 專案代號：gupta, chod, omega, alpha, nexus"
+  echo "   • 個人用途：work, hobby, research, learning, experiment"
   echo ""
 
-  # Enter instance name
-  read -p "Enter instance name: " INSTANCE_NAME
+  # 輸入 instance 名稱
+  read -p "請輸入 instance 名稱: " INSTANCE_NAME
 
   if [ -z "$INSTANCE_NAME" ]; then
-    echo "❌ Instance name cannot be empty"
+    echo "❌ Instance 名稱不能為空"
     exit 1
   fi
 
-  # Create instance directory
+  # 建立 instance 目錄
   DOCKER_DEPLOY_DIR="$SCRIPT_DIR/docker-deploy"
   CONTAINER_HOME="$DOCKER_DEPLOY_DIR/container_home/$INSTANCE_NAME"
 
-  echo "📁 Creating instance directory..."
+  echo "📁 正在建立 instance 目錄..."
   mkdir -p "$CONTAINER_HOME"
-  echo "✅ Instance directory created: $CONTAINER_HOME"
+  echo "✅ Instance 目錄已建立: $CONTAINER_HOME"
   echo ""
 
-  # Choose CLI tool
-  echo "Select AI CLI tool:"
+  # 選擇 CLI 工具
+  echo "請選擇 AI CLI 工具："
   echo "1) Gemini"
   echo "2) Claude"
   echo ""
-  read -p "Enter choice (1 or 2): " CLI_CHOICE
+  read -p "請輸入選擇 (1 或 2): " CLI_CHOICE
 
-  # Ensure correct directory permissions (standard home directory 750)
+  # 確保 container_home 目錄權限正確（比照標準 home 目錄 750）
   mkdir -p "$CONTAINER_HOME"
   chmod 750 "$CONTAINER_HOME" 2>/dev/null || sudo chmod 750 "$CONTAINER_HOME" 2>/dev/null || true
 
   case "$CLI_CHOICE" in
     1)
       echo ""
-      echo "🚀 Starting Gemini CLI authentication..."
-      echo "📂 Authentication path: $CONTAINER_HOME"
-      echo "💡 Tip: Credentials will be stored in $CONTAINER_HOME/.gemini"
+      echo "🚀 啟動 Gemini CLI 認證..."
+      echo "📂 認證路徑: $CONTAINER_HOME"
+      echo "💡 提示: 認證將存放在 $CONTAINER_HOME/.gemini"
       echo ""
       if HOME="$CONTAINER_HOME" gemini --yolo; then
         echo ""
-        echo "✅ Gemini authentication completed!"
-        echo "📦 Credentials stored at: $CONTAINER_HOME/.gemini"
+        echo "✅ Gemini 認證完成！"
+        echo "📦 凭证已存放至: $CONTAINER_HOME/.gemini"
       else
         echo ""
-        echo "⚠️  Error during authentication, please check directory permissions"
-        echo "   Try: sudo chmod 777 $CONTAINER_HOME"
+        echo "⚠️  認證過程中出現錯誤，請檢查目錄權限"
+        echo "   嘗試執行: sudo chmod 777 $CONTAINER_HOME"
       fi
       ;;
     2)
       echo ""
-      echo "🚀 Starting Claude CLI authentication..."
-      echo "📂 Authentication path: $CONTAINER_HOME"
-      echo "💡 Tip: Credentials will be stored in $CONTAINER_HOME/.claude"
+      echo "🚀 啟動 Claude CLI 認證..."
+      echo "📂 認證路徑: $CONTAINER_HOME"
+      echo "💡 提示: 認證將存放在 $CONTAINER_HOME/.claude"
       echo ""
       if HOME="$CONTAINER_HOME" claude --permission-mode bypassPermissions; then
         echo ""
-        echo "✅ Claude authentication completed!"
-        echo "📦 Credentials stored at: $CONTAINER_HOME/.claude"
+        echo "✅ Claude 認證完成！"
+        echo "📦 凭证已存放至: $CONTAINER_HOME/.claude"
       else
         echo ""
-        echo "⚠️  Error during authentication, please check directory permissions"
-        echo "   Try: sudo chmod 777 $CONTAINER_HOME"
+        echo "⚠️  認證過程中出現錯誤，請檢查目錄權限"
+        echo "   嘗試執行: sudo chmod 777 $CONTAINER_HOME"
       fi
       ;;
     *)
-      echo "❌ Invalid choice"
+      echo "❌ 無效選擇"
       exit 1
       ;;
   esac
 
   echo ""
-  echo "📋 Container startup command:"
-  echo "  docker compose -f docker-compose.${INSTANCE_NAME}.yml up -d bot"
+  echo "📋 容器啟動指令:"
+  echo "  docker compose -f docker-compose.yml -f docker-compose.${INSTANCE_NAME}.yml up -d bot"
 }
 
-# Step 1: Choose environment
+# Step 1: 選擇環境
 echo ""
-echo "Select execution environment:"
-echo "1) Local environment (Local)"
-echo "2) Container environment (Container)"
+echo "請選擇執行環境："
+echo "1) 本地環境 (Local)"
+echo "2) 容器環境 (Container)"
 echo ""
-read -p "Enter choice (1 or 2): " ENV_CHOICE
+read -p "請輸入選擇 (1 或 2): " ENV_CHOICE
 
 case "$ENV_CHOICE" in
   1)
-    echo "🖥️  Selected: Local environment"
+    echo "🖥️  選擇：本地環境"
     run_local_auth
     ;;
   2)
-    echo "🐳 Selected: Container environment"
+    echo "🐳 選擇：容器環境"
     run_container_auth
     ;;
   *)
-    echo "❌ Invalid choice"
+    echo "❌ 無效選擇"
     exit 1
     ;;
 esac
 
 echo ""
 echo "=========================================="
-echo "🎉 Credential wizard completed!"
+echo "🎉 認證精靈執行完成！"
 echo "=========================================="
 echo ""

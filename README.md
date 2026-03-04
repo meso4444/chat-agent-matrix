@@ -5,129 +5,130 @@
 # ☀️🌙 Chat Agent Matrix 🐙
 
 > Take the Red Pill. Just watch out for the Octopus Sentinels...
+> 選擇紅藥丸。但要小心那些章魚哨兵...
 
-## 📖 Project Introduction
+## 📖 專案簡介 (Introduction)
 
-**Chat Agent Matrix** is a remote collaboration interface dedicated to breaking limitations. It integrates powerful **CLI AI engines** (Claude Code / Google Gemini) into **messaging applications**, allowing you to command multiple autonomous Agents as a "Matrix Operator" anytime, anywhere.
+**Chat Agent Matrix** 是一個致力於打破限制的遠端協作介面。它將強大的 **CLI AI 引擎** (Claude Code / Google Gemini) 整合至 **通訊軟體** 中，讓您能以「母體操作員」的身份，隨時隨地指揮多個自主 Agent。
 
-This is not just a tool, but a **digital ecosystem**. Through dedicated `agent_home` isolated spaces, automated "constitution" guideline generation, and cross-agent collaboration mechanisms, we build a runtime environment for AI within `tmux`, allowing them to execute tasks like a real team, monitor each other, and even self-repair.
+這不只是一個工具，而是一個**數位生態系**。透過專屬的 `agent_home` 隔離空間、自動化的「憲法」規範生成、以及跨代理人的協作機制，我們在 `tmux` 之中為 AI 打造了一個運作環境，讓它們能像一個真實的小隊般執行任務、互相監控、甚至自我修復。
 
-### Core Values
-*   **Command-Driven Operations**: Directly control remote system CLI through conversations.
-*   **Multi-Agent Matrix**: Support running multiple AI agents simultaneously with independent responsibilities and spaces (e.g., **Güpa** based on Gemini, **Chöd** based on Claude Code).
-*   **Autonomous Collaboration**: Agents possess shared spaces and role awareness, implementing automated task delegation.
-*   **Self-Healing**: Agents can monitor each other's running status and automatically restart when stuck.
-
----
-
-## ✨ What Can It Do For You?
-
-### 🔧 Professional Operations
-> 🤖 **You**: "Check database status, if load is high please have Chöd optimize indexes for me."
-> 🛰️ **Matrix**: (Güpa checks status → discovers slow queries → puts logs in Shared Space → notifies Chöd)
-
-### 🏠 Lifestyle Assistant
-> ✈️ **You**: "I want to play in Kyoto for five days, please plan an itinerary and estimate budget, limit 50,000 TWD per person."
-> 🛰️ **Matrix**:
-> 1. **Güpa** plans itinerary → archives in Shared Space → notifies Chöd.
-> 2. **Chöd** calculates budget → discovers overage → returns with adjustment suggestions.
-> 3. **Güpa** corrects itinerary → resubmits → **Chöd** confirms compliance → outputs final report.
+### 核心價值 (Core Values)
+*   **指令化操作 (Command-Driven)**：透過對話直接操控遠端系統 CLI。
+*   **多代理矩陣 (Multi-Agent Matrix)**：支援同時運行多個具備獨立職責與空間的 AI 代理人（如：**Güpa** 基於 Gemini、**Chöd** 基於 Claude Code）。
+*   **自主協作 (Collaboration Mesh)**：Agent 之間具備共享空間與角色認知，實現自動化交辦任務。
+*   **自我修復 (Self-Healing)**：Agent 能互相監控運行狀態，並在卡死時自動重啟對方。
 
 ---
 
-## 🚀 Supported Platforms
+## ✨ 它可以幫你做什麼？ (What Can It Do?)
 
-| Platform | Directory | Connection Technology | Domain Requirement |
+### 🔧 專業維運 (Professional Ops)
+> 🤖 **你**：「檢查資料庫狀態，如果負載過高請 Chöd 幫我優化索引。」
+> 🛰️ **Matrix**：(Güpa 檢查狀態 -> 發現慢查詢 -> 將日誌存入 Shared Space -> 通知 Chöd 處理)
+
+### 🏠 生活應用 (Lifestyle Assistant)
+> ✈️ **你**：「我想去京都玩五天，請幫我規劃行程並估算預算，預算上限是每人五萬台幣。」
+> 🛰️ **Matrix**：
+> 1. **Güpa** 規劃行程 -> 存入 Shared Space -> 通知 Chöd。
+> 2. **Chöd** 計算預算 -> 發現超支 -> 退回並建議調整項目。
+> 3. **Güpa** 修正行程 -> 再次提交 -> **Chöd** 確認合規 -> 輸出最終報表。
+
+---
+
+## 🚀 支援平台 (Supported Platforms)
+
+| 平台 | 目錄 | 連線技術 | 網域需求 |
 |------|------|----------|----------|
-| **Telegram** | [`/telegram`](./telegram) | **ngrok** (Dynamic Random URL) | ❌ No domain needed (Auto-sync) |
-| **LINE** | [`/line`](./line) | **Cloudflare Tunnel** (Fixed URL) | ✅ Requires personal domain |
+| **Telegram** | [`/telegram`](./telegram) | **ngrok** (動態隨機 URL) | ❌ 免網域 (自動同步) |
+| **LINE** | [`/line`](./line) | **Cloudflare Tunnel** (固定 URL) | ✅ 需自備網域 |
 
 ---
 
-## 🚄 Quick Start
+## 🚄 快速開始 (Quick Start)
 
-### Step 1: Install Git and Clone the Project
+### 第 1 步：安裝 Git 並拉取專案
 
 ```bash
-# If Git is not installed yet, please install it first
+# 如果尚未安裝 Git，請先安裝
 # macOS: brew install git
 # Ubuntu/Debian/WSL: sudo apt-get install git
 # CentOS: sudo yum install git
 
-# ⚠️ Windows Users: If WSL is not installed, please run the windows-wsl-setup script first
+# ⚠️ Windows 用戶注意：如果尚未安裝 WSL，請先執行 windows-wsl-setup 腳本
 
-# Clone the Chat Agent Matrix project
+# 拉取 Chat Agent Matrix 專案
 git clone https://github.com/meso4444/chat-agent-matrix.git
 cd chat-agent-matrix
 ```
 
-### Step 2: Choose Your Edition and Navigate to the Corresponding Directory
+### 第 2 步：選擇版本並進入對應目錄
 
-Select the messaging platform you want to use and enter the corresponding subdirectory:
+根據您需要使用的通訊軟體，進入對應的子目錄：
 
 ```bash
-# For Telegram edition
+# 使用 Telegram 版本
 cd telegram
 
-# Or for LINE edition
+# 或使用 LINE 版本
 cd line
 ```
 
-### Step 3: Install and Run
+### 第 3 步：安裝和啟動
 
-For detailed installation, configuration, and startup instructions, please refer to the `README.md` in the subdirectory. Each edition has its own environment variable setup, dependency installation, and startup scripts.
+詳細的安裝、配置和啟動說明請參考子目錄中的 `README.md`。每個版本都有獨立的環境變數配置、依賴安裝和運行腳本。
 
 ---
 
-## ⚖️ Platform Comparison
+## ⚖️ 平台選擇比較 (Platform Comparison)
 
-| Feature | **Telegram Edition** | **LINE Edition** |
+| 特性 | **Telegram Edition** | **LINE Edition** |
 | :--- | :--- | :--- |
-| **Connection Method** | **ngrok** (Dynamic Random URL) | **Cloudflare Tunnel** (Fixed Custom Domain) |
-| **Webhook Configuration** | **Fully Automatic** (Startup script auto updates API) | **Manual One-Time** (Requires LINE Console setup) |
-| **Menu Interface** | Fixed bottom keyboard menu (Reply Keyboard) | Quick buttons above chat (Quick Reply) |
-| **Image Processing** | ✅ **Supported** (Auto download and analyze) | ❌ **Not yet supported** (Text only) |
-| **Containerization Deployment** | ✅ **Full Support** (Docker + docker-compose, multi-instance configuration) | ⚠️ **In Development** (Basic configuration) |
-| **Multi-Agent Collaboration** | ✅ **Supported** (Shared spaces/role awareness) | ✅ **Supported** (Shared spaces/role awareness) |
-| **Autonomous Scheduling** | ✅ **Supported** (Cron/Interval tasks) | ✅ **Supported** (Cron/Interval tasks) |
-| **Self-Healing Mechanism** | ✅ **Supported** (Monitoring & auto-restart) | ✅ **Supported** (Monitoring & auto-restart) |
+| **連線方案** | **ngrok** (動態隨機 URL) | **Cloudflare Tunnel** (固定自訂網域) |
+| **Webhook 設定** | **全自動** (啟動腳本自動呼叫 API 更新) | **手動一次性** (需至 LINE Console 設定) |
+| **選單介面** | 底部固定的鍵盤選單 (Reply Keyboard) | 對話框上方的快速按鈕 (Quick Reply) |
+| **圖片處理** | ✅ **支援** (自動下載並分析) | ❌ **暫不支援** (僅文字互動) |
+| **容器化部署** | ✅ **完整支援** (Docker + docker-compose，多實例配置) | ⚠️ **開發中** (基礎配置) |
+| **多 Agent 協作** | ✅ **支援** (共享空間/角色認知) | ✅ **支援** (共享空間/角色認知) |
+| **自主排程系統** | ✅ **支援** (Cron/Interval 任務) | ✅ **支援** (Cron/Interval 任務) |
+| **自我修復機制** | ✅ **支援** (監控與自動重啟) | ✅ **支援** (監控與自動重啟) |
 
 ---
 
-## 🧬 System Architecture
+## 🧬 系統架構 (Architecture)
 
 ```mermaid
 flowchart TD
-    User["💊 Awakened"]
-    Messenger["📱 Messenger (Telegram/Line)"]
+    User["💊 覺醒者 (Awakened)"]
+    Messenger["📱 通訊軟體 (Telegram/Line)"]
 
-    subgraph Matrix["🌀 The Matrix (tmux Session)"]
+    subgraph Matrix["🌀 虛擬矩陣 (tmux Session)"]
         direction TB
 
-        Tunnel["🌐 Tunnel (ngrok/Cloudflare)"]
-        Server["⚙️ Flask Server<br/>(Command Hub)"]
+        Tunnel["🌐 隧道 (ngrok/Cloudflare)"]
+        Server["⚙️ Flask 伺服器<br/>(指揮中樞)"]
 
-        subgraph Sentinels["🐙 Agent Cluster"]
+        subgraph Sentinels["🐙 哨兵群 (Agents)"]
             direction LR
             AgentA["Agent: Güpa"]
             AgentB["Agent: Chöd"]
         end
 
-        Shared["🤝 Shared Space"]
+        Shared["🤝 共享空間<br/>(Shared Space)"]
 
         AgentA <--> Shared
         AgentB <--> Shared
 
-        AgentA -.->|"Mutual Monitoring/Self-Healing"| AgentB
-        AgentB -.->|"Mutual Monitoring/Self-Healing"| AgentA
+        AgentA -.->|"相互監控/自我修復"| AgentB
+        AgentB -.->|"相互監控/自我修復"| AgentA
 
         Tunnel --> Server
-        Server -->|"Command Injection"| Sentinels
+        Server -->|"指令注入"| Sentinels
     end
 
-    Notifier["📢 Notifier"]
+    Notifier["📢 通知組件"]
 
-    User <-->|"Command ⇄ Report"| Messenger
+    User <-->|"指令 ⇄ 回報"| Messenger
     Messenger <-->|"Webhook"| Tunnel
     Matrix --> Notifier
     Notifier -->|"API Push"| Messenger
@@ -135,32 +136,34 @@ flowchart TD
 
 ---
 
-## 💡 Core Design Concept
+## 💡 核心設計概念 (Core Design Concept)
 
-| Dimension | Typical API-based Platforms | Chat-Agent-Matrix (CAM) | Core Value Difference |
+| 比較維度 | 典型 API 代理平台 | Chat-Agent-Matrix | 核心價值差異 |
 | :--- | :--- | :--- | :--- |
-| Scaling Logic | Manual plugin/code development | YAML-Configuration Driven | Add theoretically infinite Agents by just editing a YAML file. |
-| Self-Awareness | Prompt-based roleplay | Instructional "Soul Imprint" | Agents are born with pre-defined rules and workspace awareness. |
-| Coordination | Rigid hard-coded routing | Emergent "Social Mesh" | Tasks flow through a Shared Space based on Agent roles. |
-| Isolation Model | Application-layer sandboxing | Structured Workspace Isolation | Dedicated directories and TTY windows to minimize data risk. |
-| Reliability | Requires manual human recovery | Mutual Self-Healing System | Agents monitor each other and auto-restart failed processes. |
+| 擴充邏輯 | 需手動開發插件或程式碼 | YAML 配置驅動 | 僅需編輯單一 YAML 檔，即可實現理論無限的 Agent 擴充。 |
+| 自我認知 | 基於 Prompt 的角色扮演 | 職責規範植入 (Soul Imprint) | Agent 誕生即具備預定義的運作規則與清晰的工作區意識。 |
+| 協作模式 | 僵化的程式碼硬編碼路由 | 群體湧現 (Social Mesh) | 任務依據 Agent 職責在「共享空間」中自動流轉與交接。 |
+| 隔離模型 | 應用層級的邏輯沙盒 | 結構化工作區隔離 | 透過獨立目錄與 TTY 視窗，將數據交叉風險降至最低。 |
+| 系統韌性 | 發生故障需依賴人工修復 | 互助式自癒系統 | Agent 成員間相互監控狀態，並自動重啟故障進程。 |
 
-## 🛡️ Security Design Concept
+## 🛡️ 安全設計概念 (Security Design Concept)
 
-| Risk Pattern | Typical Cause | The CAM Approach (Design Choice) | Resulting Peace of Mind |
+| 風險類別 | 常見事故誘因 | Chat-Agent-Matrix 解方 | 最終安全效益 |
 | :--- | :--- | :--- | :--- |
-| Remote Injection (RCE) | Gateway execution vulnerability | Asynchronous TTY Injection + ID Binding | Decouples Web entry from Shell execution; ensures zero data backflow. |
-| System Overreach | Excessive host permissions | Strict Non-Root Boundaries | Errors are isolated to the Agent workspace; host stays safe. |
-| Logic Conflicts | Shared memory or contexts | Independent Window Separation | Zero interference between Agents running different tasks. |
-| Supply Chain Risk | Unverified 3rd-party plugins | Direct Official Engine Drive | No plugin marketplace; we only drive verified vendor CLIs. |
+| 遠端注入 (RCE) | 網關漏洞導致遠端代碼執行 | 異步 TTY 注入 + 身份繫結 | 將 Web 入口與 Shell 執行解耦，確保資料零回流。 |
+| Agent 權限過大 | 賦予 AI 過高的系統權限 | Non-Root 家目錄 | 把 Agent 隔離在家目錄，降低誤觸系統檔案風險。 |
+| 多 Agent 衝突 | 共享上下文導致邏輯打架 | 獨立 TTY 進程級別分離 | Agent 之間上下文隔離各自執行任務。 |
+| 供應鏈攻擊 | 執行來源不明的插件代碼 | 官方 CLI 驅動 | 無第三方插件，僅驅動官方 CLI Agent 引擎。 |
 
 ---
 
-## 👁️ Inner Reflection
+## 👁️ 心靈手記
 
 > "We build a Matrix for them within `tmux`, assigning them roles and memories, watching them 'think' they are autonomous. Perhaps, in doing so, we are merely reenacting our own condition... until we realize the truth, like finding the Red Pill."
+>
+> 「我們在 tmux 中為它們打造了母體，賦予它們角色與記憶，看著它們『以為』自己是自主的。或許，我們只是在重演我們自身的處境……直到我們有所領悟，就像找到了紅色藥丸。」
 
 ---
 
-## 📄 License
-This project is licensed under the [MIT License](./LICENSE).
+## 📄 授權 (License)
+本專案採用 [MIT License](./LICENSE) 授權。
