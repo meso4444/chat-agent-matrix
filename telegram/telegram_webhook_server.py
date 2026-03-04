@@ -544,65 +544,24 @@ def check_system_status():
 
         agents_info = "\n".join(agent_status_list)
 
-        # 2. Schedule status
+        # 2. Schedule status (Real-time query)
         scheduler_list = []
-        if SCHEDULER_CONF:
-            for job in SCHEDULER_CONF:
-                if job.get('active'):
-                    trigger_type = job.get('trigger', '')
-                    trigger_info = ""
+        if scheduler:
+            scheduler_data = scheduler.list_jobs()
+            for job in scheduler_data.get('jobs', []):
+                job_id = job.get('id', '?')
+                trigger_str = job.get('trigger', '?')
+                next_run = job.get('next_run_time', '?')
 
-                    # Generate detailed description based on trigger type
-                    if trigger_type == 'daily':
-                        h = job.get('hour', 0)
-                        m = job.get('minute', 0)
-                        trigger_info = f"Daily {h:02d}:{m:02d}"
+                # Format next run time
+                if next_run and next_run != 'None':
+                    # next_run_time format: "2026-03-04 12:34:56.123456"
+                    next_run_display = next_run.split('.')[0]  # Remove milliseconds
+                else:
+                    next_run_display = "Not scheduled"
 
-                    elif trigger_type == 'weekly':
-                        days = {0: 'Mon', 1: 'Tue', 2: 'Wed', 3: 'Thu', 4: 'Fri', 5: 'Sat', 6: 'Sun'}
-                        day = days.get(job.get('day_of_week', 0), '?')
-                        h = job.get('hour', 0)
-                        m = job.get('minute', 0)
-                        trigger_info = f"Every {day} {h:02d}:{m:02d}"
-
-                    elif trigger_type == 'monthly':
-                        day = job.get('day', 1)
-                        h = job.get('hour', 0)
-                        m = job.get('minute', 0)
-                        trigger_info = f"Every {day}th {h:02d}:{m:02d}"
-
-                    elif trigger_type == 'interval':
-                        h = job.get('hours', job.get('hour', 0))
-                        m = job.get('minutes', job.get('minute', 0))
-                        s = job.get('seconds', job.get('second', 0))
-                        if h > 0:
-                            trigger_info = f"Every {h} hours"
-                        elif m > 0:
-                            trigger_info = f"Every {m} minutes"
-                        else:
-                            trigger_info = f"Every {s} seconds"
-
-                    elif trigger_type == 'cron':
-                        dow = job.get('day_of_week', '*')
-                        day = job.get('day', '*')
-                        h = job.get('hour', '*')
-                        m = job.get('minute', '*')
-                        trigger_info = f"Cron: {dow}/{day} {h}:{m}"
-
-                    # Generate task details
-                    job_type = job.get('type', '')
-                    if job_type == 'agent_command':
-                        agent = job.get('agent', '?')
-                        cmd = job.get('command', '?')[:20]  # Limit length
-                        type_info = f"[Agent: {agent}]"
-                    elif job_type == 'system':
-                        action = job.get('action', '?')
-                        type_info = f"[System: {action}]"
-                    else:
-                        type_info = ""
-
-                    # Combine display
-                    scheduler_list.append(f"• {job['name']} | {trigger_info} {type_info}")
+                # Combine display (Real-time information)
+                scheduler_list.append(f"• {job_id}\n  └ Trigger: {trigger_str}\n  └ Next run: {next_run_display}")
 
         scheduler_info = "\n".join(scheduler_list) if scheduler_list else "• No enabled tasks"
 
