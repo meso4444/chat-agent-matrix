@@ -133,8 +133,7 @@ scheduler:
 - name: War_Monitor_HighFreq
   type: agent_command
   agent: Güpa
-  command: 【系統提示】請嚴格依照知識庫中的 WAR_REPORT_PROTOCOL.md 規範執行美伊戰爭 30 分鐘「絕對累積迭代」與「高強度核實」監控任務。⚠️
-    時間戳規範：嚴禁人為推算或預設時間，所有 🆕 標註必須使用執行當下的精確系統時間。
+  command: 請嚴格依照知識庫中的 WAR_REPORT_PROTOCOL.md 規範執行美伊戰爭 (Operation Epic Fury) 每小時「絕對累積迭代」與「高強度核實」監控任務。
   trigger: interval
-  minutes: 30
+  hours: 1
   active: true
