@@ -8,6 +8,7 @@ webhook_secret.token
 agent_home/
 images_temp/
 ngrok.log
+.ngrok.pid
 *.log
 
 # Python
