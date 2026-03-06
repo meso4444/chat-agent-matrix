@@ -133,7 +133,8 @@ scheduler:
 - name: War_Monitor_HighFreq
   type: agent_command
   agent: Güpa
-  command: 請嚴格依照知識庫中的 WAR_REPORT_PROTOCOL.md 規範執行美伊戰爭 (Operation Epic Fury) 每小時「絕對累積迭代」與「高強度核實」監控任務。
+  command: 【極限權威 SOP v1.5】1. 強制 cat 讀取權威底座。 2. 嚴禁任何形式的剪枝或整併歷史紀錄。 3. 章節平等：確保航班、預警、白宮等章節具備與戰情章節完全對等的歷史厚度（目前事實總數
+    142+）。 4. 字面量轉錄：禁止語義優化，每一項事實必須精確列出 [時間戳]。 5. 發送 Telegram 完整整合版，若發現章節軌跡稀釋即視為嚴重違規並重做。
   trigger: interval
   hours: 1
   active: true
