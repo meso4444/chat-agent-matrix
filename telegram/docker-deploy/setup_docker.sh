@@ -154,10 +154,20 @@ python3 "$CONFIG_GENERATOR" "config" "$INSTANCE_NAME" "$AGENTS_DATA" "$SCRIPT_DI
 # Call external generator to produce docker-compose override
 python3 "$CONFIG_GENERATOR" "compose" "$INSTANCE_NAME" "" "$SCRIPT_DIR"
 
+# Copy scheduler.yaml as instance-specific version
+echo "📋 Creating container scheduler configuration..."
+if [ -f "$SCRIPT_DIR/../scheduler.yaml" ]; then
+    cp "$SCRIPT_DIR/../scheduler.yaml" "$SCRIPT_DIR/scheduler.${INSTANCE_NAME}.yaml"
+    echo "✅ Scheduler configuration created: $SCRIPT_DIR/scheduler.${INSTANCE_NAME}.yaml"
+else
+    echo "⚠️  scheduler.yaml template not found, skipping scheduler configuration"
+fi
+
 # Create container credential persistence directory
 echo "📁 Creating container credential storage directory..."
 mkdir -p "$SCRIPT_DIR/container_home/$INSTANCE_NAME"
 chmod 750 "$SCRIPT_DIR/container_home/$INSTANCE_NAME"
+chown $(whoami):$(whoami) "$SCRIPT_DIR/container_home/$INSTANCE_NAME"
 echo "✅ Credential directory created: $SCRIPT_DIR/container_home/$INSTANCE_NAME"
 
 echo ""

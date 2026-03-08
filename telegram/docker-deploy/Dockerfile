@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Dynamically specify container username (default: appuser, can be overridden during build)
+# Dynamically specify container username (default: appuser, can be overridden at build time)
 ARG BUILD_USER=appuser
 
 # Install system tools
@@ -43,8 +43,17 @@ COPY start_ngrok.sh /app/telegram/
 COPY status_telegram_services.sh /app/telegram/
 COPY stop_telegram_services.sh /app/telegram/
 
+# Startup process dependency files (required)
+COPY scheduler_manager.py /app/telegram/
+COPY auto_permission_responder.py /app/telegram/
+COPY scheduler.yaml /app/telegram/
+
 # Message templates
 COPY message_templates.yaml /app/telegram/
+
+# Startup process files to be copied to agent_home
+COPY AGENT_PROTOCOL.md /app/telegram/
+COPY SCHEDULER_FUNCTIONALITY.md /app/telegram/
 
 # Agent rules and protocols
 COPY CLAUDE.md /app/telegram/
@@ -65,7 +74,8 @@ RUN pip install --no-cache-dir flask requests pyyaml apscheduler
 
 # Fix permissions
 RUN chown -R $BUILD_USER:$BUILD_USER /app && \
-    chmod +x /app/telegram/docker-deploy/scripts/entrypoint.sh
+    chmod +x /app/telegram/docker-deploy/scripts/entrypoint.sh && \
+    chmod +x /app/telegram/auto_permission_responder.py
 
 # Switch to non-root user
 USER $BUILD_USER
