@@ -1,0 +1,11 @@
+# Sensitive credentials and tokens
+credentials.json
+token.json
+whitelist.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.env
