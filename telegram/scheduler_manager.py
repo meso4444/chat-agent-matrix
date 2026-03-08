@@ -109,11 +109,24 @@ class SchedulerManager:
                         second=job_cfg.get('second', 0)
                     )
                 elif trigger_type == 'cron':
-                    trigger = CronTrigger(
-                        hour=job_cfg.get('hour', '*'),
-                        minute=job_cfg.get('minute', '0'),
-                        second=job_cfg.get('second', '0')
-                    )
+                    # Build cron trigger with all supported parameters
+                    cron_kwargs = {}
+
+                    # Map job config fields to CronTrigger parameters
+                    cron_fields = ['year', 'month', 'day', 'week', 'day_of_week', 'hour', 'minute', 'second']
+                    for field in cron_fields:
+                        if field in job_cfg:
+                            cron_kwargs[field] = job_cfg[field]
+
+                    # Set defaults for hour/minute/second if not specified
+                    if 'hour' not in cron_kwargs:
+                        cron_kwargs['hour'] = '*'
+                    if 'minute' not in cron_kwargs:
+                        cron_kwargs['minute'] = '0'
+                    if 'second' not in cron_kwargs:
+                        cron_kwargs['second'] = '0'
+
+                    trigger = CronTrigger(**cron_kwargs)
                 elif trigger_type == 'interval':
                     trigger = IntervalTrigger(
                         hours=job_cfg.get('hours', job_cfg.get('hour', 0)),
