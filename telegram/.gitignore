@@ -3,6 +3,8 @@
 .webhook_secret
 webhook_secret.token
 .runtime_state
+scheduler.yaml
+config.yaml
 
 # 運行時目錄與檔案
 agent_home/

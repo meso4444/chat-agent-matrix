@@ -4,6 +4,7 @@
 webhook_secret.token
 .runtime_state
 legacy_tokens_backup.txt
+config.yaml
 
 # Runtime directories and files
 agent_home/
