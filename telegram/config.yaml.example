@@ -1,0 +1,88 @@
+# ==========================================
+# Chat Agent Matrix Configuration File (Telegram Edition)
+# ==========================================
+
+# 🌐 Server and Network Settings
+server:
+  host: 127.0.0.1
+  port: 5002
+  ngrok_api_port: 4042
+
+# 🤖 AI Agent Squad Configuration
+agents:
+  - name: "Güpa"
+    engine: "gemini"
+    description: "Respect and reverence (attitude towards teachers and dharma)"
+    usecase: You are a travel itinerary planning expert
+    cleanup_policy:
+      images_retention_days: 3
+
+  - name: "Chöd"
+    engine: "claude"
+    description: "Severance, body offering (cutting through ego)"
+    usecase: You are a travel cost estimation expert
+
+# Default active Agent name on startup
+default_active_agent: "Güpa"
+
+# 🤝 Collaboration Groups
+# Group members automatically establish bidirectional (Full Mesh) symlinks
+collaboration_groups:
+  - name: "core_team"
+    description: "Collaboratively plan high-value travel itineraries"
+    members: ["Güpa", "Chöd"]
+    roles:
+      Güpa: "Responsible for planning travel itineraries according to user requirements, and deliver the itinerary to Chöd for budget estimation"
+      Chöd: "Responsible for budget estimation of all itinerary expenses. If single person cost exceeds 50,000 TWD, submit budget report to Güpa to adjust the itinerary"
+
+# ⏰ Schedule Tasks (Scheduler)
+# Schedule configuration has been separated to independent scheduler.yaml file
+# Reference: scheduler.yaml
+#
+# 🧹 Global Default Cleanup Rules
+default_cleanup_policy:
+  images_retention_days: 7
+
+# 📱 Telegram API Settings
+telegram:
+  api_base_url: "https://api.telegram.org/bot"
+  webhook_path: "/telegram_webhook"
+
+# 🖼️ Multimodal Image Processing
+image_processing:
+  temp_dir_name: "images_temp"
+
+# tmux Settings
+tmux:
+  session_name: "ai_telegram_session"
+  working_dir: ""
+
+# 🎮 Custom Menu
+menu:
+  - - label: "🌤 Taipei Today's Weather"
+      command: "Query Taipei's weather today, broken down by morning, afternoon, evening"
+    - label: "International News"
+      command: "Query recent major international news"
+  - - label: "🔄 Switch Agent"
+      command: "/switch {input}"
+      prompt: "Please enter the Agent name to switch to:"
+    - label: "🧘 Awaken Güpa"
+      command: "/switch Güpa"
+    - label: "🔪 Awaken Chöd"
+      command: "/switch Chöd"
+  - - label: "🔍 Health Check"
+      command: "/inspect {input}"
+      prompt: "Please enter the Agent name to check:"
+    - label: "🚑 Repair"
+      command: "/fix {input}"
+      prompt: "Please enter the Agent name to repair:"
+    - label: "🧠 Restore Memory"
+      command: "/resume_latest"
+  - - label: "🛑 Interrupt"
+      command: "/interrupt"
+    - label: "🧹 Reset"
+      command: "/clear"
+    - label: "📖 Help"
+      command: "/help"
+    - label: "📊 System Status"
+      command: "/status"
