@@ -1,0 +1,10 @@
+# 容器實例特定的配置和臨時檔案（不應提交）
+.env.*
+config.*.yaml
+scheduler.*.yaml
+docker-compose.*.yml
+container_home/
+*\ -\ 複製.*
+
+# 容器相關臨時檔案
+.ngrok.pid

@@ -43,8 +43,17 @@ COPY start_ngrok.sh /app/telegram/
 COPY status_telegram_services.sh /app/telegram/
 COPY stop_telegram_services.sh /app/telegram/
 
+# 排程與權限管理（啟動流程依賴）
+COPY scheduler_manager.py /app/telegram/
+COPY auto_permission_responder.py /app/telegram/
+COPY scheduler.yaml /app/telegram/
+
 # 訊息模板
 COPY message_templates.yaml /app/telegram/
+
+# Agent 協議與文檔（啟動過程複製到 agent_home）
+COPY AGENT_PROTOCOL.md /app/telegram/
+COPY SCHEDULER_FUNCTIONALITY.md /app/telegram/
 
 # Agent 規則與協議
 COPY CLAUDE.md /app/telegram/
@@ -65,7 +74,8 @@ RUN pip install --no-cache-dir flask requests pyyaml apscheduler
 
 # 修正權限
 RUN chown -R $BUILD_USER:$BUILD_USER /app && \
-    chmod +x /app/telegram/docker-deploy/scripts/entrypoint.sh
+    chmod +x /app/telegram/docker-deploy/scripts/entrypoint.sh && \
+    chmod +x /app/telegram/auto_permission_responder.py
 
 # 切換到非 root 用戶
 USER $BUILD_USER

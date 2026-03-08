@@ -30,7 +30,8 @@ def generate_docker_compose(instance, user, script_dir):
                     "../agent_home:/app/telegram/agent_home",
                     f"./container_home/{instance}:/home/{user}",
                     f"./.env.{instance}:/app/telegram/.env",
-                    f"./config.{instance}.yaml:/app/telegram/config.yaml"
+                    f"./config.{instance}.yaml:/app/telegram/config.yaml",
+                    f"./scheduler.{instance}.yaml:/app/telegram/scheduler.yaml"
                 ],
                 "dns": ["8.8.8.8", "8.8.4.4"],
                 "networks": [f"telegram_net_{instance}"]

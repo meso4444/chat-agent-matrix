@@ -154,10 +154,20 @@ python3 "$CONFIG_GENERATOR" "config" "$INSTANCE_NAME" "$AGENTS_DATA" "$SCRIPT_DI
 # 調用外部生成器產生 docker-compose override
 python3 "$CONFIG_GENERATOR" "compose" "$INSTANCE_NAME" "" "$SCRIPT_DIR"
 
+# 複製 scheduler.yaml 為實例特定版本
+echo "📋 正在建立容器排程配置..."
+if [ -f "$SCRIPT_DIR/../scheduler.yaml" ]; then
+    cp "$SCRIPT_DIR/../scheduler.yaml" "$SCRIPT_DIR/scheduler.${INSTANCE_NAME}.yaml"
+    echo "✅ 排程配置已建立: $SCRIPT_DIR/scheduler.${INSTANCE_NAME}.yaml"
+else
+    echo "⚠️  找不到 scheduler.yaml 模板，跳過排程配置"
+fi
+
 # 建立容器憑證持久化目錄
 echo "📁 正在建立容器憑證存儲目錄..."
 mkdir -p "$SCRIPT_DIR/container_home/$INSTANCE_NAME"
 chmod 750 "$SCRIPT_DIR/container_home/$INSTANCE_NAME"
+chown $(whoami):$(whoami) "$SCRIPT_DIR/container_home/$INSTANCE_NAME"
 echo "✅ 憑證目錄已建立: $SCRIPT_DIR/container_home/$INSTANCE_NAME"
 
 echo ""
