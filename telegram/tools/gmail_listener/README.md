@@ -1,74 +1,74 @@
-# 📧 Gmail 郵件監聽 & Agent 轉發系統
+# 📧 Gmail Email Listener & Agent Forwarding System
 
-**功能**: Gmail 郵件監聽 → 智能 Agent 轉發 → Telegram 回報
+**Function**: Gmail email monitoring → Intelligent Agent forwarding → Telegram reporting
 
 ---
 
-## ⚙️ 前置準備：Google Cloud 設置
+## ⚙️ Prerequisites: Google Cloud Setup
 
-### 1. 建立 Google Cloud 專案
+### 1. Create Google Cloud Project
 
-1. 打開 [Google Cloud Console](https://console.cloud.google.com)
-2. 點擊「選擇專案」→「新建專案」
-3. 輸入專案名稱（例如：`chat-agent-matrix`）
-4. 點擊「建立」
+1. Open [Google Cloud Console](https://console.cloud.google.com)
+2. Click "Select a project" → "New project"
+3. Enter project name (e.g., `chat-agent-matrix`)
+4. Click "Create"
 
-### 2. 啟用 Gmail API
+### 2. Enable Gmail API
 
-1. 在 Google Cloud Console 中，左側菜單點擊「APIs 和服務」
-2. 點擊「啟用 APIs 和服務」
-3. 搜尋「Gmail API」
-4. 點擊「Gmail API」
-5. 點擊「啟用」按鈕
+1. In Google Cloud Console, left menu click "APIs and Services"
+2. Click "Enable APIs and Services"
+3. Search for "Gmail API"
+4. Click "Gmail API"
+5. Click "Enable" button
 
-### 3. 建立 OAuth 2.0 認證
+### 3. Create OAuth 2.0 Credentials
 
-1. 左側菜單點擊「APIs 和服務」→「凭證」
-2. 點擊「建立凭證」→「OAuth 客户端 ID」
-3. 如果提示配置 OAuth 同意屏幕，點擊「配置」
-   - 應用程式名稱：輸入 `chat-agent-matrix`
-   - 使用者支援電郵：輸入你的 Gmail
-   - 點擊「保存並繼續」
-4. 在「凭证」頁面，點擊「建立 OAuth 2.0 客户端 ID」
-5. 應用程式類型選擇「已安裝的應用程式」
-6. 名稱：輸入 `gmail-listener`
-7. 點擊「建立」
+1. Left menu click "APIs and Services" → "Credentials"
+2. Click "Create Credentials" → "OAuth Client ID"
+3. If prompted to configure OAuth consent screen, click "Configure"
+   - Application name: Enter `chat-agent-matrix`
+   - User support email: Enter your Gmail
+   - Click "Save and Continue"
+4. On "Credentials" page, click "Create OAuth 2.0 Client ID"
+5. Application type select "Desktop application"
+6. Name: Enter `gmail-listener`
+7. Click "Create"
 
-### 4. 下載 credentials.json
+### 4. Download credentials.json
 
-1. 在「OAuth 2.0 客户端 ID」部分找到剛建立的應用
-2. 點擊右側的下載按鈕（向下箭頭圖標）
-3. 選擇「下載為 JSON」
-4. 將下載的 `client_secret_*.json` 檔案重命名為 `credentials.json`
-5. 複製到 `skills/` 目錄
+1. Find the OAuth 2.0 Client ID you just created
+2. Click the download button (down arrow icon) on the right
+3. Select "Download as JSON"
+4. Rename the downloaded `client_secret_*.json` file to `credentials.json`
+5. Copy to this directory
 
-### 5. 設置授權的重定向 URI（可選但建議）
+### 5. Set Authorized Redirect URI (Optional but recommended)
 
-1. 找到剛建立的 OAuth 2.0 客户端 ID，點擊編輯
-2. 在「授權的重定向 URI」中添加：
+1. Find the OAuth 2.0 Client ID you created, click Edit
+2. In "Authorized redirect URIs" add:
    ```
    http://localhost:8080/
    ```
-3. 點擊「保存」
+3. Click "Save"
 
 ---
 
-## 🚀 快速開始（5 分鐘）
+## 🚀 Quick Start (5 Minutes)
 
-### 1️⃣ 安裝依賴
+### 1️⃣ Install Dependencies
 ```bash
 pip3 install -r requirements.txt
 ```
 
-### 2️⃣ OAuth 認證（一次性）
+### 2️⃣ OAuth Authentication (One-time)
 ```bash
 python3 gmail_auth_simple.py
 ```
-- 在瀏覽器中授權 Gmail 訪問
-- 自動生成 `token.json`
+- Authorize Gmail access in browser
+- Auto-generates `token.json`
 
-### 3️⃣ 配置白名單
-編輯 `whitelist.json`:
+### 3️⃣ Configure Whitelist
+Edit `whitelist.json`:
 
 ```json
 {
@@ -83,115 +83,115 @@ python3 gmail_auth_simple.py
 }
 ```
 
-### 4️⃣ 啟動監聽
+### 4️⃣ Start Listener
 ```bash
 python3 gmail_listener.py
 ```
 
 ---
 
-## 📋 使用範例
+## 📋 Usage Examples
 
-### 發送郵件給 Agent
+### Send Email to Agent
 
-**郵件內容**:
+**Email Content**:
 ```
-收件人: your-email@example.com
-主旨: 市場分析
-內容:
+To: your-email@example.com
+Subject: Market Analysis
+Content:
 
 Hi Güpa
 
-請為我分析過去一週的市場趨勢
+Please analyze the market trends from the past week
 ```
 
-### 系統自動
+### System Auto-Process
 
-✅ 檢測郵件
-✅ 檢查寄件者在白名單中
-✅ 偵測 "Hi Güpa"
-✅ 轉發給 Güpa 的 tmux
-✅ Güpa 執行指令
-✅ 通過 Telegram 回報結果
+✅ Detect email
+✅ Check sender in whitelist
+✅ Detect "Hi Güpa"
+✅ Forward to Güpa's tmux
+✅ Güpa executes command
+✅ Report result via Telegram
 
 ---
 
-## ⚙️ 配置說明
+## ⚙️ Configuration Guide
 
 ### whitelist.json
 
-| 欄位 | 說明 | 範例 |
-|------|------|------|
-| `email` | 寄件者郵件 | `your-email@example.com` |
-| `agents` | 可觸發的 Agent | `["Accelerator", "Chöd"]` |
-| `tmux_session` | tmux session 名稱 | `ai_telegram_session` |
-| `email_marker` | 觸發關鍵詞 | `Hi` |
+| Field | Description | Example |
+|-------|-------------|---------|
+| `email` | Sender email | `your-email@example.com` |
+| `agents` | Triggerable agents | `["Accelerator", "Chöd"]` |
+| `tmux_session` | tmux session name | `ai_telegram_session` |
+| `email_marker` | Trigger keyword | `Hi` |
 
-### 觸發格式
+### Trigger Format
 
-**正確**:
+**Correct**:
 ```
 Hi Accelerator    ✅
 Hi Chöd           ✅
-HI ACCELERATOR    ✅ (不區分大小寫)
+HI ACCELERATOR    ✅ (case-insensitive)
 ```
 
-**錯誤**:
+**Incorrect**:
 ```
-Hello Accelerator ❌ (應使用 "Hi")
-Hi accelerator    ❌ (Agent 名稱區分大小寫)
-HiAccelerator     ❌ (缺少空格)
+Hello Accelerator ❌ (must use "Hi")
+Hi accelerator    ❌ (agent name is case-sensitive)
+HiAccelerator     ❌ (missing space)
 ```
 
 ---
 
-## 📁 文件說明
+## 📁 File Descriptions
 
-| 檔案 | 功能 |
-|------|------|
-| `gmail_auth_simple.py` | OAuth 認證腳本（一次性） |
-| `gmail_listener.py` | 主監聽腳本（核心功能） |
-| `whitelist.json` | 配置檔案 |
-| `credentials.json` | Google OAuth 凭證 |
-| `token.json` | OAuth 令牌（自動生成） |
-| `requirements.txt` | Python 依賴 |
+| File | Function |
+|------|----------|
+| `gmail_auth_simple.py` | OAuth authentication script (one-time) |
+| `gmail_listener.py` | Main listener script (core functionality) |
+| `whitelist.json` | Configuration file |
+| `credentials.json` | Google OAuth credentials |
+| `token.json` | OAuth token (auto-generated) |
+| `requirements.txt` | Python dependencies |
 
 ---
 
-## 🔄 工作流程
+## 🔄 Workflow
 
 ```
-發送郵件
+Send email
   ↓
 Gmail API
   ↓
-gmail_test.py 檢測新郵件
+gmail_listener.py detects new email
   ↓
-檢查白名單 → 不符合 → 跳過
-  ↓ 符合
-檢測 "Hi [Agent_name]"
-  ↓ 找到
-構建轉發訊息
+Check whitelist → Not match → Skip
+  ↓ Match
+Detect "Hi [Agent_name]"
+  ↓ Found
+Build forwarding message
   ↓
-通過 tmux 發送給 Agent
+Send to Agent via tmux
   ↓
-Agent 執行指令
+Agent executes command
   ↓
-Agent 通過 telegram_notifier.py 回報
+Agent reports via telegram_notifier.py
   ↓
-Telegram 顯示結果
+Telegram displays result
 ```
 
 ---
 
-## 🔐 安全注意
+## 🔐 Security Notes
 
-⚠️ **重要**:
-- `token.json` 包含敏感凭證，**永遠不要上傳**
-- `credentials.json` 不要分享
-- 白名單應只包含信任的寄件者
+⚠️ **Important**:
+- `token.json` contains sensitive credentials, **never upload**
+- `credentials.json` do not share
+- Whitelist should only contain trusted senders
 
-在 `.gitignore` 中添加:
+Add to `.gitignore`:
 ```
 token.json
 credentials.json
@@ -200,44 +200,44 @@ credentials.json
 
 ---
 
-## 🆘 常見問題
+## 🆘 FAQ
 
-### Q: "token.json 不存在"
+### Q: "token.json does not exist"
 
-A: 運行 OAuth 認證:
+A: Run OAuth authentication:
 ```bash
 python3 gmail_auth_simple.py
 ```
 
-### Q: "Agent tmux 窗口不存在"
+### Q: "Agent tmux window does not exist"
 
-A: 確認 Agent 已啟動:
+A: Confirm Agent is running:
 ```bash
 tmux list-windows -t ai_telegram_session
 ```
 
-### Q: "偵測不到 Agent 提及"
+### Q: "Cannot detect Agent mention"
 
-A: 確認郵件格式正確:
+A: Confirm email format is correct:
 ```
-Hi [Agent_name]  ← 必須使用 "Hi"
-(空一行)
-郵件內容
+Hi [Agent_name]  ← Must use "Hi"
+(blank line)
+Email content
 ```
 
 ---
 
-## 📊 特性
+## 📊 Features
 
-✅ **安全的 OAuth 2.0 認證**
-✅ **自動郵件監聽**（30 秒輪詢）
-✅ **智能白名單過濾**
-✅ **自動 Agent 轉發**
-✅ **Tmux 集成**
-✅ **繁體中文支援**
-✅ **低 API 消耗**
+✅ **Secure OAuth 2.0 Authentication**
+✅ **Automatic Email Monitoring** (30-second polling)
+✅ **Intelligent Whitelist Filtering**
+✅ **Automatic Agent Forwarding**
+✅ **Tmux Integration**
+✅ **Multi-language Support**
+✅ **Low API Consumption**
 
 ---
 
-**版本**: 1.0
-**最後更新**: 2026-03-08
+**Version**: 1.0
+**Last Updated**: 2026-03-08

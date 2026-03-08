@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Gmail 郵件監聽 - 含 Tmux Agent 轉發功能
-偵測到 "Hi [Agent_name]" 時自動轉發給對應 Agent
+Gmail Email Listener - With Tmux Agent Forwarding Function
+Auto-forward to corresponding Agent when "Hi [Agent_name]" is detected
 """
 
 import time
@@ -21,11 +21,11 @@ token_file = script_dir / 'token.json'
 seen_file = script_dir / '.gmail_seen_messages'
 whitelist_file = script_dir / 'whitelist.json'
 
-# 讀取配置
+# Load configuration
 whitelist_config = {}
 tmux_session = "ai_telegram_session"
 email_marker = "Hi"
-poll_interval_minutes = 0.5  # 預設 30 秒
+poll_interval_minutes = 0.5  # Default 30 seconds
 
 if whitelist_file.exists():
     with open(whitelist_file, 'r') as f:
@@ -35,7 +35,7 @@ if whitelist_file.exists():
         email_marker = data.get('email_marker', 'Hi')
         poll_interval_minutes = data.get('poll_interval_minutes', 0.5)
 
-# 構建郵件地址到 agents 的映射
+# Build mapping from email address to agents
 sender_to_agents = {}
 for entry in whitelist_config:
     if isinstance(entry, dict):
@@ -43,23 +43,23 @@ for entry in whitelist_config:
         agents = entry.get('agents', [])
         sender_to_agents[email] = agents
 
-# 讀取已經看過的郵件 ID
+# Load already seen message IDs
 seen_messages = set()
 if seen_file.exists():
     with open(seen_file, 'r') as f:
         seen_messages = set(f.read().strip().split('\n'))
 
 print("=" * 70)
-print("Gmail 郵件監聽 - Tmux Agent 轉發模式")
+print("Gmail Email Listener - Tmux Agent Forwarding Mode")
 print("=" * 70)
 
 if not token_file.exists():
-    print("❌ token.json 不存在，請先運行 gmail_auth_simple.py")
+    print("❌ token.json does not exist, please run gmail_auth_simple.py first")
     exit(1)
 
 
 def check_agent_session(agent_name):
-    """檢查 Agent 的 tmux 窗口是否存在"""
+    """Check if Agent's tmux window exists"""
     try:
         result = subprocess.run(
             ['tmux', 'has-session', '-t', f'{tmux_session}:{agent_name}'],
@@ -67,21 +67,21 @@ def check_agent_session(agent_name):
         )
         return result.returncode == 0
     except Exception as e:
-        print(f"❌ 檢查 tmux 失敗: {e}")
+        print(f"❌ Check tmux failed: {e}")
         return False
 
 
 def send_to_agent(agent_name, message):
-    """發送訊息給 Agent（參考 Telegram 的做法）"""
+    """Send message to Agent (following Telegram approach)"""
     try:
         if not check_agent_session(agent_name):
-            print(f"   ❌ Agent '{agent_name}' 的 tmux 窗口不存在")
+            print(f"   ❌ Agent '{agent_name}' tmux window does not exist")
             return False
 
-        # 轉義特殊字符
+        # Escape special characters
         escaped_message = message.replace('!', '！')
 
-        # 發送訊息（使用 literal 模式）
+        # Send message (using literal mode)
         subprocess.run([
             'tmux', 'send-keys', '-t', f'{tmux_session}:{agent_name}',
             '-l',
@@ -90,13 +90,13 @@ def send_to_agent(agent_name, message):
 
         time.sleep(0.5)
 
-        # 發送 Enter 鍵
+        # Send Enter key
         subprocess.run([
             'tmux', 'send-keys', '-t', f'{tmux_session}:{agent_name}',
             'Enter'
         ], check=True)
 
-        # 對於 Claude-based agents，再發送一次 Enter
+        # For Claude-based agents, send Enter again
         if agent_name in ['Accelerator', 'Chöd', 'Claude']:
             time.sleep(0.2)
             subprocess.run([
@@ -104,57 +104,57 @@ def send_to_agent(agent_name, message):
                 'Enter'
             ], check=True)
 
-        print(f"   ✅ 已轉發給 {agent_name}")
+        print(f"   ✅ Forwarded to {agent_name}")
         return True
 
     except Exception as e:
-        print(f"   ❌ 轉發給 {agent_name} 失敗: {e}")
+        print(f"   ❌ Failed to forward to {agent_name}: {e}")
         return False
 
 
 def detect_agent_mention(content):
-    """偵測郵件內容中的 Agent 提及 (例如 "Hi Accelerator")"""
+    """Detect Agent mentions in email content (e.g., "Hi Accelerator")"""
     mentioned_agents = []
 
     for entry in whitelist_config:
         if isinstance(entry, dict):
             agents = entry.get('agents', [])
             for agent in agents:
-                # 搜尋 "Hi [Agent_name]" 格式
+                # Search for "Hi [Agent_name]" format
                 pattern = f"{email_marker}\\s+{agent}"
                 if re.search(pattern, content, re.IGNORECASE):
                     mentioned_agents.append(agent)
 
-    return list(set(mentioned_agents))  # 去重
+    return list(set(mentioned_agents))  # Deduplicate
 
 
 try:
-    # 認證
+    # Authenticate
     creds = Credentials.from_authorized_user_file(token_file, SCOPES)
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
 
     service = googleapiclient.discovery.build('gmail', 'v1', credentials=creds)
 
-    print("✅ 已連接到 Gmail API\n")
+    print("✅ Connected to Gmail API\n")
 
-    # 顯示配置
+    # Display configuration
     if sender_to_agents:
-        print(f"📋 已註冊 Agent:")
+        print(f"📋 Registered Agents:")
         for sender, agents in sender_to_agents.items():
             print(f"   • {sender} → {', '.join(agents)}")
         print()
     else:
-        print("⚠️ 白名單為空！請編輯 whitelist.json\n")
+        print("⚠️ Whitelist is empty! Please edit whitelist.json\n")
 
-    print(f"🔍 標記詞: '{email_marker}' (e.g., '{email_marker} Accelerator')")
-    print(f"⏱️ 輪詢間隔: {poll_interval_minutes} 分鐘\n")
-    print("🔄 監聽中... 等待新郵件\n")
+    print(f"🔍 Marker: '{email_marker}' (e.g., '{email_marker} Accelerator')")
+    print(f"⏱️ Poll interval: {poll_interval_minutes} minutes\n")
+    print("🔄 Listening... waiting for new emails\n")
     print("-" * 70 + "\n")
 
     while True:
         try:
-            # 查詢未讀郵件
+            # Query unread emails
             results = service.users().messages().list(
                 userId='me',
                 q='is:unread',
@@ -167,27 +167,27 @@ try:
                 for message in messages:
                     message_id = message['id']
 
-                    # 跳過已經看過的郵件
+                    # Skip already seen messages
                     if message_id in seen_messages:
                         continue
 
-                    # 標記為已看
+                    # Mark as seen
                     seen_messages.add(message_id)
 
-                    # 獲取郵件詳情
+                    # Get message details
                     msg = service.users().messages().get(
                         userId='me',
                         id=message_id,
                         format='full'
                     ).execute()
 
-                    # 提取信息
+                    # Extract message information
                     headers = msg['payload']['headers']
-                    sender = next((h['value'] for h in headers if h['name'] == 'From'), '未知')
-                    subject = next((h['value'] for h in headers if h['name'] == 'Subject'), '(無主旨)')
-                    date = next((h['value'] for h in headers if h['name'] == 'Date'), '未知')
+                    sender = next((h['value'] for h in headers if h['name'] == 'From'), 'Unknown')
+                    subject = next((h['value'] for h in headers if h['name'] == 'Subject'), '(No subject)')
+                    date = next((h['value'] for h in headers if h['name'] == 'Date'), 'Unknown')
 
-                    # 提取郵件正文
+                    # Extract message body
                     body = ''
                     if 'parts' in msg['payload']:
                         for part in msg['payload']['parts']:
@@ -199,66 +199,66 @@ try:
                         if 'data' in msg['payload']['body']:
                             body = base64.urlsafe_b64decode(msg['payload']['body']['data']).decode('utf-8')
 
-                    # 檢查白名單 - 提取郵件地址
+                    # Check whitelist - extract email address
                     sender_email = sender.split('<')[-1].split('>')[0].lower() if '<' in sender else sender.lower()
 
-                    # 如果有白名單且寄件者不在白名單中，跳過
+                    # Skip if whitelist exists and sender is not in whitelist
                     if sender_to_agents and sender_email not in sender_to_agents:
                         continue
 
-                    # 打印郵件
-                    print(f"📧 新郵件：")
-                    print(f"   寄件者: {sender}")
-                    print(f"   主旨:  {subject}")
-                    print(f"   時間:  {date}")
-                    print(f"   內容:")
+                    # Print email
+                    print(f"📧 New email:")
+                    print(f"   From: {sender}")
+                    print(f"   Subject: {subject}")
+                    print(f"   Date: {date}")
+                    print(f"   Content:")
                     print(f"   {'-' * 66}")
 
-                    # 顯示前 500 字
-                    content = body[:500] if body else "(無內容)"
+                    # Display first 500 characters
+                    content = body[:500] if body else "(No content)"
                     for line in content.split('\n'):
                         print(f"   {line}")
 
                     if len(body) > 500:
-                        print(f"   ... (已省略，共 {len(body)} 字)")
+                        print(f"   ... (truncated, total {len(body)} characters)")
 
                     print(f"   {'-' * 66}")
 
-                    # 偵測 Agent 提及並轉發
+                    # Detect Agent mentions and forward
                     mentioned_agents = detect_agent_mention(body)
 
                     if mentioned_agents:
-                        print(f"\n   🤖 偵測到 Agent 提及: {', '.join(mentioned_agents)}")
+                        print(f"\n   🤖 Agent mention detected: {', '.join(mentioned_agents)}")
 
-                        # 構建轉發訊息 - 類似 Telegram 的格式
+                        # Build forwarding message - similar to Telegram format
                         forward_message = (
-                            f"【系統提示】此指令來自 Gmail，任務完成後請務必執行 `python3 telegram_notifier.py '你的回應...'` 來回報結果。\n\n"
-                            f"郵件寄件者: {sender}\n"
-                            f"主旨: {subject}\n\n"
+                            f"【System Prompt】This command is from Gmail. After task completion, you must execute `python3 telegram_notifier.py 'your response...'` to report the result.\n\n"
+                            f"Email from: {sender}\n"
+                            f"Subject: {subject}\n\n"
                             f"{body}"
                         )
 
                         for agent in mentioned_agents:
                             send_to_agent(agent, forward_message)
                     else:
-                        print(f"\n   ℹ️ 未偵測到 Agent 提及")
+                        print(f"\n   ℹ️ No Agent mention detected")
 
                     print()
 
-                    # 保存已看過的郵件 ID
+                    # Save seen message IDs
                     with open(seen_file, 'w') as f:
                         f.write('\n'.join(seen_messages))
 
-            # 按配置間隔檢查
+            # Poll at configured interval
             time.sleep(poll_interval_minutes * 60)
 
         except KeyboardInterrupt:
-            print("\n\n👋 停止監聽")
+            print("\n\n👋 Listener stopped")
             break
         except Exception as e:
-            print(f"❌ 錯誤: {e}")
+            print(f"❌ Error: {e}")
             time.sleep(5)
 
 except Exception as e:
-    print(f"❌ 連接失敗: {e}")
+    print(f"❌ Connection failed: {e}")
     exit(1)
