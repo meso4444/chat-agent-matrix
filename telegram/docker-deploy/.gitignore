@@ -1,0 +1,10 @@
+# Instance-specific configuration and temporary files (should not be committed)
+.env.*
+config.*.yaml
+scheduler.*.yaml
+docker-compose.*.yml
+container_home/
+* - Copy.*
+
+# Container-related temporary files
+.ngrok.pid
