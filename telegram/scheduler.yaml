@@ -23,7 +23,7 @@ scheduler:
   - name: "全體 Agent 每小時記憶更新"
     type: "system"
     action: "update_agent_memories"
-    prompt: "過去一段時間若有進行任務的摘要及重點整理,於重點任務或重要轉折點則需紀錄細節,更新紀錄到memory目錄的當日記憶檔md,這是你的個人記憶任務,不需回報給用戶。"
+    prompt: "過去一段時間若有進行任務的摘要及重點整理,於重點任務或重要轉折點則需紀錄細節,更新紀錄到memory/memory.md,這是你的個人記憶任務,不需回報給用戶。"
     trigger: "interval"
     hours: 1
     minutes: 0
