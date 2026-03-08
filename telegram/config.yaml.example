@@ -1,0 +1,88 @@
+# ==========================================
+# Chat Agent Matrix 配置檔案 (Telegram Edition)
+# ==========================================
+
+# 🌐 伺服器與網路設定
+server:
+  host: 127.0.0.1
+  port: 5002
+  ngrok_api_port: 4042
+
+# 🤖 AI Agent 軍團配置
+agents:
+  - name: "Güpa"
+    engine: "gemini"
+    description: "恭敬、虔誠（對上師、佛法的態度）"
+    usecase: 你是一個旅遊行程規劃專家
+    cleanup_policy:
+      images_retention_days: 3
+
+  - name: "Chöd"
+    engine: "claude"
+    description: "斷、施身法（切斷我執）"
+    usecase: 你是一個旅遊估價專家
+
+# 預設啟動時活躍的 Agent 名稱
+default_active_agent: "Güpa"
+
+# 🤝 協作群組 (Collaboration Groups)
+# 組內成員會自動建立雙向互連 (Full Mesh) 的軟連結
+collaboration_groups:
+  - name: "core_team"
+    description: "協作規劃高CP值的旅遊行程"
+    members: ["Güpa", "Chöd"]
+    roles:
+      Güpa: "負責依照使用者要求規劃旅遊行程，並將旅遊行程交付Chöd來估算預算"
+      Chöd: "負責行程所有花費的預算估算，若單人花費超出台幣五萬時，就提交預算報告給Güpa，讓他調整行程"
+
+# ⏰ 排程任務 (Scheduler)
+# 排程配置已分離到獨立的 scheduler.yaml 檔案
+# 參考：scheduler.yaml
+#
+# 🧹 全域預設清理規則
+default_cleanup_policy:
+  images_retention_days: 7
+
+# 📱 Telegram API 設定
+telegram:
+  api_base_url: "https://api.telegram.org/bot"
+  webhook_path: "/telegram_webhook"
+
+# 🖼️ 多模態圖片處理
+image_processing:
+  temp_dir_name: "images_temp"
+
+# tmux 設定
+tmux:
+  session_name: "ai_telegram_session"
+  working_dir: ""
+
+# 🎮 自定義選單 (Custom Menu)
+menu:
+  - - label: "🌤 台北今日天氣"
+      command: "查詢台北今天的天氣，分成早中晚"
+    - label: "國際新聞"
+      command: "查詢近日的重大國際新聞"
+  - - label: "🔄 切換 Agent"
+      command: "/switch {input}"
+      prompt: "請輸入要切換的 Agent 名稱:"
+    - label: "🧘 喚醒 Güpa"
+      command: "/switch Güpa"
+    - label: "🔪 喚醒 Chöd"
+      command: "/switch Chöd"
+  - - label: "🔍 健檢"
+      command: "/inspect {input}"
+      prompt: "請輸入要檢查的 Agent 名稱:"
+    - label: "🚑 修復"
+      command: "/fix {input}"
+      prompt: "請輸入要修復的 Agent 名稱:"
+    - label: "🧠 恢復記憶"
+      command: "/resume_latest"
+  - - label: "🛑 中斷"
+      command: "/interrupt"
+    - label: "🧹 重置"
+      command: "/clear"
+    - label: "📖 幫助"
+      command: "/help"
+    - label: "📊 系統狀態"
+      command: "/status"
