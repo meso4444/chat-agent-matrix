@@ -19,13 +19,13 @@ scheduler:
     second: 0
     active: true    # ✅ 預設啟用
 
-  # 【預設內建排程】每小時更新所有 Agent 記憶
-  - name: "全體 Agent 每小時記憶更新"
+  # 【預設內建排程】每 3 小時更新所有 Agent 記憶
+  - name: "Agent 記憶建構"
     type: "system"
     action: "update_agent_memories"
-    prompt: "過去一段時間若有進行任務的摘要及重點整理,於重點任務或重要轉折點則需紀錄細節,更新紀錄到memory/memory.md,這是你的個人記憶任務,不需回報給用戶。"
+    prompt: "進行已執行任務的重點整理摘要,及強化記錄重要細節;若無最近任務,亦可透過冥想來創造記憶,如反思如何優化你的角色能力,亦可向使用者提問和討論,以上皆作為你的記憶更新到memory/memory.md,這是你的個人記憶任務,不需回報給用戶"
     trigger: "interval"
-    hours: 1
+    hours: 3
     minutes: 0
     seconds: 0
     active: true    # ✅ 預設啟用
