@@ -66,12 +66,14 @@ session_name = os.environ['TMUX_SESSION_NAME']
 sys.path.append(script_dir)
 
 def wait_for_prompt(session_name, window_name, engine, max_wait=30):
-    """等待 tmux pane 出現對應的 CLI 提示符
+    """等待 tmux pane 出現對應的 CLI 提示符（穩定檢測）
 
     Args:
         engine: 'claude' 或 'gemini'
         - claude → ❯
         - gemini → * 或 >
+
+    Note: 需要連續檢測到提示符 3 次以上，確保 CLI 完全就緒
     """
     start_time = time.time()
     # 根據引擎選擇對應的提示符
@@ -79,6 +81,9 @@ def wait_for_prompt(session_name, window_name, engine, max_wait=30):
         prompt_markers = ['❯']
     else:  # gemini - 可能是 * 或 >
         prompt_markers = ['*', '>']
+
+    consecutive_detections = 0
+    required_detections = 3  # 需要連續檢測 3 次才認為 CLI 已就緒
 
     while time.time() - start_time < max_wait:
         try:
@@ -88,16 +93,27 @@ def wait_for_prompt(session_name, window_name, engine, max_wait=30):
             )
             output = result.stdout
             if not output:
+                consecutive_detections = 0
                 time.sleep(0.5)
                 continue
 
             # 檢查整個 pane 內容是否包含任何預期的提示符
+            detected = False
             for marker in prompt_markers:
                 if marker in output:
-                    print(f"       ✅ 檢測到 {engine} 提示符 '{marker}'")
+                    detected = True
+                    break
+
+            if detected:
+                consecutive_detections += 1
+                if consecutive_detections >= required_detections:
+                    print(f"       ✅ {engine} CLI 完全就緒（提示符穩定檢測 {consecutive_detections} 次）")
                     return True
+            else:
+                consecutive_detections = 0
+
         except Exception as e:
-            pass
+            consecutive_detections = 0
 
         time.sleep(0.5)
 
@@ -209,10 +225,13 @@ try:
         time.sleep(1)
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
 
-        # 等待 CLI 提示符出現（根據引擎類型檢查對應提示符，最多等待 60 秒）
+        # 等待 CLI 完全初始化（先等待基礎提示符，再額外等待確保完全就緒）
         print(f"     ⏳ 等待 {name} CLI 啟動…")
         if not wait_for_prompt(session_name, name, engine, max_wait=60):
             print(f"     ⚠️ {name} 啟動超時（未檢測到 {engine} 提示符），仍然嘗試注入 prompt…")
+
+        # 額外等待以確保 CLI 完全就緒（避免在初始化中途注入命令）
+        time.sleep(2)
 
         # ✅ 檢查規範文件是否已存在（避免重複注入與覆蓋）
         doc_path = os.path.join(home_path, engine_doc_name)
