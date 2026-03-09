@@ -65,16 +65,23 @@ def setup_collaboration_links(agents, groups):
                     
                     # 記錄到預期列表
                     expected_links[me].add(link_name)
-                    
+
                     # 計算相對路徑
                     rel_target = os.path.relpath(target_real_path, my_home)
-                    
-                    if not os.path.exists(full_link_path):
+
+                    # 刪除舊的軟連結（如果存在）
+                    if os.path.islink(full_link_path):
                         try:
-                            os.symlink(rel_target, full_link_path)
-                            print(f"   + 建立連結: {me} -> {partner}")
+                            os.unlink(full_link_path)
                         except OSError as e:
-                            print(f"   ⚠️ 建立連結失敗: {e}")
+                            print(f"   ⚠️ 刪除舊連結失敗: {e}")
+
+                    # 重新建立軟連結
+                    try:
+                        os.symlink(rel_target, full_link_path)
+                        print(f"   + 建立連結: {me} -> {partner}")
+                    except OSError as e:
+                        print(f"   ⚠️ 建立連結失敗: {e}")
 
     # 2. 清理不再協作的舊連結 (Cleanup Stale Links)
     print("🧹 檢查並清理過期協作連結...")

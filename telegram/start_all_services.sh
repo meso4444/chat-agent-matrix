@@ -219,6 +219,34 @@ try:
         if os.path.exists(doc_path):
             print(f"     ✅ {engine_doc_name} 已存在，跳過初始化注入（保護現有規範）")
 
+            # 🔄 執行對話恢復流程 (/resume)
+            print(f"     🔄 執行對話恢復流程…")
+
+            # Step 1: 輸入 /resume 指令
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', '-l', '/resume'], check=True)
+            time.sleep(0.5)
+
+            # Step 2: 執行 /resume (進入菜單)
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
+            time.sleep(1)
+
+            # Step 3: 選擇前次對話
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
+            time.sleep(1)
+
+            # Step 4: 輸入 q (處理 Gemini 沒有前次對話的情況)
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', '-l', 'q'], check=True)
+            time.sleep(0.5)
+
+            # Step 5: Ctrl+C 確保退出菜單
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'C-c'], check=True)
+            time.sleep(1)
+
+            # Step 6: 等待 CLI 提示符重新出現
+            print(f"     ⏳ 等待提示符恢復…")
+            if not wait_for_prompt(session_name, name, engine, max_wait=10):
+                print(f"     ⚠️ 提示符恢復超時，仍然嘗試注入 prompt…")
+
             # 📋 注入 prompt：檢查規範是否完備
             print(f"     📋 注入規範檢查 prompt…")
             engine_upper = engine.upper()
