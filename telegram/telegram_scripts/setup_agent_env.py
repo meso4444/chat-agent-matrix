@@ -69,12 +69,19 @@ def setup_collaboration_links(agents, groups):
                     # Calculate relative path
                     rel_target = os.path.relpath(target_real_path, my_home)
 
-                    if not os.path.exists(full_link_path):
+                    # Delete old symlink if it exists
+                    if os.path.islink(full_link_path):
                         try:
-                            os.symlink(rel_target, full_link_path)
-                            print(f"   + Created link: {me} -> {partner}")
+                            os.unlink(full_link_path)
                         except OSError as e:
-                            print(f"   ⚠️ Failed to create link: {e}")
+                            print(f"   ⚠️ Failed to delete old link: {e}")
+
+                    # Recreate symlink
+                    try:
+                        os.symlink(rel_target, full_link_path)
+                        print(f"   + Created link: {me} -> {partner}")
+                    except OSError as e:
+                        print(f"   ⚠️ Failed to create link: {e}")
 
     # 2. Clean up stale collaboration links (Cleanup Stale Links)
     print("🧹 Checking and cleaning up expired collaboration links...")

@@ -219,6 +219,34 @@ try:
         if os.path.exists(doc_path):
             print(f"     ✅ {engine_doc_name} exists, skip initialization injection (protect existing specifications)")
 
+            # 🔄 Execute dialog recovery flow (/resume)
+            print(f"     🔄 Executing dialog recovery flow…")
+
+            # Step 1: Input /resume command
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', '-l', '/resume'], check=True)
+            time.sleep(0.5)
+
+            # Step 2: Execute /resume (enter menu)
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
+            time.sleep(1)
+
+            # Step 3: Select previous dialog
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
+            time.sleep(1)
+
+            # Step 4: Input q (handle Gemini case where no previous dialog exists)
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', '-l', 'q'], check=True)
+            time.sleep(0.5)
+
+            # Step 5: Ctrl+C to ensure exit from menu
+            subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'C-c'], check=True)
+            time.sleep(1)
+
+            # Step 6: Wait for CLI prompt to reappear
+            print(f"     ⏳ Waiting for prompt recovery…")
+            if not wait_for_prompt(session_name, name, engine, max_wait=10):
+                print(f"     ⚠️ Prompt recovery timeout, still attempting to inject prompt…")
+
             # 📋 Inject prompt: check if specifications are complete
             print(f"     📋 Injecting specification check prompt…")
             engine_upper = engine.upper()
