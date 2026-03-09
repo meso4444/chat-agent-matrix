@@ -66,12 +66,14 @@ session_name = os.environ['TMUX_SESSION_NAME']
 sys.path.append(script_dir)
 
 def wait_for_prompt(session_name, window_name, engine, max_wait=30):
-    """Wait for tmux pane to show corresponding CLI prompt
+    """Wait for tmux pane to show corresponding CLI prompt (stable detection)
 
     Args:
         engine: 'claude' or 'gemini'
         - claude → ❯
         - gemini → * or >
+
+    Note: Requires 3+ consecutive detections to ensure CLI is fully ready
     """
     start_time = time.time()
     # Select corresponding prompt marker based on engine
@@ -79,6 +81,9 @@ def wait_for_prompt(session_name, window_name, engine, max_wait=30):
         prompt_markers = ['❯']
     else:  # gemini - could be * or >
         prompt_markers = ['*', '>']
+
+    consecutive_detections = 0
+    required_detections = 3  # Require 3 consecutive detections for CLI readiness
 
     while time.time() - start_time < max_wait:
         try:
@@ -88,16 +93,27 @@ def wait_for_prompt(session_name, window_name, engine, max_wait=30):
             )
             output = result.stdout
             if not output:
+                consecutive_detections = 0
                 time.sleep(0.5)
                 continue
 
             # Check if entire pane content contains any expected prompt marker
+            detected = False
             for marker in prompt_markers:
                 if marker in output:
-                    print(f"       ✅ Detected {engine} prompt '{marker}'")
+                    detected = True
+                    break
+
+            if detected:
+                consecutive_detections += 1
+                if consecutive_detections >= required_detections:
+                    print(f"       ✅ {engine} CLI fully ready (stable prompt detection {consecutive_detections} times)")
                     return True
+            else:
+                consecutive_detections = 0
+
         except Exception as e:
-            pass
+            consecutive_detections = 0
 
         time.sleep(0.5)
 
@@ -209,10 +225,13 @@ try:
         time.sleep(1)
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
 
-        # Wait for CLI prompt to appear (check corresponding prompt based on engine type, max wait 60 seconds)
+        # Wait for CLI to fully initialize (wait for base prompt, then extra buffer to ensure ready)
         print(f"     ⏳ Waiting for {name} CLI to start…")
         if not wait_for_prompt(session_name, name, engine, max_wait=60):
             print(f"     ⚠️ {name} startup timeout (did not detect {engine} prompt), still attempting to inject prompt…")
+
+        # Extra wait to ensure CLI is fully ready (avoid injecting commands during init)
+        time.sleep(2)
 
         # ✅ Check if specification file already exists (avoid duplicate injection and overwrite)
         doc_path = os.path.join(home_path, engine_doc_name)
