@@ -225,10 +225,11 @@ try:
         time.sleep(1)
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
 
-        # 等待 CLI 完全初始化（先等待基礎提示符，再額外等待確保完全就緒）
+        # 等待 CLI 完全初始化（20 秒 timeout）
         print(f"     ⏳ 等待 {name} CLI 啟動…")
-        if not wait_for_prompt(session_name, name, engine, max_wait=60):
-            print(f"     ⚠️ {name} 啟動超時（未檢測到 {engine} 提示符），仍然嘗試注入 prompt…")
+        if not wait_for_prompt(session_name, name, engine, max_wait=20):
+            print(f"     ❌ {name} 啟動失敗（20 秒內未檢測到 {engine} 提示符），跳過此 Agent")
+            continue  # 跳過此 Agent，繼續下一個
 
         # 額外等待以確保 CLI 完全就緒（避免在初始化中途注入命令）
         time.sleep(2)
