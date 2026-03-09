@@ -19,13 +19,13 @@ scheduler:
     second: 0
     active: true    # ✅ Enabled by default
 
-  # 【Built-in Default Schedule】Update all Agent memories every hour
-  - name: "All Agents Hourly Memory Update"
+  # 【Built-in Default Schedule】Update all Agent memories every 3 hours
+  - name: "Agent Memory Construction"
     type: "system"
     action: "update_agent_memories"
-    prompt: "If there are tasks performed in the past period, provide a summary and key points. Record details for key tasks or important turning points. Update the records to today's memory file (md format) in the memory directory. This is your personal memory task and does not require reporting to users."
+    prompt: "Perform a summary and key points of tasks executed in the past period, and strengthen the recording of important details. If there are no recent tasks, you can also create memories through meditation, such as reflecting on how to optimize your role capabilities, or ask questions and discuss with users. All of the above serve as your memory updates to memory/memory.md. This is your personal memory task and does not require reporting to users."
     trigger: "interval"
-    hours: 1
+    hours: 3
     minutes: 0
     seconds: 0
     active: true    # ✅ Enabled by default
