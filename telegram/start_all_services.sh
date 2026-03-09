@@ -225,10 +225,11 @@ try:
         time.sleep(1)
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', 'Enter'], check=True)
 
-        # Wait for CLI to fully initialize (wait for base prompt, then extra buffer to ensure ready)
+        # Wait for CLI to fully initialize (20 second timeout)
         print(f"     ⏳ Waiting for {name} CLI to start…")
-        if not wait_for_prompt(session_name, name, engine, max_wait=60):
-            print(f"     ⚠️ {name} startup timeout (did not detect {engine} prompt), still attempting to inject prompt…")
+        if not wait_for_prompt(session_name, name, engine, max_wait=20):
+            print(f"     ❌ {name} startup failed (did not detect {engine} prompt within 20s), skipping this Agent")
+            continue  # Skip this Agent and proceed to next
 
         # Extra wait to ensure CLI is fully ready (avoid injecting commands during init)
         time.sleep(2)
