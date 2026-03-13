@@ -23,7 +23,7 @@ scheduler:
   - name: "Agent 記憶建構"
     type: "system"
     action: "update_agent_memories"
-    prompt: "進行已執行任務的重點整理摘要,及強化記錄重要細節;若無最近任務,亦可透過冥想來創造記憶,如反思如何優化你的角色能力,亦可向使用者提問和討論,以上皆作為你的記憶更新到memory/memory.md,這是你的個人記憶任務,不需回報給用戶"
+    prompt: "進行已執行任務的重點整理摘要,及強化記錄重要細節;若無最近任務,亦可透過冥想來創造記憶,如反思如何優化你的角色能力,亦可向使用者提問和討論,以上皆作為你的記憶更新到{agent_home}/memory/memory.md,這是你的個人記憶任務,記憶任務狀態不需回報給使用者,但提問可發送訊息給使用者"
     trigger: "interval"
     hours: 3
     minutes: 0
