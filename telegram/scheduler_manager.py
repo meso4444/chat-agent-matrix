@@ -347,7 +347,7 @@ class SchedulerManager:
             print(f"⚠️ [Scheduler] Unable to import AGENTS list", flush=True)
             return
 
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        base_dir = os.path.dirname(os.path.abspath(__file__))
         agent_home_path = os.path.join(base_dir, 'agent_home')
 
         if not os.path.exists(agent_home_path):
