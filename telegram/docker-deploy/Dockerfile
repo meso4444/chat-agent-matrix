@@ -64,6 +64,9 @@ COPY agent_home_rules_templates/ /app/telegram/agent_home_rules_templates/
 # 初始化腳本
 COPY telegram_scripts/ /app/telegram/telegram_scripts/
 
+# 專用工具與知識庫（在啟動時複製到各 agent_home）
+COPY tools/ /app/telegram/tools/
+
 # 容器入口
 COPY docker-deploy/scripts/entrypoint.sh /app/telegram/docker-deploy/scripts/
 
