@@ -161,9 +161,11 @@ try:
                        f'python3 {responder_script} {session_name}:{name}'], check=True)
 
         # 📋 複製必要的工具腳本到 Agent home
-        # 複製 telegram_notifier.py 到 agent_home（不放入 toolbox）
-        telegram_notifier_src = os.path.join(script_dir, 'telegram_notifier.py')
-        telegram_notifier_dst = os.path.join(home_path, 'telegram_notifier.py')
+        # 複製 telegram_notifier.py 到 agent_home toolbox
+        telegram_notifier_src = os.path.join(script_dir, 'tools', 'notification', 'telegram_notifier.py')
+        toolbox_path = os.path.join(home_path, 'toolbox')
+        os.makedirs(toolbox_path, exist_ok=True)
+        telegram_notifier_dst = os.path.join(toolbox_path, 'telegram_notifier.py')
         if os.path.exists(telegram_notifier_src):
             subprocess.run(['cp', telegram_notifier_src, telegram_notifier_dst], check=True)
 
@@ -208,6 +210,35 @@ try:
         template_dst = os.path.join(home_path, 'agent_rule_gen_template.txt')
         if os.path.exists(template_src):
             subprocess.run(['cp', template_src, template_dst], check=True)
+
+        # 🎨 複製 Avatar 功能相關檔案
+        # 複製 octo_generator.py 到 toolbox
+        avatar_generator_src = os.path.join(script_dir, 'tools', 'avatar', 'octo_generator.py')
+        avatar_generator_dst = os.path.join(toolbox_path, 'octo_generator.py')
+        if os.path.exists(avatar_generator_src):
+            subprocess.run(['cp', avatar_generator_src, avatar_generator_dst], check=True)
+
+        # 複製 Avatar 設計指引到 knowledge
+        avatar_guide_src = os.path.join(script_dir, 'tools', 'avatar', 'AGENT_AVATAR_GUIDE.md')
+        avatar_guide_dst = os.path.join(knowledge_path, 'AGENT_AVATAR_GUIDE.md')
+        if os.path.exists(avatar_guide_src):
+            subprocess.run(['cp', avatar_guide_src, avatar_guide_dst], check=True)
+
+        # 複製排程功能文檔到 knowledge
+        scheduler_src = os.path.join(script_dir, 'tools', 'scheduler', 'SCHEDULER_FUNCTIONALITY.md')
+        scheduler_dst = os.path.join(knowledge_path, 'SCHEDULER_FUNCTIONALITY.md')
+        if os.path.exists(scheduler_src):
+            subprocess.run(['cp', scheduler_src, scheduler_dst], check=True)
+
+        # 建立並驗證 avatar 目錄結構
+        avatar_path = os.path.join(home_path, 'avatar')
+        avatar_emojis_path = os.path.join(avatar_path, 'emojis')
+        os.makedirs(avatar_emojis_path, exist_ok=True)
+
+        if not os.path.isdir(avatar_emojis_path):
+            print(f"   ⚠️  警告：無法創建 avatar/emojis 目錄：{avatar_emojis_path}")
+        else:
+            print(f"   ✓ Avatar 目錄已確認：{avatar_emojis_path}")
 
         # 🎯 進入 Agent 工作目錄
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', f'cd {home_path}'], check=True)

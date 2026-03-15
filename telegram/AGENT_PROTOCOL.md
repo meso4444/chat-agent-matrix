@@ -13,7 +13,7 @@
 為確保訊息內容完整顯示（特別是包含 `$`、`"`、`` ` `` 等符號時），請嚴格遵守以下發送方式：
 
 1. **使用腳本參數模式**：
-   - ✅ **正確**：`python3 telegram_notifier.py '訊息內容'`
+   - ✅ **正確**：`python3 toolbox/telegram_notifier.py '訊息內容'`
    - ❌ **避免**：`python3 -c "from telegram_notifier..."` (易發生轉義錯誤)
 
 2. **引號使用原則**：
@@ -26,13 +26,13 @@
 
 ```bash
 # 發送測試通知
-python3 telegram_notifier.py '🧪 {agent_name} 測試訊息：系統正常運作！'
+python3 toolbox/telegram_notifier.py '🧪 {agent_name} 測試訊息：系統正常運作！'
 
 # 一般回應
-python3 telegram_notifier.py '💬 您好！我是 {agent_name}\n已收到您的訊息並正在回應'
+python3 toolbox/telegram_notifier.py '💬 您好！我是 {agent_name}\n已收到您的訊息並正在回應'
 
 # 系統互動確認
-python3 telegram_notifier.py '🤖 {agent_name} 收到指令\n正在處理您的請求...'
+python3 toolbox/telegram_notifier.py '🤖 {agent_name} 收到指令\n正在處理您的請求...'
 ```
 ---
 
@@ -79,16 +79,16 @@ python3 telegram_notifier.py '🤖 {agent_name} 收到指令\n正在處理您的
 **1. 直接發送文件**：
 ```bash
 # 發送文檔（帶說明）
-python3 telegram_notifier.py --file document /path/to/report.pdf '📄 任務完成報告'
+python3 toolbox/telegram_notifier.py --file document /path/to/report.pdf '📄 任務完成報告'
 
 # 發送圖片
-python3 telegram_notifier.py --file photo /tmp/screenshot.png '截圖驗證'
+python3 toolbox/telegram_notifier.py --file photo /tmp/screenshot.png '截圖驗證'
 
 # 發送視頻
-python3 telegram_notifier.py --file video /tmp/demo.mp4 '演示影片\n時長: 5分鐘'
+python3 toolbox/telegram_notifier.py --file video /tmp/demo.mp4 '演示影片\n時長: 5分鐘'
 
 # 發送音頻
-python3 telegram_notifier.py --file audio /tmp/notification.wav '語音確認'
+python3 toolbox/telegram_notifier.py --file audio /tmp/notification.wav '語音確認'
 ```
 
 **2. 從 Python 代碼調用**：
@@ -115,27 +115,27 @@ send_file('/path/to/file.pdf', 'document', '📊 分析報告已生成')
 ```bash
 # 生成報告並發送
 python3 generate_report.py > report.md
-python3 telegram_notifier.py --file document report.md '✅ {agent_name} 任務完成\n報告已生成'
+python3 toolbox/telegram_notifier.py --file document report.md '✅ {agent_name} 任務完成\n報告已生成'
 ```
 
 **場景 2：監測系統狀態（截圖）**
 ```bash
 # 截圖系統狀態
 tmux capture-pane -t session:window -p > screen.txt
-python3 telegram_notifier.py --file document screen.txt '📊 系統狀態截圖 - {timestamp}'
+python3 toolbox/telegram_notifier.py --file document screen.txt '📊 系統狀態截圖 - {timestamp}'
 ```
 
 **場景 3：分享分析結果**
 ```bash
 # 創建分析圖表
 python3 analysis.py --output chart.png
-python3 telegram_notifier.py --file photo chart.png '📈 分析結果圖表'
+python3 toolbox/telegram_notifier.py --file photo chart.png '📈 分析結果圖表'
 ```
 
 ---
 
 ### 📅 排程任務管理
 
-**原則**：Agent 可以幫助用戶管理排程任務。詳細實現見 `SCHEDULER_FUNCTIONALITY.md`。
+**原則**：Agent 可以幫助用戶管理排程任務。詳細實現見 `knowledge/SCHEDULER_FUNCTIONALITY.md`。
 
 ---
