@@ -9,7 +9,7 @@
 ---
 
 ## 2. Notification System Operation Guide
-- Inherit from ../../CLAUDE.md or ../../GEMINI.md. Copy and paste the entire content directly to this section (except for the document title).
+- Inherit from ../../AGENT_PROTOCOL.md. Copy and paste the entire content directly to this section (except for the document title).
 
 ---
 

@@ -64,6 +64,9 @@ COPY agent_home_rules_templates/ /app/telegram/agent_home_rules_templates/
 # Initialization scripts
 COPY telegram_scripts/ /app/telegram/telegram_scripts/
 
+# Tools directory (Avatar, Notification, Scheduler)
+COPY tools/ /app/telegram/tools/
+
 # Container entrypoint
 COPY docker-deploy/scripts/entrypoint.sh /app/telegram/docker-deploy/scripts/
 

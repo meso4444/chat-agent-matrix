@@ -161,9 +161,11 @@ try:
                        f'python3 {responder_script} {session_name}:{name}'], check=True)
 
         # 📋 Copy necessary tool scripts to Agent home
-        # Copy telegram_notifier.py to agent_home (not in toolbox)
-        telegram_notifier_src = os.path.join(script_dir, 'telegram_notifier.py')
-        telegram_notifier_dst = os.path.join(home_path, 'telegram_notifier.py')
+        # Copy telegram_notifier.py to toolbox
+        telegram_notifier_src = os.path.join(script_dir, 'tools', 'notification', 'telegram_notifier.py')
+        toolbox_path = os.path.join(home_path, 'toolbox')
+        os.makedirs(toolbox_path, exist_ok=True)
+        telegram_notifier_dst = os.path.join(toolbox_path, 'telegram_notifier.py')
         if os.path.exists(telegram_notifier_src):
             subprocess.run(['cp', telegram_notifier_src, telegram_notifier_dst], check=True)
 
@@ -195,19 +197,40 @@ try:
             if os.path.exists(src_file):
                 subprocess.run(['cp', src_file, dst_file], check=True)
 
-        # Copy knowledge base files (to knowledge directory)
-        knowledge_files_to_copy = ['SCHEDULER_FUNCTIONALITY.md']
-        for knowledge_file in knowledge_files_to_copy:
-            src_file = os.path.join(script_dir, knowledge_file)
-            dst_file = os.path.join(knowledge_path, knowledge_file)
-            if os.path.exists(src_file):
-                subprocess.run(['cp', src_file, dst_file], check=True)
-
         # Copy template files (copy directly to agent_home, no subdirectory)
         template_src = os.path.join(script_dir, 'agent_home_rules_templates', 'agent_rule_gen_template.txt')
         template_dst = os.path.join(home_path, 'agent_rule_gen_template.txt')
         if os.path.exists(template_src):
             subprocess.run(['cp', template_src, template_dst], check=True)
+
+        # 🎨 Copy Avatar functionality-related files
+        # Copy octo_generator.py to toolbox
+        avatar_generator_src = os.path.join(script_dir, 'tools', 'avatar', 'octo_generator.py')
+        avatar_generator_dst = os.path.join(toolbox_path, 'octo_generator.py')
+        if os.path.exists(avatar_generator_src):
+            subprocess.run(['cp', avatar_generator_src, avatar_generator_dst], check=True)
+
+        # Copy Avatar design guide to knowledge
+        avatar_guide_src = os.path.join(script_dir, 'tools', 'avatar', 'AGENT_AVATAR_GUIDE.md')
+        avatar_guide_dst = os.path.join(knowledge_path, 'AGENT_AVATAR_GUIDE.md')
+        if os.path.exists(avatar_guide_src):
+            subprocess.run(['cp', avatar_guide_src, avatar_guide_dst], check=True)
+
+        # Copy scheduler functionality documentation to knowledge
+        scheduler_src = os.path.join(script_dir, 'tools', 'scheduler', 'SCHEDULER_FUNCTIONALITY.md')
+        scheduler_dst = os.path.join(knowledge_path, 'SCHEDULER_FUNCTIONALITY.md')
+        if os.path.exists(scheduler_src):
+            subprocess.run(['cp', scheduler_src, scheduler_dst], check=True)
+
+        # Create and verify avatar directory structure
+        avatar_path = os.path.join(home_path, 'avatar')
+        avatar_emojis_path = os.path.join(avatar_path, 'emojis')
+        os.makedirs(avatar_emojis_path, exist_ok=True)
+
+        if not os.path.isdir(avatar_emojis_path):
+            print(f"   ⚠️  Warning: Unable to create avatar/emojis directory: {avatar_emojis_path}")
+        else:
+            print(f"   ✓ Avatar directory confirmed: {avatar_emojis_path}")
 
         # 🎯 Enter Agent working directory
         subprocess.run(['tmux', 'send-keys', '-t', f'{session_name}:{name}', f'cd {home_path}'], check=True)

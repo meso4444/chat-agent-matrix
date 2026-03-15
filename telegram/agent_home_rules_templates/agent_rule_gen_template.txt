@@ -19,4 +19,6 @@ Special attention:
 1. The Notification System Operation Guide except for the document title should be **completely copied**, nothing should be omitted.
 2. Based on the "Team Collaboration Context", add a "Collaboration Partners" section in your work handbook, clearly listing who to contact for what tasks.
 
+=== Visual Avatar Construction Task ===
+After completing the customized self-definition writing, follow the guidance in ./knowledge/AGENT_AVATAR_GUIDE.md to generate your avatar.
 
