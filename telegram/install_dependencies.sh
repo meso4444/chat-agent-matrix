@@ -166,7 +166,7 @@ install_python_packages() {
     fi
 
     # Install packages
-    PACKAGES="flask requests pyyaml apscheduler"
+    PACKAGES="flask requests pyyaml apscheduler pillow"
     echo "📦 Installing Python packages: $PACKAGES"
     if pip3 install $PACKAGES; then
         echo "✅ Python packages installed successfully"
