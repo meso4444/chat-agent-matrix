@@ -166,7 +166,7 @@ install_python_packages() {
     fi
 
     # 安裝套件
-    PACKAGES="flask requests pyyaml apscheduler"
+    PACKAGES="flask requests pyyaml apscheduler pillow"
     echo "📦 安裝 Python 套件: $PACKAGES"
     if pip3 install $PACKAGES; then
         echo "✅ Python 套件安裝成功"
