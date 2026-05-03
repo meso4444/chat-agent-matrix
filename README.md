@@ -1,3 +1,10 @@
+# ⚠️ Project Legacy Notice
+
+**This repository is now in LEGACY mode.**  
+It has been succeeded by **[OctoMatrix](https://github.com/meso4444/OctoMatrix)**, which features a more robust Multi-Communicator architecture, improved Cyberbrain memory system, and enhanced autonomous routing.
+
+---
+
 <div align="center">
   <img src="assets/logo-banner.png" alt="Chat Agent Matrix" width="100%" style="max-width: 900px; height: auto; margin-bottom: 20px;" />
 </div>
