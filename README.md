@@ -1,3 +1,15 @@
+# ⚠️ 專案舊版公告 (Legacy Notice)
+
+**本專案已停止維護，進入舊版存檔模式。**  
+核心功能已遷移並大幅升級至全新的 **[OctoMatrix](https://github.com/meso4444/OctoMatrix)** 專案。
+
+**請移至新專案以獲得：**
+- 更強大的多平台通訊架構 (Multi-Communicator)
+- 優化的電子腦記憶系統 (Cyberbrain)
+- 增強的自動化路由與穩定性
+
+---
+
 <div align="center">
   <img src="assets/logo-banner.png" alt="Chat Agent Matrix" width="100%" style="max-width: 900px; height: auto; margin-bottom: 20px;" />
 </div>
